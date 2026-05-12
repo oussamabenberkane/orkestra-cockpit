@@ -5,7 +5,7 @@ import type { ModalKey } from "@/lib/types";
 import { modalData } from "@/lib/modal-data";
 import { X, ArrowRight } from "lucide-react";
 
-interface BureauModalProps {
+interface ApertureModalProps {
   open: boolean;
   modalKey: ModalKey | null;
   onClose: () => void;
@@ -13,19 +13,19 @@ interface BureauModalProps {
 
 const sectionTag: Record<ModalKey, { label: string; tone: string; bg: string }> = {
   finance: { label: "Finance", tone: "var(--warn)", bg: "var(--warn-tint)" },
-  vue360: { label: "Vue d'ensemble", tone: "var(--brand)", bg: "var(--brand-tint)" },
+  vue360: { label: "Vue d'ensemble", tone: "var(--accent)", bg: "var(--accent-tint)" },
   sinistres: { label: "Sinistres", tone: "var(--danger)", bg: "var(--danger-tint)" },
-  prospection: { label: "Prospection", tone: "var(--brand)", bg: "var(--brand-tint)" },
+  prospection: { label: "Prospection", tone: "var(--accent)", bg: "var(--accent-tint)" },
   portefeuille: { label: "Portefeuille", tone: "var(--info)", bg: "var(--info-tint)" },
-  agents: { label: "Agents IA", tone: "var(--accent)", bg: "var(--accent-tint)" },
-  rapport: { label: "Rapport", tone: "var(--brand)", bg: "var(--brand-tint)" },
+  agents: { label: "Agents IA", tone: "var(--purple)", bg: "var(--purple-tint)" },
+  rapport: { label: "Rapport", tone: "var(--accent)", bg: "var(--accent-tint)" },
 };
 
 function stripLeadingEmoji(s: string) {
   return s.replace(/^[\p{Emoji_Presentation}\p{Extended_Pictographic}\s·—•]+/u, "").trim();
 }
 
-export default function BureauModal({ open, modalKey, onClose }: BureauModalProps) {
+export default function ApertureModal({ open, modalKey, onClose }: ApertureModalProps) {
   const data = modalKey ? modalData[modalKey] : null;
   if (!data || !modalKey) return null;
 
@@ -40,20 +40,20 @@ export default function BureauModal({ open, modalKey, onClose }: BureauModalProp
         style={{
           background: "var(--surface)",
           border: "1px solid var(--border)",
-          borderRadius: "12px",
+          borderRadius: "14px",
           padding: 0,
-          maxWidth: "580px",
+          maxWidth: "600px",
           width: "92vw",
-          fontFamily: "var(--font-manrope)",
+          fontFamily: "var(--font-sans)",
           color: "var(--text)",
           boxShadow:
-            "0 24px 60px -16px rgba(15,23,42,0.18), 0 8px 20px -10px rgba(15,23,42,0.08)",
+            "0 32px 80px -24px rgba(15,23,42,0.22), 0 8px 20px -12px rgba(15,23,42,0.08)",
           overflow: "hidden",
         }}
       >
         <div
           style={{
-            padding: "1rem 1.25rem",
+            padding: "1rem 1.4rem",
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
@@ -71,8 +71,8 @@ export default function BureauModal({ open, modalKey, onClose }: BureauModalProp
               color: tag.tone,
               background: tag.bg,
               padding: "0.25rem 0.55rem",
-              borderRadius: "6px",
-              letterSpacing: "0.01em",
+              borderRadius: "100px",
+              letterSpacing: "-0.005em",
             }}
           >
             <span
@@ -96,7 +96,7 @@ export default function BureauModal({ open, modalKey, onClose }: BureauModalProp
               height: 28,
               background: "var(--surface-2)",
               border: "1px solid var(--border)",
-              borderRadius: "6px",
+              borderRadius: "8px",
               color: "var(--text-2)",
               cursor: "pointer",
             }}
@@ -105,15 +105,15 @@ export default function BureauModal({ open, modalKey, onClose }: BureauModalProp
           </button>
         </div>
 
-        <div style={{ padding: "1.25rem 1.4rem 0.65rem" }}>
+        <div style={{ padding: "1.4rem 1.5rem 0.75rem" }}>
           <h2
             style={{
-              fontSize: "1.35rem",
+              fontSize: "1.4rem",
               fontWeight: 700,
-              letterSpacing: "-0.02em",
+              letterSpacing: "-0.025em",
               color: "var(--text)",
               margin: 0,
-              marginBottom: "0.5rem",
+              marginBottom: "0.55rem",
               lineHeight: 1.2,
             }}
           >
@@ -121,11 +121,11 @@ export default function BureauModal({ open, modalKey, onClose }: BureauModalProp
           </h2>
           <p
             style={{
-              fontSize: "0.9rem",
+              fontSize: "0.92rem",
               lineHeight: 1.6,
               color: "var(--text-2)",
               margin: 0,
-              marginBottom: "1rem",
+              marginBottom: "1.1rem",
             }}
           >
             {data.body}
@@ -134,20 +134,19 @@ export default function BureauModal({ open, modalKey, onClose }: BureauModalProp
 
         <div
           style={{
-            margin: "0 1.4rem 1.25rem",
-            padding: 0,
+            margin: "0 1.5rem 1.25rem",
             background: "var(--surface-2)",
             border: "1px solid var(--border)",
-            borderRadius: "8px",
+            borderRadius: "10px",
             overflow: "hidden",
           }}
         >
           <div
             style={{
-              padding: "0.5rem 0.85rem",
+              padding: "0.55rem 0.95rem",
               background: "var(--surface-3)",
               borderBottom: "1px solid var(--border)",
-              fontFamily: "var(--font-jbmono)",
+              fontFamily: "var(--font-mono)",
               fontSize: "0.66rem",
               color: "var(--text-3)",
               letterSpacing: "0.04em",
@@ -160,10 +159,10 @@ export default function BureauModal({ open, modalKey, onClose }: BureauModalProp
           <pre
             style={{
               margin: 0,
-              padding: "0.85rem 1rem",
-              fontFamily: "var(--font-jbmono), monospace",
+              padding: "0.95rem 1.1rem",
+              fontFamily: "var(--font-mono), monospace",
               fontSize: "0.78rem",
-              lineHeight: 1.75,
+              lineHeight: 1.8,
               color: "var(--text-2)",
               whiteSpace: "pre-wrap",
               wordBreak: "break-word",
@@ -179,7 +178,7 @@ export default function BureauModal({ open, modalKey, onClose }: BureauModalProp
             display: "flex",
             justifyContent: "flex-end",
             gap: "0.5rem",
-            padding: "0.85rem 1.4rem",
+            padding: "0.95rem 1.5rem",
             borderTop: "1px solid var(--border)",
             background: "var(--surface-2)",
           }}
@@ -187,37 +186,38 @@ export default function BureauModal({ open, modalKey, onClose }: BureauModalProp
           <button
             onClick={onClose}
             style={{
-              padding: "0.5rem 0.95rem",
+              padding: "0.55rem 1rem",
               background: "var(--surface)",
               border: "1px solid var(--border)",
               color: "var(--text-2)",
               fontFamily: "inherit",
-              fontSize: "0.82rem",
+              fontSize: "0.84rem",
               fontWeight: 500,
               cursor: "pointer",
-              borderRadius: "8px",
+              borderRadius: "9px",
             }}
           >
             Fermer
           </button>
           <button
             style={{
-              padding: "0.5rem 0.95rem",
-              background: "var(--brand)",
-              border: "1px solid var(--brand)",
+              padding: "0.55rem 1.1rem",
+              background: "var(--accent)",
+              border: "1px solid var(--accent)",
               color: "#FFFFFF",
               fontFamily: "inherit",
-              fontSize: "0.82rem",
+              fontSize: "0.84rem",
               fontWeight: 600,
               cursor: "pointer",
-              borderRadius: "8px",
+              borderRadius: "9px",
               display: "inline-flex",
               alignItems: "center",
               gap: "0.4rem",
               transition: "background 0.15s",
+              boxShadow: "0 1px 2px rgba(30,64,175,0.22)",
             }}
-            onMouseEnter={(e) => (e.currentTarget.style.background = "var(--brand-2)")}
-            onMouseLeave={(e) => (e.currentTarget.style.background = "var(--brand)")}
+            onMouseEnter={(e) => (e.currentTarget.style.background = "var(--accent-2)")}
+            onMouseLeave={(e) => (e.currentTarget.style.background = "var(--accent)")}
           >
             {data.cta}
             <ArrowRight size={13} strokeWidth={2.25} />

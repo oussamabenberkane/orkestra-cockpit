@@ -5,13 +5,13 @@ import type { ModalKey } from "@/lib/types";
 import { modalData } from "@/lib/modal-data";
 import { X, ArrowRight, Hash } from "lucide-react";
 
-interface AtriumModalProps {
+interface OnyxModalProps {
   open: boolean;
   modalKey: ModalKey | null;
   onClose: () => void;
 }
 
-const idMap: Record<ModalKey, string> = {
+const refMap: Record<ModalKey, string> = {
   prospection: "DOM-01",
   portefeuille: "DOM-02",
   sinistres: "DOM-03",
@@ -25,7 +25,7 @@ function stripLeadingEmoji(s: string) {
   return s.replace(/^[\p{Emoji_Presentation}\p{Extended_Pictographic}\s·—•]+/u, "").trim();
 }
 
-export default function AtriumModal({ open, modalKey, onClose }: AtriumModalProps) {
+export default function OnyxModal({ open, modalKey, onClose }: OnyxModalProps) {
   const data = modalKey ? modalData[modalKey] : null;
   if (!data || !modalKey) return null;
 
@@ -37,15 +37,16 @@ export default function AtriumModal({ open, modalKey, onClose }: AtriumModalProp
       <DialogContent
         showCloseButton={false}
         style={{
-          background: "var(--surface)",
-          border: "1px solid var(--border)",
-          borderRadius: "10px",
+          background: "var(--surface-2)",
+          border: "1px solid var(--border-strong)",
+          borderRadius: "12px",
           padding: 0,
-          maxWidth: "560px",
+          maxWidth: "580px",
           width: "92vw",
-          fontFamily: "var(--font-geist)",
+          fontFamily: "var(--font-sans)",
           color: "var(--text)",
-          boxShadow: "0 16px 40px -12px rgba(10,10,10,0.18)",
+          boxShadow:
+            "0 32px 80px -16px rgba(0,0,0,0.6), 0 0 0 1px var(--inset-highlight) inset, 0 8px 24px -10px rgba(129,140,248,0.12)",
           overflow: "hidden",
         }}
       >
@@ -55,24 +56,24 @@ export default function AtriumModal({ open, modalKey, onClose }: AtriumModalProp
             justifyContent: "space-between",
             alignItems: "center",
             gap: "0.5rem",
-            padding: "0.75rem 1rem",
+            padding: "0.85rem 1.1rem",
             borderBottom: "1px solid var(--border)",
-            background: "var(--surface-2)",
+            background: "var(--surface)",
           }}
         >
           <span
             style={{
               display: "inline-flex",
               alignItems: "center",
-              gap: "0.35rem",
-              fontFamily: "var(--font-geist-mono)",
-              fontSize: "0.72rem",
-              color: "var(--text-3)",
+              gap: "0.4rem",
+              fontFamily: "var(--font-mono)",
+              fontSize: "0.74rem",
+              color: "var(--text-2)",
               letterSpacing: "0.02em",
             }}
           >
-            <Hash size={11} strokeWidth={2} />
-            {idMap[modalKey]}
+            <Hash size={12} strokeWidth={2} />
+            {refMap[modalKey]}
           </span>
           <button
             onClick={onClose}
@@ -83,10 +84,10 @@ export default function AtriumModal({ open, modalKey, onClose }: AtriumModalProp
               justifyContent: "center",
               width: 26,
               height: 26,
-              background: "var(--surface)",
+              background: "var(--surface-2)",
               border: "1px solid var(--border)",
               borderRadius: "6px",
-              color: "var(--text-3)",
+              color: "var(--text-2)",
               cursor: "pointer",
             }}
           >
@@ -94,27 +95,27 @@ export default function AtriumModal({ open, modalKey, onClose }: AtriumModalProp
           </button>
         </div>
 
-        <div style={{ padding: "1.1rem 1.25rem 0.5rem" }}>
+        <div style={{ padding: "1.25rem 1.4rem 0.6rem" }}>
           <h2
             style={{
-              fontSize: "1.25rem",
+              fontSize: "1.35rem",
               fontWeight: 600,
               letterSpacing: "-0.02em",
               color: "var(--text)",
               margin: 0,
               marginBottom: "0.5rem",
-              lineHeight: 1.25,
+              lineHeight: 1.2,
             }}
           >
             {cleanTitle}
           </h2>
           <p
             style={{
-              fontSize: "0.88rem",
+              fontSize: "0.9rem",
               lineHeight: 1.6,
               color: "var(--text-2)",
               margin: 0,
-              marginBottom: "0.85rem",
+              marginBottom: "1rem",
             }}
           >
             {data.body}
@@ -123,13 +124,13 @@ export default function AtriumModal({ open, modalKey, onClose }: AtriumModalProp
 
         <pre
           style={{
-            margin: "0 1.25rem 1rem",
-            padding: "0.85rem 1rem",
-            fontFamily: "var(--font-geist-mono), monospace",
-            fontSize: "0.76rem",
-            lineHeight: 1.75,
+            margin: "0 1.4rem 1.25rem",
+            padding: "0.95rem 1.05rem",
+            fontFamily: "var(--font-mono), monospace",
+            fontSize: "0.78rem",
+            lineHeight: 1.8,
             color: "var(--text-2)",
-            background: "var(--surface-2)",
+            background: "var(--surface)",
             border: "1px solid var(--border)",
             borderRadius: "8px",
             whiteSpace: "pre-wrap",
@@ -143,60 +144,52 @@ export default function AtriumModal({ open, modalKey, onClose }: AtriumModalProp
         <div
           style={{
             display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
+            justifyContent: "flex-end",
             gap: "0.5rem",
-            padding: "0.75rem 1.25rem",
+            padding: "0.85rem 1.4rem",
             borderTop: "1px solid var(--border)",
-            background: "var(--surface-2)",
+            background: "var(--surface)",
           }}
         >
-          <span
+          <button
+            onClick={onClose}
             style={{
-              fontFamily: "var(--font-geist-mono)",
-              fontSize: "0.7rem",
-              color: "var(--text-3)",
+              padding: "0.5rem 0.95rem",
+              background: "var(--surface-2)",
+              border: "1px solid var(--border)",
+              color: "var(--text-2)",
+              fontFamily: "inherit",
+              fontSize: "0.82rem",
+              fontWeight: 500,
+              cursor: "pointer",
+              borderRadius: "8px",
             }}
           >
-            Échap pour fermer
-          </span>
-          <div style={{ display: "flex", gap: "0.4rem" }}>
-            <button
-              onClick={onClose}
-              style={{
-                padding: "0.4rem 0.85rem",
-                background: "var(--surface)",
-                border: "1px solid var(--border)",
-                color: "var(--text-2)",
-                fontFamily: "inherit",
-                fontSize: "0.8rem",
-                fontWeight: 500,
-                cursor: "pointer",
-                borderRadius: "6px",
-              }}
-            >
-              Fermer
-            </button>
-            <button
-              style={{
-                padding: "0.4rem 0.85rem",
-                background: "var(--accent)",
-                border: "1px solid var(--accent)",
-                color: "#FFFFFF",
-                fontFamily: "inherit",
-                fontSize: "0.8rem",
-                fontWeight: 600,
-                cursor: "pointer",
-                borderRadius: "6px",
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "0.35rem",
-              }}
-            >
-              {data.cta}
-              <ArrowRight size={12} strokeWidth={2.25} />
-            </button>
-          </div>
+            Fermer
+          </button>
+          <button
+            style={{
+              padding: "0.5rem 0.95rem",
+              background: "var(--accent)",
+              border: "1px solid var(--accent)",
+              color: "#0B0C0F",
+              fontFamily: "inherit",
+              fontSize: "0.82rem",
+              fontWeight: 600,
+              cursor: "pointer",
+              borderRadius: "8px",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "0.4rem",
+              transition: "background 0.15s",
+              boxShadow: "0 0 0 0 var(--accent-tint), 0 4px 16px -6px var(--accent-tint-2)",
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.background = "var(--accent-2)")}
+            onMouseLeave={(e) => (e.currentTarget.style.background = "var(--accent)")}
+          >
+            {data.cta}
+            <ArrowRight size={13} strokeWidth={2.25} />
+          </button>
         </div>
       </DialogContent>
     </Dialog>

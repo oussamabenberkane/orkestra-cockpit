@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { ArrowLeft, ArrowRight, ShieldCheck, BarChart3, Zap } from "lucide-react";
+import { ArrowLeft, ArrowRight, ShieldCheck, BarChart3, Sparkles } from "lucide-react";
 
 export default function LoginPageD() {
   const router = useRouter();
@@ -26,7 +26,7 @@ export default function LoginPageD() {
         display: "grid",
         gridTemplateColumns: "1fr 1fr",
       }}
-      className="bureau-login"
+      className="aperture-login"
     >
       {/* Left — form */}
       <main
@@ -39,39 +39,35 @@ export default function LoginPageD() {
         }}
       >
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "0.65rem" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
             <div
               style={{
                 width: 32,
                 height: 32,
-                background: "var(--brand)",
+                background: "var(--accent)",
                 color: "#FFFFFF",
-                borderRadius: "7px",
+                borderRadius: "8px",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                fontSize: "0.74rem",
+                fontSize: "0.72rem",
                 fontWeight: 800,
                 letterSpacing: "-0.02em",
+                boxShadow: "0 1px 2px rgba(30,64,175,0.18)",
               }}
             >
               CMA
             </div>
-            <div style={{ lineHeight: 1.15 }}>
-              <div
-                style={{
-                  fontSize: "0.92rem",
-                  fontWeight: 700,
-                  color: "var(--text)",
-                  letterSpacing: "-0.015em",
-                }}
-              >
-                Cabinet Müller &amp; Associés
-              </div>
-              <div style={{ fontSize: "0.72rem", color: "var(--text-3)" }}>
-                Orkestra Cockpit
-              </div>
-            </div>
+            <span
+              style={{
+                fontSize: "0.92rem",
+                fontWeight: 700,
+                color: "var(--text)",
+                letterSpacing: "-0.015em",
+              }}
+            >
+              Orkestra Cockpit
+            </span>
           </div>
           <Link
             href="/"
@@ -83,8 +79,8 @@ export default function LoginPageD() {
               fontWeight: 500,
               color: "var(--text-3)",
               textDecoration: "none",
-              padding: "0.35rem 0.6rem",
-              borderRadius: "6px",
+              padding: "0.35rem 0.65rem",
+              borderRadius: "8px",
               transition: "color 0.15s, background 0.15s",
             }}
             onMouseEnter={(e) => {
@@ -104,43 +100,45 @@ export default function LoginPageD() {
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+          transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
           style={{ maxWidth: "400px", width: "100%" }}
         >
-          <div
+          <span
             style={{
-              fontSize: "0.72rem",
+              fontSize: "0.66rem",
               fontWeight: 700,
-              letterSpacing: "0.1em",
+              letterSpacing: "0.18em",
               textTransform: "uppercase",
-              color: "var(--brand)",
+              color: "var(--accent)",
               marginBottom: "0.65rem",
+              display: "inline-block",
             }}
           >
-            Variante D · Bureau
-          </div>
+            Variante D · Aperture
+          </span>
           <h1
             style={{
-              fontSize: "clamp(1.85rem, 3.5vw, 2.4rem)",
+              fontSize: "clamp(1.9rem, 3.5vw, 2.4rem)",
               fontWeight: 700,
               lineHeight: 1.1,
               letterSpacing: "-0.025em",
               color: "var(--text)",
               margin: 0,
-              marginBottom: "0.5rem",
+              marginBottom: "0.55rem",
             }}
           >
-            Reprenons votre cockpit.
+            Bonjour, Thomas.
           </h1>
           <p
             style={{
-              fontSize: "0.95rem",
+              fontSize: "0.96rem",
               color: "var(--text-3)",
               marginBottom: "2rem",
-              maxWidth: "32ch",
+              maxWidth: "34ch",
+              lineHeight: 1.55,
             }}
           >
-            Bonjour Thomas. Tous vos KPIs combinés, en un seul endroit.
+            Connectez-vous pour voir le chiffre du mois et les trois actions qui vous attendent.
           </p>
 
           <form onSubmit={handleSubmit}>
@@ -180,7 +178,7 @@ export default function LoginPageD() {
                   cursor: "pointer",
                 }}
               >
-                <input type="checkbox" defaultChecked style={{ accentColor: "var(--brand)" }} />
+                <input type="checkbox" defaultChecked style={{ accentColor: "var(--accent)" }} />
                 Rester connecté
               </label>
               <button
@@ -188,7 +186,7 @@ export default function LoginPageD() {
                 style={{
                   background: "transparent",
                   border: "none",
-                  color: "var(--brand)",
+                  color: "var(--accent)",
                   fontFamily: "inherit",
                   fontSize: "0.78rem",
                   fontWeight: 600,
@@ -196,7 +194,7 @@ export default function LoginPageD() {
                   padding: 0,
                 }}
               >
-                Mot de passe oublié ?
+                Oublié ?
               </button>
             </div>
 
@@ -205,8 +203,8 @@ export default function LoginPageD() {
               disabled={loading}
               style={{
                 width: "100%",
-                padding: "0.75rem",
-                background: loading ? "var(--text-3)" : "var(--brand)",
+                padding: "0.78rem",
+                background: loading ? "var(--text-3)" : "var(--accent)",
                 color: "#FFFFFF",
                 border: "none",
                 borderRadius: "10px",
@@ -220,13 +218,13 @@ export default function LoginPageD() {
                 gap: "0.45rem",
                 letterSpacing: "-0.005em",
                 transition: "background 0.2s",
-                boxShadow: loading ? "none" : "0 2px 6px rgba(30,64,175,0.18)",
+                boxShadow: loading ? "none" : "0 2px 8px rgba(30,64,175,0.22)",
               }}
               onMouseEnter={(e) => {
-                if (!loading) e.currentTarget.style.background = "var(--brand-2)";
+                if (!loading) e.currentTarget.style.background = "var(--accent-2)";
               }}
               onMouseLeave={(e) => {
-                if (!loading) e.currentTarget.style.background = "var(--brand)";
+                if (!loading) e.currentTarget.style.background = "var(--accent)";
               }}
             >
               {loading ? "Connexion…" : "Accéder au cockpit"}
@@ -253,7 +251,7 @@ export default function LoginPageD() {
       {/* Right — feature panel */}
       <aside
         style={{
-          background: "var(--brand)",
+          background: "var(--accent)",
           color: "#FFFFFF",
           padding: "clamp(2rem, 4vw, 3.5rem)",
           position: "relative",
@@ -262,7 +260,7 @@ export default function LoginPageD() {
           flexDirection: "column",
           justifyContent: "space-between",
         }}
-        className="bureau-login-aside"
+        className="aperture-aside"
       >
         <div
           aria-hidden
@@ -270,7 +268,7 @@ export default function LoginPageD() {
             position: "absolute",
             inset: 0,
             background:
-              "radial-gradient(50% 40% at 80% 10%, rgba(201,122,63,0.22), transparent 60%), radial-gradient(60% 50% at 20% 90%, rgba(255,255,255,0.07), transparent 60%)",
+              "radial-gradient(50% 40% at 80% 10%, rgba(255,255,255,0.10), transparent 60%), radial-gradient(60% 50% at 10% 90%, rgba(0,0,0,0.10), transparent 60%)",
             pointerEvents: "none",
           }}
         />
@@ -281,48 +279,48 @@ export default function LoginPageD() {
             inset: 0,
             backgroundImage:
               "linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px)",
-            backgroundSize: "32px 32px",
+            backgroundSize: "36px 36px",
             pointerEvents: "none",
           }}
         />
 
         <motion.div
-          initial={{ opacity: 0, y: 12 }}
+          initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.12, duration: 0.6 }}
           style={{ position: "relative", zIndex: 1 }}
         >
           <h2
             style={{
-              fontSize: "clamp(1.65rem, 3vw, 2rem)",
+              fontSize: "clamp(1.7rem, 3vw, 2.15rem)",
               fontWeight: 700,
               letterSpacing: "-0.025em",
               lineHeight: 1.15,
               margin: 0,
               marginBottom: "1.25rem",
-              maxWidth: "20ch",
+              maxWidth: "22ch",
             }}
           >
-            Le cockpit unifié de votre cabinet de courtage.
+            Un chiffre par mois, trois actions par matin.
           </h2>
           <p
             style={{
               fontSize: "0.95rem",
-              color: "rgba(255,255,255,0.75)",
+              color: "rgba(255,255,255,0.78)",
               lineHeight: 1.6,
               maxWidth: "38ch",
               margin: 0,
             }}
           >
-            Primes, sinistres, trésorerie, agents IA — toutes vos sources réunies dans
-            une seule vue, mise à jour en continu.
+            Aperture met en avant l&apos;essentiel — le chiffre d&apos;affaires, les actions
+            prioritaires, et tout le reste en support.
           </p>
         </motion.div>
 
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2, duration: 0.6 }}
+          transition={{ delay: 0.22, duration: 0.6 }}
           style={{
             position: "relative",
             zIndex: 1,
@@ -333,26 +331,26 @@ export default function LoginPageD() {
         >
           <Feature
             icon={<BarChart3 size={14} strokeWidth={2.25} />}
-            title="KPIs combinés"
-            desc="BrokerStar + Odoo, KPI impossibles dans un seul ERP."
+            title="Hero KPI"
+            desc="Un graphique principal avec événements annotés."
           />
           <Feature
-            icon={<Zap size={14} strokeWidth={2.25} />}
-            title="Agents IA"
-            desc="Renouvellements, impayés, rapports — préparés pendant la nuit."
+            icon={<Sparkles size={14} strokeWidth={2.25} />}
+            title="Trois choses aujourd'hui"
+            desc="Vos actions du matin, mises au premier plan."
           />
           <Feature
             icon={<ShieldCheck size={14} strokeWidth={2.25} />}
             title="LPD conforme"
-            desc="LLM souverain Infomaniak. Données hébergées en Suisse."
+            desc="LLM souverain Infomaniak. Données en Suisse."
           />
         </motion.div>
       </aside>
 
       <style>{`
         @media (max-width: 820px) {
-          .bureau-login { grid-template-columns: 1fr !important; }
-          .bureau-login-aside { display: none !important; }
+          .aperture-login { grid-template-columns: 1fr !important; }
+          .aperture-aside { display: none !important; }
         }
       `}</style>
     </div>
@@ -374,8 +372,8 @@ function Feature({
         display: "flex",
         gap: "0.85rem",
         alignItems: "flex-start",
-        background: "rgba(255,255,255,0.06)",
-        border: "1px solid rgba(255,255,255,0.1)",
+        background: "rgba(255,255,255,0.07)",
+        border: "1px solid rgba(255,255,255,0.12)",
         borderRadius: "10px",
         padding: "0.85rem 1rem",
       }}
@@ -385,7 +383,7 @@ function Feature({
           flexShrink: 0,
           width: 28,
           height: 28,
-          background: "rgba(255,255,255,0.12)",
+          background: "rgba(255,255,255,0.14)",
           borderRadius: "7px",
           display: "flex",
           alignItems: "center",
@@ -398,7 +396,7 @@ function Feature({
       <div>
         <div
           style={{
-            fontSize: "0.88rem",
+            fontSize: "0.86rem",
             fontWeight: 700,
             marginBottom: "0.15rem",
             letterSpacing: "-0.01em",
@@ -409,8 +407,8 @@ function Feature({
         <div
           style={{
             fontSize: "0.78rem",
-            color: "rgba(255,255,255,0.65)",
-            lineHeight: 1.45,
+            color: "rgba(255,255,255,0.68)",
+            lineHeight: 1.5,
           }}
         >
           {desc}
@@ -445,6 +443,7 @@ function Field({
           fontWeight: 600,
           color: "var(--text)",
           marginBottom: "0.4rem",
+          letterSpacing: "-0.005em",
         }}
       >
         {label}
@@ -457,7 +456,7 @@ function Field({
         placeholder={placeholder}
         style={{
           width: "100%",
-          padding: "0.65rem 0.85rem",
+          padding: "0.7rem 0.9rem",
           background: "var(--surface)",
           border: "1px solid var(--border)",
           borderRadius: "10px",
@@ -468,8 +467,8 @@ function Field({
           transition: "border-color 0.15s, box-shadow 0.15s",
         }}
         onFocus={(e) => {
-          e.target.style.borderColor = "var(--brand)";
-          e.target.style.boxShadow = "0 0 0 3px var(--brand-tint)";
+          e.target.style.borderColor = "var(--accent)";
+          e.target.style.boxShadow = "0 0 0 3px var(--accent-tint)";
         }}
         onBlur={(e) => {
           e.target.style.borderColor = "var(--border)";

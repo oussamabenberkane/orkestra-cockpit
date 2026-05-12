@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { ArrowLeft, ArrowRight, ShieldCheck, Sparkles } from "lucide-react";
+import { ArrowLeft, ArrowRight, ShieldCheck, Sparkles, Activity } from "lucide-react";
 
 export default function LoginPageB() {
   const router = useRouter();
@@ -20,19 +20,19 @@ export default function LoginPageB() {
 
   return (
     <div
+      className="forge-login"
       style={{
         minHeight: "100vh",
         background: "var(--bg)",
         display: "grid",
         gridTemplateColumns: "1.1fr 1fr",
       }}
-      className="mercury-login"
     >
       {/* Left — brand panel */}
       <aside
         style={{
           position: "relative",
-          background: "var(--surface-2)",
+          background: "var(--surface)",
           borderRight: "1px solid var(--border)",
           padding: "clamp(2rem, 4vw, 3.5rem)",
           display: "flex",
@@ -47,7 +47,7 @@ export default function LoginPageB() {
             position: "absolute",
             inset: 0,
             background:
-              "radial-gradient(60% 50% at 25% 20%, rgba(13,112,102,0.08), transparent 65%), radial-gradient(40% 30% at 80% 85%, rgba(13,112,102,0.06), transparent 65%)",
+              "radial-gradient(50% 40% at 20% 10%, rgba(59,91,126,0.05), transparent 65%)",
             pointerEvents: "none",
           }}
         />
@@ -63,7 +63,7 @@ export default function LoginPageB() {
               color: "var(--text-3)",
               fontSize: "0.78rem",
               fontWeight: 500,
-              padding: "0.4rem 0.7rem",
+              padding: "0.35rem 0.65rem",
               background: "var(--surface)",
               border: "1px solid var(--border)",
               borderRadius: "8px",
@@ -78,7 +78,7 @@ export default function LoginPageB() {
               e.currentTarget.style.borderColor = "var(--border)";
             }}
           >
-            <ArrowLeft size={14} strokeWidth={2.25} />
+            <ArrowLeft size={13} strokeWidth={2.25} />
             Sélection
           </Link>
         </div>
@@ -101,7 +101,7 @@ export default function LoginPageB() {
               maxWidth: "16ch",
             }}
           >
-            Le cockpit unifié de votre cabinet.
+            Pilotez votre cabinet avec intelligence.
           </h1>
           <p
             style={{
@@ -112,25 +112,28 @@ export default function LoginPageB() {
               marginBottom: "2.25rem",
             }}
           >
-            Primes, sinistres, trésorerie, agents IA — toutes vos sources réunies dans
-            une seule vue, en temps réel.
+            Tous vos KPIs combinés BrokerStar + Odoo, agents IA inclus, dans une vue unifiée.
           </p>
 
           <div
             style={{
               display: "flex",
               flexDirection: "column",
-              gap: "0.65rem",
+              gap: "0.6rem",
               maxWidth: "32rem",
             }}
           >
             <Feature
-              icon={<Sparkles size={14} strokeWidth={2.25} />}
-              text="KPIs combinés BrokerStar + Odoo, mis à jour en continu."
+              icon={<Sparkles size={13} strokeWidth={2.25} />}
+              text="KPIs combinés mis à jour en continu."
             />
             <Feature
-              icon={<ShieldCheck size={14} strokeWidth={2.25} />}
-              text="LLM souverain Infomaniak — données hébergées en Suisse."
+              icon={<Activity size={13} strokeWidth={2.25} />}
+              text="Strip de variations depuis la dernière session."
+            />
+            <Feature
+              icon={<ShieldCheck size={13} strokeWidth={2.25} />}
+              text="LLM souverain Infomaniak — LPD Art.16."
             />
           </div>
         </motion.div>
@@ -147,8 +150,8 @@ export default function LoginPageB() {
             flexWrap: "wrap",
           }}
         >
-          <span>Variante B — Mercury</span>
-          <span>LPD Art.16 · Infomaniak CH</span>
+          <span>Variante B — Forge</span>
+          <span>BrokerStar · Odoo · Combiné</span>
         </div>
       </aside>
 
@@ -179,16 +182,16 @@ export default function LoginPageB() {
               marginBottom: "0.4rem",
             }}
           >
-            Bienvenue, Thomas.
+            Connexion
           </h2>
           <p
             style={{
-              fontSize: "0.95rem",
+              fontSize: "0.92rem",
               color: "var(--text-3)",
               marginBottom: "2rem",
             }}
           >
-            Connectez-vous pour accéder à votre cockpit.
+            Continuez avec votre compte Cabinet Müller.
           </p>
 
           <form onSubmit={handleSubmit}>
@@ -212,11 +215,25 @@ export default function LoginPageB() {
             <div
               style={{
                 display: "flex",
-                justifyContent: "flex-end",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginTop: "-0.25rem",
                 marginBottom: "1.25rem",
-                marginTop: "-0.5rem",
               }}
             >
+              <label
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "0.4rem",
+                  fontSize: "0.78rem",
+                  color: "var(--text-2)",
+                  cursor: "pointer",
+                }}
+              >
+                <input type="checkbox" defaultChecked style={{ accentColor: "var(--accent)" }} />
+                Rester connecté
+              </label>
               <button
                 type="button"
                 style={{
@@ -225,12 +242,12 @@ export default function LoginPageB() {
                   color: "var(--accent)",
                   fontFamily: "inherit",
                   fontSize: "0.78rem",
-                  fontWeight: 500,
+                  fontWeight: 600,
                   cursor: "pointer",
                   padding: 0,
                 }}
               >
-                Mot de passe oublié ?
+                Oublié ?
               </button>
             </div>
 
@@ -244,15 +261,17 @@ export default function LoginPageB() {
                 color: "#FFFFFF",
                 border: "none",
                 borderRadius: "10px",
-                fontFamily: "var(--font-inter-tight)",
-                fontSize: "0.95rem",
+                fontFamily: "var(--font-sans)",
+                fontSize: "0.92rem",
                 fontWeight: 600,
                 cursor: loading ? "not-allowed" : "pointer",
                 display: "inline-flex",
                 justifyContent: "center",
                 alignItems: "center",
                 gap: "0.45rem",
+                letterSpacing: "-0.005em",
                 transition: "background 0.2s",
+                boxShadow: loading ? "none" : "0 2px 6px rgba(59,91,126,0.18)",
               }}
               onMouseEnter={(e) => {
                 if (!loading) e.currentTarget.style.background = "var(--accent-2)";
@@ -262,7 +281,7 @@ export default function LoginPageB() {
               }}
             >
               {loading ? "Connexion…" : "Accéder au cockpit"}
-              {!loading && <ArrowRight size={16} strokeWidth={2.25} />}
+              {!loading && <ArrowRight size={15} strokeWidth={2.25} />}
             </button>
           </form>
 
@@ -286,8 +305,8 @@ export default function LoginPageB() {
 
       <style>{`
         @media (max-width: 820px) {
-          .mercury-login { grid-template-columns: 1fr !important; }
-          .mercury-login > aside { min-height: 360px; }
+          .forge-login { grid-template-columns: 1fr !important; }
+          .forge-login > aside { min-height: 320px; }
         }
       `}</style>
     </div>
@@ -299,18 +318,19 @@ function BrandMark() {
     <div style={{ display: "inline-flex", alignItems: "center", gap: "0.65rem" }}>
       <div
         style={{
-          width: 40,
-          height: 40,
+          width: 38,
+          height: 38,
           background: "var(--accent)",
-          borderRadius: "10px",
+          color: "#FFFFFF",
+          borderRadius: "9px",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          color: "#FFFFFF",
-          fontSize: "0.95rem",
+          fontSize: "0.88rem",
           fontWeight: 700,
           letterSpacing: "-0.02em",
-          boxShadow: "0 2px 4px rgba(13,112,102,0.18)",
+          boxShadow:
+            "0 1px 2px rgba(59,91,126,0.12), inset 0 1px 0 rgba(255,255,255,0.16)",
         }}
       >
         CMA
@@ -408,7 +428,7 @@ function Field({
           background: "var(--surface)",
           border: "1px solid var(--border)",
           borderRadius: "10px",
-          fontFamily: "var(--font-inter-tight)",
+          fontFamily: "var(--font-sans)",
           fontSize: "0.92rem",
           color: "var(--text)",
           outline: "none",

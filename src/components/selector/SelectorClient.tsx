@@ -22,7 +22,7 @@ const variants: Variant[] = [
     name: "Cockpit Standard",
     reference: "Version actuelle",
     tagline:
-      "Le tableau de bord en place. Pills colorées, grille de tuiles, sidebar foncée — l'aspect actuel du cockpit Orkestra.",
+      "Le cockpit en place. Sidebar foncée, pills colorées, grille de tuiles — l'aspect actuel d'Orkestra.",
     signature: ["Sidebar foncée", "Pills source", "6 tuiles couleur"],
     swatches: ["#1E2761", "#2B3AE8", "#10B981", "#F4F6FB"],
     preview: <PreviewA />,
@@ -30,35 +30,57 @@ const variants: Variant[] = [
   {
     letter: "B",
     href: "/b/login",
-    name: "Mercury",
-    reference: "Mercury · Brex · Plaid",
+    name: "Forge",
+    reference: "Linear · Stripe Connect · Brex",
     tagline:
-      "Premium fintech. Off-white tiède, ombre douce, sparklines dans chaque KPI. La sensation d'un logiciel bancaire haut de gamme.",
-    signature: ["Top bar workspace", "Sparklines KPI", "Élévation douce"],
-    swatches: ["#FAFAF7", "#0F1419", "#0D7066", "#E7E3D8"],
-    preview: <PreviewB />,
+      "SaaS standard pro. Sidebar rail, densité maîtrisée, strip de variations « depuis hier », sparklines partout. La référence du genre.",
+    signature: ["Sidebar workspace", "Delta strip", "Sparklines inline"],
+    swatches: ["#FAFAFA", "#0F172A", "#3B5B7E", "#E5E7EB"],
+    preview: <PreviewForge />,
   },
   {
     letter: "C",
     href: "/c/login",
-    name: "Atrium",
-    reference: "Linear · Attio · Pylon",
+    name: "Halo",
+    reference: "Mercury · Stripe Atlas · Pylon",
     tagline:
-      "Outil de productivité. Densité serrée, sidebar persistante, palette de commandes (⌘K). La référence des produits B2B modernes.",
-    signature: ["Sidebar persistante", "Commande ⌘K", "Densité serrée"],
-    swatches: ["#FAFAFA", "#0A0A0A", "#4F46E5", "#E4E4E7"],
-    preview: <PreviewC />,
+      "Light tiède, typographie-driven. Pas de sidebar, beaucoup d'air, KPIs en grand, sources en filigrane. La direction « calm money software ».",
+    signature: ["Top-nav", "Numéros count-up", "Hover source breakdown"],
+    swatches: ["#FAF7F2", "#1F1E1B", "#1F6F5B", "#C9A158"],
+    preview: <PreviewHalo />,
   },
   {
     letter: "D",
     href: "/d/login",
-    name: "Bureau",
-    reference: "Ramp · Stripe · Vercel",
+    name: "Aperture",
+    reference: "Mercury Treasury · Linear Project",
     tagline:
-      "Dashboard corporate avec personnalité. Grille bento à formats mixtes, charts intégrés, histoire de couleur de marque.",
-    signature: ["Grille bento", "Charts intégrés", "Top-nav horizontale"],
-    swatches: ["#FFFFFF", "#0F172A", "#1E40AF", "#C97A3F"],
-    preview: <PreviewD />,
+      "Hero KPI avec satellites. Un grand chiffre avec chart annoté, deux petits KPIs flanquants, strip d'actions prioritaires. Le dashboard qui raconte une histoire.",
+    signature: ["Hero + satellites", "Chart annoté", "3 actions du jour"],
+    swatches: ["#FAFBFB", "#0F172A", "#1E40AF", "#DBEAFE"],
+    preview: <PreviewAperture />,
+  },
+  {
+    letter: "E",
+    href: "/e/login",
+    name: "Onyx",
+    reference: "Linear Dark · Vercel · Raycast",
+    tagline:
+      "Dark élégant, pas terminal. Trois paliers de surface, bordures presque invisibles, focus glow. La sophistication des produits modernes en mode nuit.",
+    signature: ["3 paliers surface", "Glow focus", "Indigo accent"],
+    swatches: ["#0B0C0F", "#14161B", "#818CF8", "#1B1E25"],
+    preview: <PreviewOnyx />,
+  },
+  {
+    letter: "F",
+    href: "/f/login",
+    name: "Plinth",
+    reference: "Things 3 · Cron · macOS Sonoma",
+    tagline:
+      "Élévation en strates. Cartes avec double ombre (inner tight + outer soft), chiffres à poids mixtes, transitions 220ms. La polish keynote Apple appliquée à un dashboard.",
+    signature: ["Double ombre", "Poids mixtes", "Transitions soyeuses"],
+    swatches: ["#F5F5F7", "#1D1D1F", "#5856D6", "#FBFBFD"],
+    preview: <PreviewPlinth />,
   },
 ];
 
@@ -131,14 +153,14 @@ export default function SelectorClient() {
           maxWidth: "1280px",
           width: "100%",
           margin: "0 auto",
-          padding: "clamp(2rem, 5vw, 4rem) clamp(1.5rem, 4vw, 3rem)",
+          padding: "clamp(2rem, 5vw, 3.5rem) clamp(1.5rem, 4vw, 3rem)",
         }}
       >
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-          style={{ marginBottom: "clamp(2rem, 4vw, 3rem)", maxWidth: "640px" }}
+          style={{ marginBottom: "clamp(2rem, 4vw, 2.5rem)", maxWidth: "680px" }}
         >
           <div
             style={{
@@ -150,7 +172,7 @@ export default function SelectorClient() {
               marginBottom: "0.85rem",
             }}
           >
-            Quatre directions à explorer
+            Six directions à explorer
           </div>
           <h1
             style={{
@@ -163,7 +185,7 @@ export default function SelectorClient() {
               marginBottom: "0.75rem",
             }}
           >
-            Choisissez la direction de design à présenter au client.
+            Choisissez la direction de design à présenter.
           </h1>
           <p
             style={{
@@ -173,9 +195,8 @@ export default function SelectorClient() {
               margin: 0,
             }}
           >
-            Le même cockpit, quatre langues visuelles. Sources, KPIs et flux identiques —
-            seuls changent l&apos;ambiance et la grammaire produit. Cliquez pour ouvrir
-            une direction.
+            Le même cockpit, six langues visuelles. Mêmes KPIs, mêmes sources, mêmes flux —
+            seuls changent l&apos;ambiance, la densité et la grammaire produit.
           </p>
         </motion.div>
 
@@ -183,8 +204,8 @@ export default function SelectorClient() {
           className="selector-grid"
           style={{
             display: "grid",
-            gridTemplateColumns: "repeat(2, 1fr)",
-            gap: "clamp(1rem, 2vw, 1.5rem)",
+            gridTemplateColumns: "repeat(3, 1fr)",
+            gap: "clamp(1rem, 2vw, 1.25rem)",
           }}
         >
           {variants.map((v, i) => (
@@ -193,7 +214,7 @@ export default function SelectorClient() {
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{
-                delay: 0.1 + i * 0.06,
+                delay: 0.08 + i * 0.06,
                 duration: 0.5,
                 ease: [0.22, 1, 0.36, 1],
               }}
@@ -228,7 +249,10 @@ export default function SelectorClient() {
       </footer>
 
       <style>{`
-        @media (max-width: 820px) {
+        @media (max-width: 1100px) {
+          .selector-grid { grid-template-columns: repeat(2, 1fr) !important; }
+        }
+        @media (max-width: 700px) {
           .selector-grid { grid-template-columns: 1fr !important; }
         }
       `}</style>
@@ -264,10 +288,9 @@ function VariantCard({ variant }: { variant: Variant }) {
           transition: "border-color 0.2s, box-shadow 0.2s",
         }}
       >
-        {/* Preview area */}
         <div
           style={{
-            height: "188px",
+            height: "168px",
             borderBottom: "1px solid #E5E7EB",
             position: "relative",
             overflow: "hidden",
@@ -276,14 +299,13 @@ function VariantCard({ variant }: { variant: Variant }) {
           {variant.preview}
         </div>
 
-        {/* Content */}
         <div
           style={{
-            padding: "1.25rem 1.4rem 1.4rem",
+            padding: "1.1rem 1.25rem 1.25rem",
             display: "flex",
             flexDirection: "column",
             flex: 1,
-            gap: "0.85rem",
+            gap: "0.75rem",
           }}
         >
           <div
@@ -291,27 +313,27 @@ function VariantCard({ variant }: { variant: Variant }) {
               display: "flex",
               justifyContent: "space-between",
               alignItems: "baseline",
-              gap: "0.75rem",
+              gap: "0.5rem",
             }}
           >
-            <div style={{ display: "flex", alignItems: "baseline", gap: "0.75rem" }}>
+            <div style={{ display: "flex", alignItems: "baseline", gap: "0.65rem" }}>
               <span
                 style={{
-                  fontSize: "0.7rem",
+                  fontSize: "0.66rem",
                   fontWeight: 700,
                   letterSpacing: "0.18em",
                   textTransform: "uppercase",
                   color: "#94A3B8",
                   background: "#F1F5F9",
-                  padding: "0.15rem 0.45rem",
+                  padding: "0.12rem 0.4rem",
                   borderRadius: "4px",
                 }}
               >
-                Variante {variant.letter}
+                {variant.letter}
               </span>
               <h2
                 style={{
-                  fontSize: "1.15rem",
+                  fontSize: "1.05rem",
                   fontWeight: 600,
                   color: "#0F172A",
                   letterSpacing: "-0.015em",
@@ -321,21 +343,12 @@ function VariantCard({ variant }: { variant: Variant }) {
                 {variant.name}
               </h2>
             </div>
-            <span
-              style={{
-                fontSize: "0.7rem",
-                color: "#64748B",
-                fontWeight: 500,
-              }}
-            >
-              {variant.reference}
-            </span>
           </div>
 
           <p
             style={{
-              fontSize: "0.86rem",
-              lineHeight: 1.55,
+              fontSize: "0.78rem",
+              lineHeight: 1.5,
               color: "#475569",
               margin: 0,
               flex: 1,
@@ -344,15 +357,27 @@ function VariantCard({ variant }: { variant: Variant }) {
             {variant.tagline}
           </p>
 
+          <div
+            style={{
+              fontSize: "0.66rem",
+              fontWeight: 500,
+              color: "#94A3B8",
+              letterSpacing: "0.04em",
+              fontStyle: "italic",
+            }}
+          >
+            inspiré de — {variant.reference}
+          </div>
+
           <div style={{ display: "flex", gap: "0.4rem", alignItems: "center" }}>
-            <div style={{ display: "flex", gap: "0.25rem" }}>
+            <div style={{ display: "flex", gap: "0.2rem" }}>
               {variant.swatches.map((c) => (
                 <span
                   key={c}
                   title={c}
                   style={{
-                    width: 14,
-                    height: 14,
+                    width: 12,
+                    height: 12,
                     borderRadius: "3px",
                     background: c,
                     border: "1px solid rgba(15,23,42,0.08)",
@@ -365,23 +390,23 @@ function VariantCard({ variant }: { variant: Variant }) {
               style={{
                 display: "inline-flex",
                 alignItems: "center",
-                gap: "0.3rem",
-                fontSize: "0.78rem",
+                gap: "0.25rem",
+                fontSize: "0.74rem",
                 fontWeight: 600,
                 color: "#2563EB",
               }}
             >
               Explorer
-              <ArrowUpRight size={14} strokeWidth={2.25} />
+              <ArrowUpRight size={13} strokeWidth={2.25} />
             </span>
           </div>
 
           <div
             style={{
               display: "flex",
-              gap: "0.4rem",
+              gap: "0.35rem",
               flexWrap: "wrap",
-              paddingTop: "0.75rem",
+              paddingTop: "0.6rem",
               borderTop: "1px solid #F1F5F9",
             }}
           >
@@ -389,12 +414,12 @@ function VariantCard({ variant }: { variant: Variant }) {
               <span
                 key={s}
                 style={{
-                  fontSize: "0.68rem",
+                  fontSize: "0.66rem",
                   fontWeight: 500,
                   color: "#64748B",
                   background: "#F8FAFC",
                   border: "1px solid #E2E8F0",
-                  padding: "0.2rem 0.5rem",
+                  padding: "0.18rem 0.45rem",
                   borderRadius: "100px",
                 }}
               >
@@ -408,62 +433,63 @@ function VariantCard({ variant }: { variant: Variant }) {
   );
 }
 
+/* ─── Previews ─── */
+
 function PreviewA() {
   return (
     <div style={{ position: "absolute", inset: 0, background: "#F4F6FB", display: "flex" }}>
-      <div style={{ width: 42, background: "#1E2761", padding: "10px 6px" }}>
+      <div style={{ width: 36, background: "#1E2761", padding: "8px 5px" }}>
         {[0, 1, 2, 3].map((i) => (
           <div
             key={i}
             style={{
-              height: 6,
-              width: "70%",
-              background: i === 0 ? "#2B3AE8" : "rgba(255,255,255,0.18)",
+              height: 5,
+              width: "75%",
+              background: i === 0 ? "#2B3AE8" : "rgba(255,255,255,0.16)",
               borderRadius: 2,
-              marginBottom: 7,
+              marginBottom: 6,
             }}
           />
         ))}
       </div>
-      <div style={{ flex: 1, padding: "14px 14px" }}>
-        <div style={{ display: "flex", gap: 4, marginBottom: 10 }}>
+      <div style={{ flex: 1, padding: "12px 12px" }}>
+        <div style={{ display: "flex", gap: 3, marginBottom: 8 }}>
           {["#2563EB", "#7C3AED", "#10B981"].map((c) => (
             <span
               key={c}
               style={{
-                fontSize: 0,
-                width: 36,
-                height: 12,
-                borderRadius: 12,
+                width: 28,
+                height: 9,
+                borderRadius: 9,
                 background: c,
-                opacity: 0.18,
+                opacity: 0.2,
                 border: `1px solid ${c}`,
               }}
             />
           ))}
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 6, marginBottom: 8 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 5, marginBottom: 7 }}>
           {[1, 2, 3, 4].map((i) => (
             <div
               key={i}
               style={{
-                height: 28,
+                height: 22,
                 background: "#FFFFFF",
                 border: "1px solid #E4E7F0",
-                borderRadius: 6,
+                borderRadius: 5,
               }}
             />
           ))}
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 6 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 5 }}>
           {["#028090", "#10B981", "#EF4444"].map((c) => (
             <div
               key={c}
               style={{
-                height: 56,
+                height: 48,
                 background: "#FFFFFF",
                 border: "1px solid #E4E7F0",
-                borderRadius: 8,
+                borderRadius: 6,
                 borderTop: `3px solid ${c}`,
               }}
             />
@@ -474,143 +500,79 @@ function PreviewA() {
   );
 }
 
-function PreviewB() {
-  return (
-    <div style={{ position: "absolute", inset: 0, background: "#FAFAF7", padding: "14px 16px" }}>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: 14,
-          padding: "0 0 8px",
-          borderBottom: "1px solid #E7E3D8",
-        }}
-      >
-        <span style={{ fontSize: 9, fontWeight: 600, color: "#0F1419" }}>CMA · Cockpit</span>
-        <span style={{ fontSize: 8, color: "#6B7280" }}>⌘K</span>
-      </div>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8, marginBottom: 10 }}>
-        {[1, 2, 3].map((i) => (
-          <div
-            key={i}
-            style={{
-              background: "#FFFFFF",
-              border: "1px solid #E7E3D8",
-              borderRadius: 8,
-              padding: 8,
-              boxShadow: "0 1px 2px rgba(15,20,25,0.04)",
-            }}
-          >
-            <div style={{ fontSize: 7, color: "#6B7280", marginBottom: 2 }}>KPI {i}</div>
-            <div style={{ fontSize: 11, fontWeight: 600, color: "#0F1419" }}>92.4K</div>
-            <svg viewBox="0 0 50 12" style={{ width: "100%", height: 10, marginTop: 4 }}>
-              <polyline
-                points="0,10 8,7 16,8 24,5 32,6 40,3 50,2"
-                fill="none"
-                stroke="#0D7066"
-                strokeWidth="1.2"
-              />
-            </svg>
-          </div>
-        ))}
-      </div>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}>
-        {[1, 2, 3].map((i) => (
-          <div
-            key={i}
-            style={{
-              background: "#FFFFFF",
-              border: "1px solid #E7E3D8",
-              borderRadius: 8,
-              padding: 8,
-              height: 50,
-              boxShadow: "0 1px 2px rgba(15,20,25,0.04)",
-            }}
-          >
-            <div style={{ width: 16, height: 16, background: "#E5F1EF", borderRadius: 4, marginBottom: 4 }} />
-            <div style={{ fontSize: 7, color: "#6B7280" }}>Domaine {i}</div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function PreviewC() {
+function PreviewForge() {
   return (
     <div style={{ position: "absolute", inset: 0, background: "#FAFAFA", display: "flex" }}>
-      <div style={{ width: 50, background: "#F4F4F5", padding: "10px 6px", borderRight: "1px solid #E4E4E7" }}>
-        <div style={{ height: 8, background: "#E4E4E7", borderRadius: 2, marginBottom: 8 }} />
+      <div style={{ width: 44, background: "#F4F4F5", borderRight: "1px solid #E5E7EB", padding: "8px 5px" }}>
+        <div style={{ width: 18, height: 18, background: "#0F172A", borderRadius: 4, marginBottom: 10 }} />
         {[0, 1, 2, 3, 4].map((i) => (
           <div
             key={i}
             style={{
-              height: 6,
-              background: i === 1 ? "#4F46E5" : "#D4D4D8",
-              opacity: i === 1 ? 1 : 0.5,
+              height: 5,
+              width: i === 0 ? "85%" : "70%",
+              background: i === 0 ? "#3B5B7E" : "#D4D4D8",
+              opacity: i === 0 ? 1 : 0.65,
               borderRadius: 2,
-              marginBottom: 6,
-              width: "85%",
+              marginBottom: 5,
             }}
           />
         ))}
       </div>
-      <div style={{ flex: 1, padding: "12px 14px" }}>
+      <div style={{ flex: 1, padding: "11px 12px" }}>
         <div
           style={{
+            fontSize: 8,
+            color: "#475569",
+            marginBottom: 6,
             display: "flex",
-            justifyContent: "space-between",
             alignItems: "center",
-            marginBottom: 10,
-            paddingBottom: 6,
-            borderBottom: "1px solid #E4E4E7",
+            gap: 4,
           }}
         >
-          <span style={{ fontSize: 8, color: "#0A0A0A", fontWeight: 500 }}>Vue ▸ Aujourd&apos;hui</span>
-          <span
-            style={{
-              fontSize: 7,
-              border: "1px solid #E4E4E7",
-              padding: "1px 4px",
-              borderRadius: 3,
-              color: "#71717A",
-              background: "#FFFFFF",
-            }}
-          >
-            ⌘K
-          </span>
+          <span style={{ color: "#3B5B7E", fontWeight: 600 }}>↑ 4 changements depuis hier</span>
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 4, marginBottom: 10 }}>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(5, 1fr)",
+            background: "#FFFFFF",
+            border: "1px solid #E5E7EB",
+            borderRadius: 6,
+            overflow: "hidden",
+            marginBottom: 8,
+          }}
+        >
           {[1, 2, 3, 4, 5].map((i) => (
-            <div key={i}>
-              <div style={{ fontSize: 6, color: "#71717A", marginBottom: 1 }}>L{i}</div>
-              <div style={{ fontSize: 8, fontWeight: 600, color: "#0A0A0A" }}>189</div>
-              <svg viewBox="0 0 30 8" style={{ width: "100%", height: 6, marginTop: 2 }}>
-                <polyline
-                  points="0,7 5,5 10,6 15,4 20,5 25,3 30,4"
-                  fill="none"
-                  stroke="#4F46E5"
-                  strokeWidth="1"
-                />
+            <div
+              key={i}
+              style={{
+                padding: 6,
+                borderRight: i < 5 ? "1px solid #E5E7EB" : "none",
+              }}
+            >
+              <div style={{ fontSize: 5, color: "#94A3B8", marginBottom: 2 }}>kpi {i}</div>
+              <div style={{ fontSize: 9, fontWeight: 700, color: "#0F172A" }}>92K</div>
+              <svg viewBox="0 0 24 8" style={{ width: "100%", height: 5, marginTop: 1 }}>
+                <polyline points="0,7 4,5 8,6 12,4 16,5 20,3 24,2" fill="none" stroke="#3B5B7E" strokeWidth="1" />
               </svg>
             </div>
           ))}
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 6 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 5 }}>
           {[1, 2, 3].map((i) => (
             <div
               key={i}
               style={{
                 background: "#FFFFFF",
-                border: "1px solid #E4E4E7",
+                border: "1px solid #E5E7EB",
                 borderRadius: 6,
                 padding: 6,
-                height: 40,
+                height: 44,
               }}
             >
-              <div style={{ width: 12, height: 12, background: "#EEF2FF", borderRadius: 3, marginBottom: 3 }} />
-              <div style={{ fontSize: 7, color: "#71717A" }}>Tile {i}</div>
+              <div style={{ width: 12, height: 12, background: "#DBEAFE", borderRadius: 3, marginBottom: 3 }} />
+              <div style={{ fontSize: 6, color: "#475569" }}>domaine</div>
             </div>
           ))}
         </div>
@@ -619,114 +581,330 @@ function PreviewC() {
   );
 }
 
-function PreviewD() {
+function PreviewHalo() {
   return (
-    <div style={{ position: "absolute", inset: 0, background: "#FFFFFF", padding: "10px 12px" }}>
+    <div style={{ position: "absolute", inset: 0, background: "#FAF7F2", padding: "11px 14px" }}>
       <div
         style={{
           display: "flex",
-          gap: 12,
-          fontSize: 7,
-          paddingBottom: 6,
-          borderBottom: "2px solid #1E40AF",
-          color: "#475569",
+          justifyContent: "space-between",
+          alignItems: "center",
           marginBottom: 12,
-          fontWeight: 500,
+          paddingBottom: 6,
+          borderBottom: "1px solid #EAE3D4",
         }}
       >
-        <span style={{ color: "#1E40AF", fontWeight: 600 }}>CMA</span>
-        <span>Vue</span>
-        <span>Domaines</span>
-        <span>Agents</span>
-        <span>Rapports</span>
+        <span style={{ fontSize: 8, color: "#1F1E1B", fontWeight: 600 }}>◆ CMA</span>
+        <div style={{ display: "flex", gap: 5, fontSize: 6, color: "#807B72" }}>
+          <span>Vue</span>
+          <span>Domaines</span>
+          <span>Agents</span>
+        </div>
+        <span style={{ fontSize: 6, color: "#807B72" }}>TM</span>
+      </div>
+      <div style={{ textAlign: "center", marginBottom: 12 }}>
+        <div style={{ fontSize: 8, color: "#807B72", fontWeight: 500, marginBottom: 5 }}>
+          Bonjour Thomas.
+        </div>
+        <div style={{ display: "flex", justifyContent: "space-around", gap: 8, marginTop: 6 }}>
+          {[
+            { v: "92.4K", l: "CA mensuel" },
+            { v: "68%", l: "Marge" },
+            { v: "+18K", l: "Cash" },
+          ].map((kpi) => (
+            <div key={kpi.l} style={{ textAlign: "center" }}>
+              <div style={{ fontSize: 11, fontWeight: 600, color: "#1F1E1B", letterSpacing: "-0.02em" }}>
+                {kpi.v}
+              </div>
+              <div style={{ fontSize: 5, color: "#807B72", marginTop: 2 }}>{kpi.l}</div>
+            </div>
+          ))}
+        </div>
       </div>
       <div
         style={{
-          display: "grid",
-          gridTemplateColumns: "1.6fr 1fr 0.8fr",
-          gridTemplateRows: "auto auto",
-          gap: 6,
+          height: 1,
+          background: "#EAE3D4",
+          marginBottom: 8,
+        }}
+      />
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 5 }}>
+        {[1, 2, 3].map((i) => (
+          <div
+            key={i}
+            style={{
+              background: "#FFFFFF",
+              border: "1px solid #EAE3D4",
+              borderRadius: 6,
+              padding: 5,
+              height: 38,
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "space-between",
+            }}
+          >
+            <div style={{ fontSize: 5, color: "#807B72" }}>tuile</div>
+            <div style={{ fontSize: 8, fontWeight: 600, color: "#1F1E1B" }}>18 %</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function PreviewAperture() {
+  return (
+    <div style={{ position: "absolute", inset: 0, background: "#FAFBFB", padding: "11px 12px" }}>
+      <div
+        style={{
+          fontSize: 7,
+          color: "#0F172A",
+          fontWeight: 600,
+          marginBottom: 8,
         }}
       >
+        Bonjour Thomas — Mai 2026
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "1.7fr 1fr", gap: 6, marginBottom: 6 }}>
         <div
           style={{
-            gridRow: "span 2",
-            background: "#F8FAFC",
+            background: "#FFFFFF",
             border: "1px solid #E2E8F0",
             borderRadius: 6,
-            padding: 8,
-            minHeight: 100,
+            padding: 7,
+            position: "relative",
           }}
         >
-          <div style={{ fontSize: 7, color: "#64748B", marginBottom: 2 }}>CA mensuel</div>
-          <div style={{ fontSize: 13, fontWeight: 700, color: "#0F172A" }}>92 400</div>
-          <svg viewBox="0 0 100 30" style={{ width: "100%", height: 50, marginTop: 4 }}>
+          <div style={{ fontSize: 5, color: "#64748B", marginBottom: 1 }}>CA mensuel ⊕</div>
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0F172A", letterSpacing: "-0.02em" }}>
+            92 400
+          </div>
+          <div style={{ fontSize: 5, color: "#059669", marginBottom: 4 }}>↗ +12 % YoY</div>
+          <svg viewBox="0 0 120 30" style={{ width: "100%", height: 28 }}>
             <defs>
-              <linearGradient id="d-grad" x1="0" x2="0" y1="0" y2="1">
+              <linearGradient id="sel-ap-grad" x1="0" x2="0" y1="0" y2="1">
                 <stop offset="0%" stopColor="#1E40AF" stopOpacity="0.3" />
                 <stop offset="100%" stopColor="#1E40AF" stopOpacity="0" />
               </linearGradient>
             </defs>
             <path
-              d="M 0 22 L 12 18 L 24 20 L 36 14 L 48 16 L 60 10 L 72 12 L 84 6 L 100 4 L 100 30 L 0 30 Z"
-              fill="url(#d-grad)"
+              d="M 0 24 L 12 20 L 24 22 L 36 16 L 48 18 L 60 12 L 72 14 L 84 8 L 96 10 L 108 5 L 120 4 L 120 30 L 0 30 Z"
+              fill="url(#sel-ap-grad)"
             />
             <polyline
-              points="0,22 12,18 24,20 36,14 48,16 60,10 72,12 84,6 100,4"
+              points="0,24 12,20 24,22 36,16 48,18 60,12 72,14 84,8 96,10 108,5 120,4"
               fill="none"
               stroke="#1E40AF"
-              strokeWidth="1.5"
+              strokeWidth="1.4"
             />
+            <circle cx="60" cy="12" r="2" fill="#1E40AF" />
+            <circle cx="84" cy="8" r="2" fill="#1E40AF" />
           </svg>
         </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+          <div
+            style={{
+              flex: 1,
+              background: "#FFFFFF",
+              border: "1px solid #E2E8F0",
+              borderRadius: 6,
+              padding: 5,
+            }}
+          >
+            <div style={{ fontSize: 5, color: "#64748B" }}>Marge</div>
+            <div style={{ fontSize: 9, fontWeight: 700, color: "#0F172A" }}>68 %</div>
+          </div>
+          <div
+            style={{
+              flex: 1,
+              background: "#FFFFFF",
+              border: "1px solid #E2E8F0",
+              borderRadius: 6,
+              padding: 5,
+            }}
+          >
+            <div style={{ fontSize: 5, color: "#64748B" }}>Cash</div>
+            <div style={{ fontSize: 9, fontWeight: 700, color: "#0F172A" }}>+18K</div>
+          </div>
+        </div>
+      </div>
+      <div
+        style={{
+          background: "#EFF6FF",
+          border: "1px solid #DBEAFE",
+          borderRadius: 5,
+          padding: "5px 7px",
+          fontSize: 6,
+        }}
+      >
+        <div style={{ color: "#1E40AF", fontWeight: 700, marginBottom: 2 }}>
+          Trois choses aujourd&apos;hui →
+        </div>
+        <div style={{ color: "#475569", lineHeight: 1.4 }}>
+          · Valider 4 renouvellements
+          <br />· Relancer Rossi SA
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PreviewOnyx() {
+  return (
+    <div style={{ position: "absolute", inset: 0, background: "#0B0C0F", display: "flex" }}>
+      <div
+        style={{
+          width: 44,
+          background: "#14161B",
+          borderRight: "1px solid rgba(255,255,255,0.07)",
+          padding: "8px 5px",
+        }}
+      >
+        <div style={{ width: 18, height: 18, background: "#818CF8", borderRadius: 4, marginBottom: 10 }} />
+        {[0, 1, 2, 3, 4].map((i) => (
+          <div
+            key={i}
+            style={{
+              height: 5,
+              width: i === 0 ? "85%" : "70%",
+              background: i === 0 ? "#818CF8" : "rgba(255,255,255,0.18)",
+              borderRadius: 2,
+              marginBottom: 5,
+              opacity: i === 0 ? 1 : 0.7,
+            }}
+          />
+        ))}
+      </div>
+      <div style={{ flex: 1, padding: "11px 12px" }}>
         <div
           style={{
-            background: "#F8FAFC",
-            border: "1px solid #E2E8F0",
-            borderRadius: 6,
-            padding: 6,
+            fontSize: 8,
+            color: "#E5E7EB",
+            fontWeight: 500,
+            marginBottom: 8,
           }}
         >
-          <div style={{ fontSize: 6, color: "#64748B" }}>Sinistres</div>
-          <div style={{ fontSize: 11, fontWeight: 700, color: "#DC2626" }}>3</div>
-          <div style={{ fontSize: 6, color: "#DC2626" }}>1 urgent</div>
+          Vue · Aujourd&apos;hui
         </div>
-        <div
-          style={{
-            background: "#F8FAFC",
-            border: "1px solid #E2E8F0",
-            borderRadius: 6,
-            padding: 6,
-          }}
-        >
-          <div style={{ fontSize: 6, color: "#64748B" }}>Marge</div>
-          <div style={{ fontSize: 11, fontWeight: 700, color: "#0F172A" }}>68%</div>
-          <div style={{ fontSize: 6, color: "#059669" }}>↗ +4pt</div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 4, marginBottom: 8 }}>
+          {[1, 2, 3, 4].map((i) => (
+            <div
+              key={i}
+              style={{
+                background: "#14161B",
+                border: "1px solid rgba(255,255,255,0.07)",
+                borderRadius: 5,
+                padding: 5,
+                boxShadow: "inset 0 1px 0 rgba(255,255,255,0.04)",
+              }}
+            >
+              <div style={{ fontSize: 5, color: "#94A3B8", marginBottom: 1 }}>kpi {i}</div>
+              <div style={{ fontSize: 8, fontWeight: 600, color: "#E5E7EB" }}>92K</div>
+              <svg viewBox="0 0 30 8" style={{ width: "100%", height: 5, marginTop: 1 }}>
+                <polyline points="0,7 5,5 10,6 15,4 20,5 25,3 30,2" fill="none" stroke="#818CF8" strokeWidth="1" />
+              </svg>
+            </div>
+          ))}
         </div>
-        <div
-          style={{
-            background: "#F8FAFC",
-            border: "1px solid #E2E8F0",
-            borderRadius: 6,
-            padding: 6,
-            gridColumn: "span 2",
-          }}
-        >
-          <div style={{ fontSize: 6, color: "#64748B", marginBottom: 2 }}>Rétention</div>
-          <svg viewBox="0 0 50 14" style={{ width: "100%", height: 18 }}>
-            {[2, 4, 3, 6, 5, 8, 7, 9].map((v, i) => (
-              <rect
-                key={i}
-                x={i * 6.2}
-                y={14 - v}
-                width={4}
-                height={v}
-                fill="#1E40AF"
-                opacity={0.85}
-              />
-            ))}
-          </svg>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 4 }}>
+          {[1, 2, 3].map((i) => (
+            <div
+              key={i}
+              style={{
+                background: "#14161B",
+                border: "1px solid rgba(255,255,255,0.07)",
+                borderRadius: 5,
+                padding: 5,
+                height: 32,
+                boxShadow: "inset 0 1px 0 rgba(255,255,255,0.04)",
+              }}
+            >
+              <div style={{ width: 10, height: 10, background: "rgba(129,140,248,0.18)", borderRadius: 3 }} />
+            </div>
+          ))}
         </div>
+      </div>
+    </div>
+  );
+}
+
+function PreviewPlinth() {
+  return (
+    <div style={{ position: "absolute", inset: 0, background: "#F5F5F7", padding: "12px 14px" }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: 10,
+        }}
+      >
+        <span style={{ fontSize: 8, color: "#1D1D1F", fontWeight: 600 }}>CMA · Cockpit</span>
+        <span style={{ fontSize: 5, color: "#86868B" }}>TM</span>
+      </div>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "1fr 1fr",
+          gap: 8,
+          marginBottom: 8,
+        }}
+      >
+        {[
+          { v: "92 400", l: "CA mensuel", t: "+12 %" },
+          { v: "68 %", l: "Marge nette", t: "+4 pt" },
+        ].map((k) => (
+          <div
+            key={k.l}
+            style={{
+              background: "#FFFFFF",
+              borderRadius: 8,
+              padding: 7,
+              boxShadow:
+                "inset 0 1px 0 rgba(255,255,255,1), 0 0 0 1px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.05), 0 6px 14px -10px rgba(0,0,0,0.12)",
+            }}
+          >
+            <div style={{ fontSize: 5, color: "#86868B", marginBottom: 2 }}>{k.l}</div>
+            <div
+              style={{
+                fontSize: 13,
+                fontWeight: 600,
+                color: "#1D1D1F",
+                letterSpacing: "-0.02em",
+              }}
+            >
+              {k.v.split(" ")[0]}{" "}
+              <span style={{ fontSize: 8, fontWeight: 500, color: "#86868B" }}>{k.v.split(" ")[1] ?? ""}</span>
+            </div>
+            <div style={{ fontSize: 5, color: "#34A853", marginTop: 2 }}>↗ {k.t}</div>
+          </div>
+        ))}
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 6 }}>
+        {[1, 2, 3].map((i) => (
+          <div
+            key={i}
+            style={{
+              background: "#FFFFFF",
+              borderRadius: 7,
+              height: 38,
+              padding: 5,
+              boxShadow:
+                "inset 0 1px 0 rgba(255,255,255,1), 0 0 0 1px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.05), 0 6px 14px -10px rgba(0,0,0,0.12)",
+            }}
+          >
+            <div
+              style={{
+                width: 12,
+                height: 12,
+                background: "rgba(88,86,214,0.14)",
+                borderRadius: 3,
+                marginBottom: 3,
+              }}
+            />
+            <div style={{ fontSize: 5, color: "#86868B" }}>tuile</div>
+          </div>
+        ))}
       </div>
     </div>
   );

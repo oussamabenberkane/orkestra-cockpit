@@ -3,29 +3,29 @@
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import type { ModalKey } from "@/lib/types";
 import { modalData } from "@/lib/modal-data";
-import { X, ArrowRight } from "lucide-react";
+import { X, ArrowRight, Hash } from "lucide-react";
 
-interface MercuryModalProps {
+interface ForgeModalProps {
   open: boolean;
   modalKey: ModalKey | null;
   onClose: () => void;
 }
 
-const sectionTag: Record<ModalKey, string> = {
-  finance: "Finance",
-  vue360: "Vue d'ensemble",
-  sinistres: "Sinistres",
-  prospection: "Prospection",
-  portefeuille: "Portefeuille",
-  agents: "Agents IA",
-  rapport: "Rapport",
+const refMap: Record<ModalKey, string> = {
+  prospection: "DOM-01",
+  portefeuille: "DOM-02",
+  sinistres: "DOM-03",
+  finance: "DOM-04",
+  vue360: "DOM-05",
+  agents: "DOM-06",
+  rapport: "AGT-03",
 };
 
 function stripLeadingEmoji(s: string) {
   return s.replace(/^[\p{Emoji_Presentation}\p{Extended_Pictographic}\s·—•]+/u, "").trim();
 }
 
-export default function MercuryModal({ open, modalKey, onClose }: MercuryModalProps) {
+export default function ForgeModal({ open, modalKey, onClose }: ForgeModalProps) {
   const data = modalKey ? modalData[modalKey] : null;
   if (!data || !modalKey) return null;
 
@@ -41,45 +41,40 @@ export default function MercuryModal({ open, modalKey, onClose }: MercuryModalPr
           border: "1px solid var(--border)",
           borderRadius: "12px",
           padding: 0,
-          maxWidth: "560px",
+          maxWidth: "580px",
           width: "92vw",
-          fontFamily: "var(--font-inter-tight)",
+          fontFamily: "var(--font-sans)",
           color: "var(--text)",
           boxShadow:
-            "0 24px 60px -16px rgba(15,20,25,0.18), 0 8px 20px -8px rgba(15,20,25,0.08)",
+            "0 24px 60px -16px rgba(15,23,42,0.16), 0 8px 20px -10px rgba(15,23,42,0.08)",
           overflow: "hidden",
         }}
       >
         <div
           style={{
-            padding: "1.25rem 1.4rem 0.75rem",
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
-            gap: "1rem",
+            gap: "0.5rem",
+            padding: "0.85rem 1.1rem",
             borderBottom: "1px solid var(--border)",
+            background: "var(--surface-2)",
           }}
         >
-          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-            <span
-              style={{
-                width: 6,
-                height: 6,
-                borderRadius: "50%",
-                background: "var(--accent)",
-              }}
-            />
-            <span
-              style={{
-                fontSize: "0.74rem",
-                fontWeight: 600,
-                color: "var(--text-2)",
-                letterSpacing: "-0.005em",
-              }}
-            >
-              {sectionTag[modalKey]}
-            </span>
-          </div>
+          <span
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "0.4rem",
+              fontFamily: "var(--font-mono)",
+              fontSize: "0.74rem",
+              color: "var(--text-3)",
+              letterSpacing: "0.02em",
+            }}
+          >
+            <Hash size={12} strokeWidth={2} />
+            {refMap[modalKey]}
+          </span>
           <button
             onClick={onClose}
             aria-label="Fermer"
@@ -87,23 +82,32 @@ export default function MercuryModal({ open, modalKey, onClose }: MercuryModalPr
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              width: 28,
-              height: 28,
-              background: "var(--surface-2)",
+              width: 26,
+              height: 26,
+              background: "var(--surface)",
               border: "1px solid var(--border)",
               borderRadius: "6px",
-              color: "var(--text-2)",
+              color: "var(--text-3)",
               cursor: "pointer",
+              transition: "color 0.15s, border-color 0.15s",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.color = "var(--text)";
+              e.currentTarget.style.borderColor = "var(--border-strong)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.color = "var(--text-3)";
+              e.currentTarget.style.borderColor = "var(--border)";
             }}
           >
-            <X size={14} strokeWidth={2.25} />
+            <X size={13} strokeWidth={2.25} />
           </button>
         </div>
 
-        <div style={{ padding: "1.25rem 1.4rem 0.5rem" }}>
+        <div style={{ padding: "1.25rem 1.4rem 0.6rem" }}>
           <h2
             style={{
-              fontSize: "1.35rem",
+              fontSize: "1.3rem",
               fontWeight: 600,
               letterSpacing: "-0.02em",
               color: "var(--text)",
@@ -121,6 +125,7 @@ export default function MercuryModal({ open, modalKey, onClose }: MercuryModalPr
               color: "var(--text-2)",
               margin: 0,
               marginBottom: "1rem",
+              maxWidth: "52ch",
             }}
           >
             {data.body}
@@ -130,10 +135,10 @@ export default function MercuryModal({ open, modalKey, onClose }: MercuryModalPr
         <pre
           style={{
             margin: "0 1.4rem 1.25rem",
-            padding: "0.9rem 1rem",
-            fontFamily: "var(--font-jbmono), monospace",
+            padding: "0.85rem 1rem",
+            fontFamily: "var(--font-mono), monospace",
             fontSize: "0.78rem",
-            lineHeight: 1.7,
+            lineHeight: 1.75,
             color: "var(--text-2)",
             background: "var(--surface-2)",
             border: "1px solid var(--border)",
@@ -153,7 +158,7 @@ export default function MercuryModal({ open, modalKey, onClose }: MercuryModalPr
             gap: "0.5rem",
             padding: "0.85rem 1.4rem",
             borderTop: "1px solid var(--border)",
-            background: "var(--bg)",
+            background: "var(--surface-2)",
           }}
         >
           <button
@@ -163,7 +168,7 @@ export default function MercuryModal({ open, modalKey, onClose }: MercuryModalPr
               background: "var(--surface)",
               border: "1px solid var(--border)",
               color: "var(--text-2)",
-              fontFamily: "var(--font-inter-tight)",
+              fontFamily: "var(--font-sans)",
               fontSize: "0.82rem",
               fontWeight: 500,
               cursor: "pointer",
@@ -178,7 +183,7 @@ export default function MercuryModal({ open, modalKey, onClose }: MercuryModalPr
               background: "var(--accent)",
               border: "1px solid var(--accent)",
               color: "#FFFFFF",
-              fontFamily: "var(--font-inter-tight)",
+              fontFamily: "var(--font-sans)",
               fontSize: "0.82rem",
               fontWeight: 600,
               cursor: "pointer",
@@ -192,7 +197,7 @@ export default function MercuryModal({ open, modalKey, onClose }: MercuryModalPr
             onMouseLeave={(e) => (e.currentTarget.style.background = "var(--accent)")}
           >
             {data.cta}
-            <ArrowRight size={14} strokeWidth={2.25} />
+            <ArrowRight size={13} strokeWidth={2.25} />
           </button>
         </div>
       </DialogContent>

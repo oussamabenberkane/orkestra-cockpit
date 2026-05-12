@@ -1,14 +1,14 @@
 import { Inter_Tight, JetBrains_Mono } from "next/font/google";
 
 const interTight = Inter_Tight({
-  variable: "--font-inter-tight",
+  variable: "--font-sans",
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
   display: "swap",
 });
 
 const jetBrainsMono = JetBrains_Mono({
-  variable: "--font-jbmono",
+  variable: "--font-mono",
   subsets: ["latin"],
   weight: ["400", "500", "600"],
   display: "swap",
@@ -23,32 +23,33 @@ export default function DesignBLayout({
     <div
       className={`${interTight.variable} ${jetBrainsMono.variable}`}
       style={{
-        fontFamily: "var(--font-inter-tight), system-ui, sans-serif",
-        background: "#FAFAF7",
-        color: "#0F1419",
+        fontFamily: "var(--font-sans), system-ui, sans-serif",
+        background: "#F8FAFC",
+        color: "#0F172A",
         minHeight: "100vh",
-        ["--bg" as string]: "#FAFAF7",
+        ["--bg" as string]: "#F8FAFC",
+        ["--sidebar-bg" as string]: "#F1F5F9",
         ["--surface" as string]: "#FFFFFF",
-        ["--surface-2" as string]: "#F4F2EC",
-        ["--surface-3" as string]: "#EEEAE0",
-        ["--border" as string]: "#E7E3D8",
-        ["--border-strong" as string]: "#D6D0C0",
-        ["--text" as string]: "#0F1419",
-        ["--text-2" as string]: "#404652",
-        ["--text-3" as string]: "#6B7280",
-        ["--text-4" as string]: "#9CA3AF",
-        ["--accent" as string]: "#0D7066",
-        ["--accent-2" as string]: "#0A5E55",
-        ["--accent-tint" as string]: "#E5F1EF",
-        ["--accent-tint-2" as string]: "#D2E7E3",
-        ["--success" as string]: "#1F8E5C",
-        ["--success-tint" as string]: "#E6F4EC",
+        ["--surface-2" as string]: "#F1F5F9",
+        ["--surface-3" as string]: "#E2E8F0",
+        ["--border" as string]: "#E2E8F0",
+        ["--border-strong" as string]: "#CBD5E1",
+        ["--text" as string]: "#0F172A",
+        ["--text-2" as string]: "#334155",
+        ["--text-3" as string]: "#64748B",
+        ["--text-4" as string]: "#94A3B8",
+        ["--accent" as string]: "#3B5B7E",
+        ["--accent-2" as string]: "#2D4663",
+        ["--accent-tint" as string]: "#E1E7EE",
+        ["--accent-tint-2" as string]: "#D1DAE5",
+        ["--success" as string]: "#047857",
+        ["--success-tint" as string]: "#D1FAE5",
         ["--warn" as string]: "#B45309",
-        ["--warn-tint" as string]: "#FDF3E5",
+        ["--warn-tint" as string]: "#FEF3C7",
         ["--danger" as string]: "#B91C1C",
-        ["--danger-tint" as string]: "#FBEAEA",
-        ["--info" as string]: "#1E4FBF",
-        ["--info-tint" as string]: "#E8EEFB",
+        ["--danger-tint" as string]: "#FEE2E2",
+        ["--info" as string]: "#1D4ED8",
+        ["--info-tint" as string]: "#DBEAFE",
       }}
     >
       {children}

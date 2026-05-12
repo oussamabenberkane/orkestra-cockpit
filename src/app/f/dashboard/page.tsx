@@ -5,12 +5,12 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import {
   Search, Bell, ChevronDown, LogOut, Settings,
-  TrendingUp, ArrowUpRight, Check, X, Circle,
+  TrendingUp, ArrowUpRight, ArrowRight, Check, X, Circle,
   Target, FolderArchive, Flame, Wallet, Globe, Sparkles,
-  Mail, AlertCircle, FileText, AlertTriangle,
+  Mail, AlertCircle, FileText,
 } from "lucide-react";
 import type { ModalKey } from "@/lib/types";
-import HaloModal from "@/components/c/HaloModal";
+import PlinthModal from "@/components/f/PlinthModal";
 import { Sparkline } from "@/components/shared/Sparkline";
 import { CountUp, formatThousands } from "@/components/shared/CountUp";
 
@@ -21,14 +21,8 @@ const kpis = [
     format: (n: number) => formatThousands(n),
     unit: "CHF",
     trend: "+12.0%",
-    trendDir: "up" as const,
     spark: [62, 64, 70, 68, 72, 78, 80, 82, 86, 88, 92, 92],
     combined: true,
-    breakdown: [
-      { src: "BrokerStar", val: "64 200" },
-      { src: "Odoo", val: "−27 200" },
-      { src: "⊕ Consolidé", val: "92 400" },
-    ],
   },
   {
     label: "Marge nette",
@@ -36,29 +30,17 @@ const kpis = [
     format: (n: number) => String(Math.round(n)),
     unit: "%",
     trend: "+4 pt",
-    trendDir: "up" as const,
     spark: [55, 58, 60, 62, 63, 64, 64, 66, 67, 67, 68, 68],
     combined: true,
-    breakdown: [
-      { src: "Primes BS", val: "85.0 K" },
-      { src: "Charges", val: "27.2 K" },
-      { src: "⊕ Marge", val: "68 %" },
-    ],
   },
   {
     label: "Cash-flow",
     target: 18,
     format: (n: number) => "+" + Math.round(n),
-    unit: "K CHF",
+    unit: "K",
     trend: "stable",
-    trendDir: "up" as const,
     spark: [4, 6, 8, 7, 10, 12, 11, 14, 15, 16, 17, 18],
     combined: true,
-    breakdown: [
-      { src: "Encaissé", val: "+45.6 K" },
-      { src: "Sortant", val: "−27.2 K" },
-      { src: "⊕ Net", val: "+18.4 K" },
-    ],
   },
   {
     label: "Rétention",
@@ -66,14 +48,8 @@ const kpis = [
     format: (n: number) => String(Math.round(n)),
     unit: "%",
     trend: "+3 pt",
-    trendDir: "up" as const,
     spark: [81, 82, 83, 83, 84, 85, 85, 86, 86, 87, 87, 87],
     combined: false,
-    breakdown: [
-      { src: "Renouvelés", val: "12" },
-      { src: "Pertes 12m", val: "−4" },
-      { src: "Solde", val: "+8" },
-    ],
   },
 ];
 
@@ -102,9 +78,9 @@ const tiles: TileEntry[] = [
     spark: [10, 12, 11, 14, 14, 15, 16, 17, 17, 18, 18, 18],
   },
   {
-    Icon: FolderArchive, iconColor: "var(--gold)", iconBg: "var(--gold-tint)",
+    Icon: FolderArchive, iconColor: "var(--info)", iconBg: "var(--info-tint)",
     title: "Portefeuille", metric: "189", unit: "",
-    caption: "Contrats actifs · 85 K CHF de primes annuelles.",
+    caption: "Contrats actifs · 85 K CHF de primes.",
     alert: "4 renouvellements J-30", alertTone: "neutral",
     sources: ["BrokerStar"], modalKey: "portefeuille",
     spark: [182, 183, 184, 184, 185, 186, 186, 187, 188, 188, 189, 189],
@@ -112,30 +88,30 @@ const tiles: TileEntry[] = [
   {
     Icon: Flame, iconColor: "var(--danger)", iconBg: "var(--danger-tint)",
     title: "Sinistres", metric: "3", unit: "",
-    caption: "Dossiers ouverts · ratio sinistralité 12 %.",
+    caption: "Dossiers ouverts · ratio 12 % CA.",
     alert: "SIN-0047 — 68 jours", alertTone: "danger",
     sources: ["BrokerStar"], modalKey: "sinistres",
   },
   {
     Icon: Wallet, iconColor: "var(--warn)", iconBg: "var(--warn-tint)",
     title: "Finance", metric: "+18", unit: "K",
-    caption: "Cash-flow net · commissions 11.2 K, impayés 3.2 K.",
-    alert: "2 impayés", alertTone: "warn",
+    caption: "Cash-flow net · commissions 11.2 K.",
+    alert: "2 impayés — 3 200 CHF", alertTone: "warn",
     sources: ["BrokerStar", "Odoo"], modalKey: "finance",
     spark: [4, 6, 8, 7, 10, 12, 11, 14, 15, 16, 17, 18],
   },
   {
     Icon: Globe, iconColor: "var(--accent)", iconBg: "var(--accent-tint)",
     title: "Vue d'ensemble", metric: "68", unit: "%",
-    caption: "Marge consolidée · vision combinée temps réel.",
+    caption: "Marge consolidée · vision combinée.",
     alert: "+4 pt vs marché CH", alertTone: "good",
     sources: ["BrokerStar", "Odoo"], modalKey: "vue360",
     spark: [55, 58, 60, 62, 63, 64, 64, 66, 67, 67, 68, 68],
   },
   {
-    Icon: Sparkles, iconColor: "var(--gold)", iconBg: "var(--gold-tint)",
+    Icon: Sparkles, iconColor: "var(--accent)", iconBg: "var(--accent-tint)",
     title: "Agents IA", metric: "3", unit: "",
-    caption: "Actions préparées cette nuit · prêtes à valider.",
+    caption: "Actions préparées · prêtes à valider.",
     alert: "Validation requise", alertTone: "neutral",
     sources: ["BrokerStar", "Odoo"], modalKey: "agents",
   },
@@ -143,22 +119,22 @@ const tiles: TileEntry[] = [
 
 const agents = [
   {
-    Icon: Mail, iconColor: "var(--accent)", iconBg: "var(--accent-tint)",
-    name: "Agent · Renouvellement",
-    desc: "4 courriers rédigés. Échéances dans 28 jours.",
-    source: "BrokerStar",
+    Icon: Mail, iconColor: "var(--info)", iconBg: "var(--info-tint)",
+    name: "Renouvellement",
+    desc: "4 courriers rédigés — échéances J-28",
+    source: "BrokerStar", time: "il y a 12 min",
   },
   {
     Icon: AlertCircle, iconColor: "var(--warn)", iconBg: "var(--warn-tint)",
-    name: "Agent · Impayé Rossi SA",
-    desc: "Relance préparée — 1 800 CHF, 67 jours.",
-    source: "Odoo",
+    name: "Impayé Rossi SA",
+    desc: "Relance préparée — 1 800 CHF · 67 jours",
+    source: "Odoo", time: "il y a 28 min",
   },
   {
-    Icon: FileText, iconColor: "var(--gold)", iconBg: "var(--gold-tint)",
-    name: "Agent · Rapport direction",
-    desc: "Synthèse mensuelle combinée BS + Odoo prête.",
-    source: "Combiné",
+    Icon: FileText, iconColor: "var(--accent)", iconBg: "var(--accent-tint)",
+    name: "Rapport direction",
+    desc: "Synthèse mensuelle BrokerStar + Odoo prête",
+    source: "Combiné", time: "il y a 1 h",
     modalKey: "rapport" as ModalKey,
   },
 ];
@@ -170,7 +146,7 @@ const navLinks = [
   { label: "Rapports" },
 ];
 
-export default function DashboardPageC() {
+export default function DashboardPageF() {
   const router = useRouter();
   const [modalKey, setModalKey] = useState<ModalKey | null>(null);
   const open = (k: ModalKey) => setModalKey(k);
@@ -182,9 +158,9 @@ export default function DashboardPageC() {
 
       <main
         style={{
-          maxWidth: "1180px",
+          maxWidth: "1240px",
           margin: "0 auto",
-          padding: "clamp(2.5rem, 5vw, 4rem) clamp(1.5rem, 4vw, 3rem) 4rem",
+          padding: "clamp(2rem, 4vw, 3rem) clamp(1.5rem, 3vw, 2.5rem) 4rem",
         }}
       >
         <motion.section
@@ -192,80 +168,73 @@ export default function DashboardPageC() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
         >
-          <span
+          <div
             style={{
-              display: "inline-block",
-              fontSize: "0.66rem",
-              fontWeight: 600,
-              color: "var(--accent)",
-              letterSpacing: "0.22em",
-              textTransform: "uppercase",
-              marginBottom: "0.95rem",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "flex-end",
+              gap: "1rem",
+              flexWrap: "wrap",
+              marginBottom: "1.5rem",
             }}
           >
-            Mardi 12 mai · Mai 2026
-          </span>
-          <h1
-            style={{
-              fontSize: "clamp(2rem, 4vw, 2.85rem)",
-              fontWeight: 600,
-              letterSpacing: "-0.025em",
-              color: "var(--text)",
-              margin: 0,
-              marginBottom: "0.6rem",
-              lineHeight: 1.08,
-            }}
-          >
-            Bonjour Thomas.
-          </h1>
-          <p
-            style={{
-              fontSize: "1.05rem",
-              color: "var(--text-3)",
-              margin: 0,
-              marginBottom: "clamp(2.5rem, 5vw, 3.5rem)",
-              lineHeight: 1.55,
-              maxWidth: "52ch",
-            }}
-          >
-            Voici les indicateurs du cabinet — primes, sinistres, trésorerie, le tout consolidé en
-            temps réel depuis BrokerStar et Odoo.
-          </p>
+            <div>
+              <h1
+                style={{
+                  fontSize: "clamp(1.75rem, 3vw, 2.15rem)",
+                  fontWeight: 600,
+                  letterSpacing: "-0.025em",
+                  color: "var(--text)",
+                  margin: 0,
+                  marginBottom: "0.25rem",
+                }}
+              >
+                Bonjour Thomas
+              </h1>
+              <p
+                style={{
+                  fontSize: "0.92rem",
+                  color: "var(--text-3)",
+                  margin: 0,
+                }}
+              >
+                Mardi 12 mai 2026 · Cabinet Müller &amp; Associés
+              </p>
+            </div>
+            <div style={{ display: "flex", gap: "0.45rem" }}>
+              <SoftBadge dot="var(--info)" label="BrokerStar · 3 min" />
+              <SoftBadge dot="var(--accent)" label="Odoo · 5 min" />
+            </div>
+          </div>
 
           <div
-            className="halo-kpis"
+            className="plinth-kpis"
             style={{
               display: "grid",
               gridTemplateColumns: "repeat(4, 1fr)",
-              gap: "1rem",
-              marginBottom: "clamp(2rem, 4vw, 3rem)",
+              gap: "0.85rem",
+              marginBottom: "clamp(1.5rem, 3vw, 2.5rem)",
             }}
           >
             {kpis.map((k, i) => (
               <KPICard key={k.label} kpi={k} delay={i * 70} />
             ))}
           </div>
-
-          <AlertsBand />
         </motion.section>
 
         <motion.section
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.08, duration: 0.55 }}
-          style={{ marginTop: "clamp(3rem, 5vw, 4rem)" }}
         >
-          <SectionHeader
-            kicker="Domaines"
-            title="Six tableaux actifs."
-          />
+          <SectionHeader title="Domaines" subtitle="Six tableaux opérationnels." />
           <div
-            className="halo-tiles"
+            className="plinth-tiles"
             style={{
               display: "grid",
               gridTemplateColumns: "repeat(3, 1fr)",
-              gap: "1rem",
-              marginTop: "1.25rem",
+              gap: "0.85rem",
+              marginTop: "1rem",
             }}
           >
             {tiles.map((t) => (
@@ -278,19 +247,16 @@ export default function DashboardPageC() {
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.14, duration: 0.55 }}
-          style={{ marginTop: "clamp(3rem, 5vw, 4rem)" }}
+          style={{ marginTop: "clamp(1.5rem, 3vw, 2.5rem)" }}
         >
-          <SectionHeader
-            kicker="Salle de presse"
-            title="Trois agents vous adressent leurs notes."
-          />
+          <SectionHeader title="Agents IA" subtitle="Trois actions préparées cette nuit." />
           <div
             style={{
-              marginTop: "1.25rem",
+              marginTop: "1rem",
               background: "var(--surface)",
-              border: "1px solid var(--border)",
-              borderRadius: "16px",
+              borderRadius: "14px",
               overflow: "hidden",
+              boxShadow: "var(--tier-1)",
             }}
           >
             {agents.map((a, i) => (
@@ -307,19 +273,19 @@ export default function DashboardPageC() {
         <Footer />
       </main>
 
-      <HaloModal open={modalKey !== null} modalKey={modalKey} onClose={close} />
+      <PlinthModal open={modalKey !== null} modalKey={modalKey} onClose={close} />
 
       <style>{`
         @media (max-width: 1100px) {
-          .halo-kpis { grid-template-columns: repeat(2, 1fr) !important; }
-          .halo-tiles { grid-template-columns: repeat(2, 1fr) !important; }
+          .plinth-kpis { grid-template-columns: repeat(2, 1fr) !important; }
+          .plinth-tiles { grid-template-columns: repeat(2, 1fr) !important; }
         }
         @media (max-width: 720px) {
-          .halo-nav { display: none !important; }
+          .plinth-nav { display: none !important; }
         }
         @media (max-width: 600px) {
-          .halo-kpis { grid-template-columns: 1fr !important; }
-          .halo-tiles { grid-template-columns: 1fr !important; }
+          .plinth-kpis { grid-template-columns: 1fr !important; }
+          .plinth-tiles { grid-template-columns: 1fr !important; }
         }
       `}</style>
     </div>
@@ -330,8 +296,8 @@ function TopBar({ onLogout }: { onLogout: () => void }) {
   return (
     <header
       style={{
-        background: "rgba(250,247,242,0.85)",
-        backdropFilter: "saturate(150%) blur(10px)",
+        background: "rgba(245,245,247,0.8)",
+        backdropFilter: "saturate(180%) blur(20px)",
         borderBottom: "1px solid var(--border)",
         position: "sticky",
         top: 0,
@@ -340,104 +306,110 @@ function TopBar({ onLogout }: { onLogout: () => void }) {
     >
       <div
         style={{
-          maxWidth: "1180px",
+          maxWidth: "1240px",
           margin: "0 auto",
-          padding: "0.85rem clamp(1.5rem, 4vw, 3rem)",
+          padding: "0.75rem clamp(1.5rem, 3vw, 2.5rem)",
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
           gap: "1rem",
         }}
       >
-        <button
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "0.6rem",
-            background: "transparent",
-            border: "none",
-            padding: 0,
-            cursor: "pointer",
-            fontFamily: "inherit",
-          }}
-        >
-          <span
+        <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+          <button
             style={{
-              width: 28,
-              height: 28,
-              background: "var(--accent)",
-              color: "#FFFFFF",
-              borderRadius: "8px",
               display: "flex",
               alignItems: "center",
-              justifyContent: "center",
-              fontSize: "0.68rem",
-              fontWeight: 700,
-              letterSpacing: "-0.02em",
+              gap: "0.55rem",
+              background: "transparent",
+              border: "none",
+              padding: 0,
+              cursor: "pointer",
+              fontFamily: "inherit",
             }}
           >
-            CMA
-          </span>
-          <span
-            style={{
-              fontSize: "0.92rem",
-              fontWeight: 600,
-              color: "var(--text)",
-              letterSpacing: "-0.01em",
-            }}
-          >
-            Cabinet Müller
-          </span>
-          <ChevronDown size={13} strokeWidth={2} color="var(--text-3)" />
-        </button>
-
-        <nav className="halo-nav" style={{ display: "flex", gap: "0.2rem" }}>
-          {navLinks.map((l) => (
-            <button
-              key={l.label}
+            <span
               style={{
-                background: l.active ? "var(--surface-2)" : "transparent",
-                border: "none",
-                padding: "0.45rem 0.8rem",
-                fontFamily: "inherit",
-                fontSize: "0.84rem",
-                fontWeight: l.active ? 600 : 500,
-                color: l.active ? "var(--text)" : "var(--text-3)",
-                cursor: "pointer",
+                width: 28,
+                height: 28,
+                background: "linear-gradient(to bottom, var(--accent), var(--accent-2))",
+                color: "#FFFFFF",
                 borderRadius: "8px",
-                transition: "color 0.15s, background 0.15s",
-              }}
-              onMouseEnter={(e) => {
-                if (!l.active) {
-                  e.currentTarget.style.color = "var(--text)";
-                  e.currentTarget.style.background = "var(--surface-2)";
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (!l.active) {
-                  e.currentTarget.style.color = "var(--text-3)";
-                  e.currentTarget.style.background = "transparent";
-                }
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: "0.66rem",
+                fontWeight: 700,
+                letterSpacing: "-0.02em",
+                boxShadow:
+                  "inset 0 1px 0 rgba(255,255,255,0.3), 0 0 0 1px rgba(68,65,200,0.2), 0 2px 6px -2px rgba(88,86,214,0.35)",
               }}
             >
-              {l.label}
-            </button>
-          ))}
-        </nav>
+              CMA
+            </span>
+            <span
+              style={{
+                fontSize: "0.92rem",
+                fontWeight: 600,
+                color: "var(--text)",
+                letterSpacing: "-0.015em",
+              }}
+            >
+              Cabinet Müller
+            </span>
+            <ChevronDown size={13} strokeWidth={2.25} color="var(--text-3)" />
+          </button>
+          <nav className="plinth-nav" style={{ display: "flex", gap: "0.2rem" }}>
+            {navLinks.map((l) => (
+              <button
+                key={l.label}
+                style={{
+                  background: l.active ? "var(--surface)" : "transparent",
+                  border: "none",
+                  padding: "0.42rem 0.75rem",
+                  fontFamily: "inherit",
+                  fontSize: "0.84rem",
+                  fontWeight: l.active ? 600 : 500,
+                  color: l.active ? "var(--text)" : "var(--text-3)",
+                  cursor: "pointer",
+                  borderRadius: "9px",
+                  boxShadow: l.active ? "var(--tier-1)" : "none",
+                  transition: "all 0.22s ease",
+                }}
+                onMouseEnter={(e) => {
+                  if (!l.active) {
+                    e.currentTarget.style.color = "var(--text)";
+                    e.currentTarget.style.background = "var(--surface)";
+                    e.currentTarget.style.boxShadow = "var(--tier-1)";
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!l.active) {
+                    e.currentTarget.style.color = "var(--text-3)";
+                    e.currentTarget.style.background = "transparent";
+                    e.currentTarget.style.boxShadow = "none";
+                  }
+                }}
+              >
+                {l.label}
+              </button>
+            ))}
+          </nav>
+        </div>
 
-        <div style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
           <div
             style={{
               display: "flex",
               alignItems: "center",
               gap: "0.45rem",
               background: "var(--surface)",
-              border: "1px solid var(--border)",
-              borderRadius: "8px",
-              padding: "0.35rem 0.65rem",
+              borderRadius: "9px",
+              padding: "0.35rem 0.6rem",
               color: "var(--text-3)",
-              fontSize: "0.78rem",
+              fontSize: "0.8rem",
               cursor: "text",
+              boxShadow: "var(--tier-1)",
             }}
           >
             <Search size={13} strokeWidth={2} />
@@ -457,6 +429,24 @@ function TopBar({ onLogout }: { onLogout: () => void }) {
           <IconBtn label="Paramètres">
             <Settings size={14} strokeWidth={2} />
           </IconBtn>
+          <span
+            style={{
+              width: 30,
+              height: 30,
+              background: "linear-gradient(to bottom, var(--text-2), var(--text))",
+              color: "#FFFFFF",
+              borderRadius: "50%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: "0.66rem",
+              fontWeight: 700,
+              boxShadow: "inset 0 1px 0 rgba(255,255,255,0.18), 0 1px 2px rgba(0,0,0,0.12)",
+            }}
+            title="Thomas Müller"
+          >
+            TM
+          </span>
           <button
             onClick={onLogout}
             aria-label="Déconnexion"
@@ -464,15 +454,15 @@ function TopBar({ onLogout }: { onLogout: () => void }) {
             style={{
               display: "flex",
               alignItems: "center",
-              gap: "0.4rem",
+              justifyContent: "center",
+              width: 30,
+              height: 30,
               background: "transparent",
-              border: "1px solid transparent",
+              border: "none",
               borderRadius: "8px",
-              padding: "0.3rem 0.5rem",
               color: "var(--text-3)",
               cursor: "pointer",
-              fontFamily: "inherit",
-              transition: "color 0.15s, background 0.15s",
+              transition: "color 0.22s, background 0.22s",
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.color = "var(--danger)";
@@ -483,22 +473,6 @@ function TopBar({ onLogout }: { onLogout: () => void }) {
               e.currentTarget.style.background = "transparent";
             }}
           >
-            <span
-              style={{
-                width: 26,
-                height: 26,
-                background: "var(--text)",
-                color: "var(--surface)",
-                borderRadius: "50%",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: "0.62rem",
-                fontWeight: 700,
-              }}
-            >
-              TM
-            </span>
             <LogOut size={13} strokeWidth={2} />
           </button>
         </div>
@@ -526,47 +500,65 @@ function IconBtn({
         position: "relative",
         width: 32,
         height: 32,
-        background: "transparent",
-        border: "1px solid transparent",
-        borderRadius: "8px",
+        background: "var(--surface)",
+        border: "none",
+        borderRadius: "9px",
         color: "var(--text-2)",
         cursor: "pointer",
-        transition: "background 0.15s, border-color 0.15s",
+        boxShadow: "var(--tier-1)",
+        transition: "transform 0.22s ease",
       }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.background = "var(--surface-2)";
-        e.currentTarget.style.borderColor = "var(--border)";
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.background = "transparent";
-        e.currentTarget.style.borderColor = "transparent";
-      }}
+      onMouseEnter={(e) => (e.currentTarget.style.transform = "translateY(-1px)")}
+      onMouseLeave={(e) => (e.currentTarget.style.transform = "translateY(0)")}
     >
       {children}
       {badge && (
         <span
           style={{
             position: "absolute",
-            top: 2,
-            right: 2,
+            top: 1,
+            right: 1,
             minWidth: 14,
             height: 14,
             padding: "0 3px",
             borderRadius: "7px",
             background: "var(--danger)",
             color: "#FFFFFF",
-            fontSize: "0.58rem",
+            fontSize: "0.56rem",
             fontWeight: 700,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            border: "1.5px solid var(--bg)",
+            border: "2px solid var(--bg)",
+            boxShadow: "0 1px 2px rgba(0,0,0,0.18)",
           }}
         >
           {badge}
         </span>
       )}
     </button>
+  );
+}
+
+function SoftBadge({ dot, label }: { dot: string; label: string }) {
+  return (
+    <span
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: "0.4rem",
+        fontSize: "0.74rem",
+        fontWeight: 500,
+        color: "var(--text-2)",
+        background: "var(--surface)",
+        padding: "0.35rem 0.65rem",
+        borderRadius: "100px",
+        boxShadow: "var(--tier-1)",
+      }}
+    >
+      <Circle size={6} strokeWidth={0} fill={dot} />
+      {label}
+    </span>
   );
 }
 
@@ -579,18 +571,16 @@ function KPICard({
 }) {
   return (
     <div
-      className="halo-kpi"
+      className="plinth-kpi"
       style={{
         background: "var(--surface)",
-        border: "1px solid var(--border)",
-        borderRadius: "16px",
-        padding: "1.4rem 1.4rem 1.25rem",
-        position: "relative",
-        overflow: "hidden",
+        borderRadius: "14px",
+        padding: "1.1rem 1.15rem 1rem",
+        boxShadow: "var(--tier-1)",
         display: "flex",
         flexDirection: "column",
-        gap: "0.75rem",
-        transition: "border-color 0.22s, box-shadow 0.22s, transform 0.22s",
+        gap: "0.6rem",
+        transition: "transform 0.22s ease, box-shadow 0.22s ease",
         cursor: "default",
       }}
     >
@@ -599,7 +589,6 @@ function KPICard({
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          gap: "0.4rem",
         }}
       >
         <span
@@ -607,10 +596,6 @@ function KPICard({
             fontSize: "0.78rem",
             fontWeight: 500,
             color: "var(--text-3)",
-            display: "inline-flex",
-            alignItems: "center",
-            gap: "0.4rem",
-            letterSpacing: "-0.005em",
           }}
         >
           {kpi.label}
@@ -632,12 +617,13 @@ function KPICard({
         )}
       </div>
 
-      <div style={{ display: "flex", alignItems: "baseline", gap: "0.4rem" }}>
+      {/* Mixed-weight number */}
+      <div style={{ display: "flex", alignItems: "baseline", gap: "0.3rem" }}>
         <span
           style={{
             fontFamily: "var(--font-mono)",
-            fontSize: "2.2rem",
-            fontWeight: 500,
+            fontSize: "2rem",
+            fontWeight: 600,
             letterSpacing: "-0.04em",
             color: "var(--text)",
             lineHeight: 0.95,
@@ -649,10 +635,11 @@ function KPICard({
         {kpi.unit && (
           <span
             style={{
-              fontSize: "0.85rem",
+              fontFamily: "var(--font-mono)",
+              fontSize: "0.84rem",
               fontWeight: 500,
               color: "var(--text-3)",
-              letterSpacing: "-0.005em",
+              letterSpacing: "-0.01em",
             }}
           >
             {kpi.unit}
@@ -666,18 +653,21 @@ function KPICard({
             display: "inline-flex",
             alignItems: "center",
             gap: "0.25rem",
-            fontSize: "0.74rem",
+            fontSize: "0.72rem",
             fontWeight: 600,
             color: "var(--success)",
+            background: "var(--success-tint)",
+            padding: "0.15rem 0.45rem",
+            borderRadius: "5px",
           }}
         >
-          <TrendingUp size={11} strokeWidth={2.5} />
+          <TrendingUp size={10} strokeWidth={2.5} />
           {kpi.trend}
         </span>
-        <span style={{ flex: 1 }}>
+        <span style={{ flex: 1, marginLeft: "0.3rem" }}>
           <Sparkline
             data={kpi.spark}
-            width={150}
+            width={130}
             height={22}
             stroke="var(--accent)"
             strokeWidth={1.5}
@@ -685,165 +675,48 @@ function KPICard({
         </span>
       </div>
 
-      <div className="halo-kpi-reveal">
-        {kpi.breakdown.map((b) => (
-          <div
-            key={b.src}
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              fontSize: "0.74rem",
-              color: "var(--text-3)",
-              padding: "0.2rem 0",
-              borderTop: "1px solid var(--border)",
-            }}
-          >
-            <span>{b.src}</span>
-            <span
-              style={{
-                color: "var(--text-2)",
-                fontVariantNumeric: "tabular-nums",
-                fontFamily: "var(--font-mono)",
-              }}
-            >
-              {b.val}
-            </span>
-          </div>
-        ))}
-      </div>
-
       <style>{`
-        .halo-kpi:hover {
-          border-color: var(--border-strong);
-          box-shadow: 0 1px 2px rgba(31,30,27,0.04), 0 12px 28px -16px rgba(31,30,27,0.12);
+        .plinth-kpi:hover {
           transform: translateY(-2px);
-        }
-        .halo-kpi-reveal {
-          max-height: 0;
-          overflow: hidden;
-          opacity: 0;
-          margin-top: 0;
-          transition: max-height 0.3s ease, opacity 0.22s ease, margin-top 0.3s ease;
-        }
-        .halo-kpi:hover .halo-kpi-reveal {
-          max-height: 200px;
-          opacity: 1;
-          margin-top: 0.35rem;
+          box-shadow: var(--tier-2);
         }
       `}</style>
     </div>
   );
 }
 
-function AlertsBand() {
-  return (
-    <div
-      style={{
-        background: "var(--surface)",
-        border: "1px solid var(--border)",
-        borderRadius: "14px",
-        padding: "0.85rem 1.1rem",
-        display: "flex",
-        alignItems: "center",
-        gap: "1rem",
-        flexWrap: "wrap",
-      }}
-    >
-      <span
-        style={{
-          width: 32,
-          height: 32,
-          background: "var(--danger-tint)",
-          color: "var(--danger)",
-          borderRadius: "10px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          flexShrink: 0,
-        }}
-      >
-        <AlertTriangle size={15} strokeWidth={2.25} />
-      </span>
-      <div style={{ flex: 1, minWidth: "180px" }}>
-        <div
-          style={{
-            fontSize: "0.84rem",
-            fontWeight: 600,
-            color: "var(--text)",
-            letterSpacing: "-0.005em",
-          }}
-        >
-          5 alertes actives · 3 urgentes
-        </div>
-        <div
-          style={{
-            fontSize: "0.78rem",
-            color: "var(--text-3)",
-            marginTop: "0.1rem",
-          }}
-        >
-          SIN-0047 (68j) · 2 impayés (3 200 CHF) · 3 relances prospection
-        </div>
-      </div>
-      <button
-        style={{
-          display: "inline-flex",
-          alignItems: "center",
-          gap: "0.3rem",
-          padding: "0.5rem 0.85rem",
-          fontFamily: "inherit",
-          fontSize: "0.8rem",
-          fontWeight: 600,
-          color: "var(--text-2)",
-          background: "var(--surface)",
-          border: "1px solid var(--border)",
-          borderRadius: "9px",
-          cursor: "pointer",
-          transition: "border-color 0.15s",
-        }}
-        onMouseEnter={(e) => (e.currentTarget.style.borderColor = "var(--border-strong)")}
-        onMouseLeave={(e) => (e.currentTarget.style.borderColor = "var(--border)")}
-      >
-        Voir les alertes
-        <ArrowUpRight size={12} strokeWidth={2.25} />
-      </button>
-    </div>
-  );
-}
-
 function SectionHeader({
-  kicker,
   title,
+  subtitle,
 }: {
-  kicker: string;
   title: string;
+  subtitle?: string;
 }) {
   return (
     <div>
-      <div
-        style={{
-          fontSize: "0.66rem",
-          fontWeight: 600,
-          color: "var(--accent)",
-          letterSpacing: "0.22em",
-          textTransform: "uppercase",
-          marginBottom: "0.5rem",
-        }}
-      >
-        {kicker}
-      </div>
       <h2
         style={{
-          fontSize: "clamp(1.3rem, 2vw, 1.6rem)",
+          fontSize: "1.15rem",
           fontWeight: 600,
-          letterSpacing: "-0.02em",
           color: "var(--text)",
+          letterSpacing: "-0.02em",
           margin: 0,
-          lineHeight: 1.2,
         }}
       >
         {title}
       </h2>
+      {subtitle && (
+        <p
+          style={{
+            fontSize: "0.84rem",
+            color: "var(--text-3)",
+            margin: 0,
+            marginTop: "0.15rem",
+          }}
+        >
+          {subtitle}
+        </p>
+      )}
     </div>
   );
 }
@@ -865,32 +738,30 @@ function TileCard({
       ? "var(--danger)"
       : "var(--text-3)";
   return (
-    <motion.button
+    <button
       onClick={() => onOpen(tile.modalKey)}
-      whileHover={{ y: -3 }}
-      transition={{ duration: 0.2 }}
       style={{
         background: "var(--surface)",
-        border: "1px solid var(--border)",
-        borderRadius: "16px",
-        padding: "1.25rem 1.25rem 1.15rem",
+        border: "none",
+        borderRadius: "14px",
+        padding: "1.05rem 1.1rem 0.95rem",
         textAlign: "left",
         fontFamily: "inherit",
         color: "inherit",
         cursor: "pointer",
         display: "flex",
         flexDirection: "column",
-        gap: "0.85rem",
-        transition: "border-color 0.22s, box-shadow 0.22s",
+        gap: "0.7rem",
+        boxShadow: "var(--tier-1)",
+        transition: "transform 0.22s ease, box-shadow 0.22s ease",
       }}
       onMouseEnter={(e) => {
-        e.currentTarget.style.borderColor = "var(--border-strong)";
-        e.currentTarget.style.boxShadow =
-          "0 1px 2px rgba(31,30,27,0.04), 0 16px 32px -20px rgba(31,30,27,0.12)";
+        e.currentTarget.style.transform = "translateY(-2px)";
+        e.currentTarget.style.boxShadow = "var(--tier-2)";
       }}
       onMouseLeave={(e) => {
-        e.currentTarget.style.borderColor = "var(--border)";
-        e.currentTarget.style.boxShadow = "none";
+        e.currentTarget.style.transform = "translateY(0)";
+        e.currentTarget.style.boxShadow = "var(--tier-1)";
       }}
     >
       <div
@@ -900,7 +771,7 @@ function TileCard({
           justifyContent: "space-between",
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.55rem" }}>
           <span
             style={{
               width: 30,
@@ -911,13 +782,14 @@ function TileCard({
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
+              boxShadow: "inset 0 1px 0 rgba(255,255,255,0.6)",
             }}
           >
             <Icon size={14} strokeWidth={2} />
           </span>
           <span
             style={{
-              fontSize: "0.96rem",
+              fontSize: "0.92rem",
               fontWeight: 600,
               color: "var(--text)",
               letterSpacing: "-0.01em",
@@ -929,12 +801,12 @@ function TileCard({
         <ArrowUpRight size={14} strokeWidth={2.25} color="var(--text-4)" />
       </div>
 
-      <div style={{ display: "flex", alignItems: "flex-end", gap: "0.85rem" }}>
+      <div style={{ display: "flex", alignItems: "flex-end", gap: "0.7rem" }}>
         <span
           style={{
             fontFamily: "var(--font-mono)",
-            fontSize: "2rem",
-            fontWeight: 500,
+            fontSize: "1.9rem",
+            fontWeight: 600,
             letterSpacing: "-0.035em",
             color: "var(--text)",
             lineHeight: 0.95,
@@ -945,9 +817,11 @@ function TileCard({
           {tile.unit && (
             <span
               style={{
-                fontSize: "0.5em",
+                fontFamily: "var(--font-mono)",
+                fontSize: "0.55em",
+                fontWeight: 500,
                 color: "var(--text-3)",
-                marginLeft: "0.1rem",
+                marginLeft: "0.12rem",
                 letterSpacing: 0,
               }}
             >
@@ -957,12 +831,12 @@ function TileCard({
         </span>
         {tile.spark && (
           <div
-            style={{ flex: 1, marginBottom: "0.2rem", color: tile.iconColor, opacity: 0.7 }}
+            style={{ flex: 1, marginBottom: "0.2rem", color: tile.iconColor, opacity: 0.85 }}
           >
             <Sparkline
               data={tile.spark}
               width={130}
-              height={22}
+              height={20}
               stroke="currentColor"
               strokeWidth={1.4}
             />
@@ -972,11 +846,11 @@ function TileCard({
 
       <p
         style={{
-          fontSize: "0.84rem",
+          fontSize: "0.8rem",
           color: "var(--text-3)",
-          lineHeight: 1.5,
+          lineHeight: 1.45,
           margin: 0,
-          minHeight: "2.5rem",
+          minHeight: "1.15rem",
         }}
       >
         {tile.caption}
@@ -984,12 +858,12 @@ function TileCard({
 
       <div
         style={{
-          paddingTop: "0.65rem",
-          borderTop: "1px solid var(--border)",
           display: "flex",
           alignItems: "center",
           gap: "0.5rem",
-          justifyContent: "space-between",
+          paddingTop: "0.55rem",
+          background:
+            "linear-gradient(to right, transparent, var(--border) 12%, var(--border) 88%, transparent) top / 100% 1px no-repeat",
         }}
       >
         <span
@@ -1005,6 +879,7 @@ function TileCard({
           <Circle size={5} strokeWidth={0} fill="currentColor" />
           {tile.alert}
         </span>
+        <span style={{ flex: 1 }} />
         <span
           style={{
             fontSize: "0.66rem",
@@ -1015,7 +890,7 @@ function TileCard({
           {tile.sources.join(" · ")}
         </span>
       </div>
-    </motion.button>
+    </button>
   );
 }
 
@@ -1031,6 +906,7 @@ function AgentRow({
     name: string;
     desc: string;
     source: string;
+    time: string;
   };
   isLast: boolean;
   onOpen?: () => void;
@@ -1041,25 +917,26 @@ function AgentRow({
     <div
       style={{
         display: "grid",
-        gridTemplateColumns: "auto 1fr auto auto",
-        gap: "1rem",
+        gridTemplateColumns: "auto 1fr auto",
+        gap: "0.95rem",
         alignItems: "center",
-        padding: "1.1rem 1.4rem",
+        padding: "0.95rem 1.15rem",
         borderBottom: isLast ? "none" : "1px solid var(--border)",
         opacity: done !== "none" ? 0.4 : 1,
-        transition: "opacity 0.25s, background 0.15s",
+        transition: "opacity 0.25s",
       }}
     >
       <span
         style={{
-          width: 36,
-          height: 36,
+          width: 32,
+          height: 32,
           background: agent.iconBg,
           color: agent.iconColor,
-          borderRadius: "10px",
+          borderRadius: "9px",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
+          boxShadow: "inset 0 1px 0 rgba(255,255,255,0.6)",
         }}
       >
         <Icon size={15} strokeWidth={2} />
@@ -1071,34 +948,18 @@ function AgentRow({
             fontWeight: 600,
             color: "var(--text)",
             letterSpacing: "-0.005em",
-            marginBottom: "0.15rem",
+            marginBottom: "0.1rem",
           }}
         >
-          {agent.name}
+          Agent · {agent.name}
         </div>
-        <div
-          style={{
-            fontSize: "0.82rem",
-            color: "var(--text-3)",
-            lineHeight: 1.5,
-          }}
-        >
-          {agent.desc}
+        <div style={{ fontSize: "0.8rem", color: "var(--text-3)", lineHeight: 1.45 }}>
+          {agent.desc}{" "}
+          <span style={{ color: "var(--text-4)" }}>
+            · {agent.source} · {agent.time}
+          </span>
         </div>
       </div>
-      <span
-        style={{
-          fontFamily: "var(--font-mono)",
-          fontSize: "0.68rem",
-          color: "var(--text-3)",
-          padding: "0.2rem 0.5rem",
-          background: "var(--surface-2)",
-          border: "1px solid var(--border)",
-          borderRadius: "6px",
-        }}
-      >
-        {agent.source}
-      </span>
       <div style={{ display: "flex", gap: "0.4rem" }}>
         <button
           onClick={() => {
@@ -1111,22 +972,28 @@ function AgentRow({
             alignItems: "center",
             gap: "0.3rem",
             padding: "0.45rem 0.85rem",
-            background: done === "none" ? "var(--accent)" : "transparent",
+            background:
+              done === "none"
+                ? "linear-gradient(to bottom, var(--accent), var(--accent-2))"
+                : "var(--surface)",
             color: done === "none" ? "#FFFFFF" : "var(--text-3)",
-            border: `1px solid ${done === "none" ? "var(--accent)" : "var(--border)"}`,
+            border: "none",
             borderRadius: "9px",
             fontFamily: "inherit",
             fontSize: "0.78rem",
             fontWeight: 600,
             cursor: done === "none" ? "pointer" : "default",
-            transition: "background 0.15s",
-            boxShadow: done === "none" ? "0 1px 2px rgba(31,111,91,0.16)" : "none",
+            boxShadow:
+              done === "none"
+                ? "inset 0 1px 0 rgba(255,255,255,0.25), 0 0 0 1px rgba(68,65,200,0.30), 0 4px 14px -4px rgba(88,86,214,0.40)"
+                : "var(--tier-1)",
+            transition: "transform 0.22s ease",
           }}
           onMouseEnter={(e) => {
-            if (done === "none") e.currentTarget.style.background = "var(--accent-2)";
+            if (done === "none") e.currentTarget.style.transform = "translateY(-1px)";
           }}
           onMouseLeave={(e) => {
-            if (done === "none") e.currentTarget.style.background = "var(--accent)";
+            if (done === "none") e.currentTarget.style.transform = "translateY(0)";
           }}
         >
           {done === "validated" && <Check size={12} strokeWidth={2.5} />}
@@ -1140,13 +1007,15 @@ function AgentRow({
             display: "inline-flex",
             alignItems: "center",
             justifyContent: "center",
-            width: 32,
+            width: 30,
             padding: "0.45rem",
             background: "var(--surface)",
             color: "var(--text-3)",
-            border: "1px solid var(--border)",
+            border: "none",
             borderRadius: "9px",
+            boxShadow: "var(--tier-1)",
             cursor: done === "none" ? "pointer" : "default",
+            transition: "transform 0.22s ease",
           }}
         >
           <X size={12} strokeWidth={2.25} />
@@ -1160,9 +1029,10 @@ function Footer() {
   return (
     <footer
       style={{
-        marginTop: "clamp(3rem, 6vw, 5rem)",
-        paddingTop: "1.5rem",
-        borderTop: "1px solid var(--border)",
+        marginTop: "clamp(3rem, 5vw, 4rem)",
+        paddingTop: "1.25rem",
+        background:
+          "linear-gradient(to right, transparent, var(--border) 8%, var(--border) 92%, transparent) top / 100% 1px no-repeat",
         display: "flex",
         justifyContent: "space-between",
         gap: "1rem",
@@ -1171,8 +1041,8 @@ function Footer() {
         flexWrap: "wrap",
       }}
     >
-      <span>Cabinet Müller &amp; Associés SA · Zürich</span>
-      <span>BrokerStar sync il y a 3 min · Odoo il y a 5 min</span>
+      <span>© 2026 Cabinet Müller &amp; Associés SA · Zürich</span>
+      <span>Sync BrokerStar 3 min · Odoo 5 min</span>
       <span>LPD Art.16 · Infomaniak CH</span>
     </footer>
   );

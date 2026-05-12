@@ -7,11 +7,10 @@ import {
   Home, BarChart3, Target, FolderArchive, Flame, Wallet, Globe,
   Sparkles, MessageSquare, AlertTriangle, Settings, HelpCircle,
   ChevronDown, ChevronRight, Search, Bell, LogOut, Plus,
-  TrendingUp, ArrowUpRight, Check, X, Circle, Mail, AlertCircle,
-  FileText, Clock,
+  TrendingUp, ArrowUpRight, Check, X, Circle, Mail, AlertCircle, FileText,
 } from "lucide-react";
 import type { ModalKey } from "@/lib/types";
-import ForgeModal from "@/components/b/ForgeModal";
+import OnyxModal from "@/components/e/OnyxModal";
 import { Sparkline } from "@/components/shared/Sparkline";
 import { CountUp, formatThousands } from "@/components/shared/CountUp";
 
@@ -22,14 +21,8 @@ const kpis = [
     format: (n: number) => formatThousands(n),
     unit: "CHF",
     trend: "+12.0%",
-    trendDir: "up" as const,
     spark: [62, 64, 70, 68, 72, 78, 80, 82, 86, 88, 92, 92],
     combined: true,
-    breakdown: [
-      { src: "BrokerStar", val: "64 200" },
-      { src: "Odoo (charges)", val: "−27 200" },
-      { src: "⊕ Net consolidé", val: "92 400" },
-    ],
   },
   {
     label: "Marge nette",
@@ -37,29 +30,17 @@ const kpis = [
     format: (n: number) => String(Math.round(n)),
     unit: "%",
     trend: "+4 pt",
-    trendDir: "up" as const,
     spark: [55, 58, 60, 62, 63, 64, 64, 66, 67, 67, 68, 68],
     combined: true,
-    breakdown: [
-      { src: "Primes BS", val: "85 K" },
-      { src: "Charges Odoo", val: "27.2 K" },
-      { src: "⊕ Marge", val: "68 %" },
-    ],
   },
   {
     label: "Cash-flow",
     target: 18,
     format: (n: number) => "+" + Math.round(n),
-    unit: "K CHF",
-    trend: "+K vs M-1",
-    trendDir: "up" as const,
+    unit: "K",
+    trend: "stable",
     spark: [4, 6, 8, 7, 10, 12, 11, 14, 15, 16, 17, 18],
     combined: true,
-    breakdown: [
-      { src: "Encaissements", val: "+45.6 K" },
-      { src: "Charges + imp.", val: "−27.2 K" },
-      { src: "⊕ Cash net", val: "+18.4 K" },
-    ],
   },
   {
     label: "Rétention",
@@ -67,30 +48,18 @@ const kpis = [
     format: (n: number) => String(Math.round(n)),
     unit: "%",
     trend: "+3 pt",
-    trendDir: "up" as const,
     spark: [81, 82, 83, 83, 84, 85, 85, 86, 86, 87, 87, 87],
     combined: false,
-    breakdown: [
-      { src: "Contrats actifs", val: "189" },
-      { src: "Renouvellements", val: "+12" },
-      { src: "Pertes (12 mois)", val: "−4" },
-    ],
   },
   {
     label: "Alertes",
     target: 5,
     format: (n: number) => String(Math.round(n)),
     unit: "",
-    trend: "3 urgentes",
-    trendDir: "down" as const,
+    trend: "3 urg.",
     spark: [2, 2, 3, 3, 4, 4, 4, 5, 5, 5, 5, 5],
     combined: false,
     danger: true,
-    breakdown: [
-      { src: "Sinistres", val: "1 critique" },
-      { src: "Impayés", val: "2" },
-      { src: "Relances dues", val: "2" },
-    ],
   },
 ];
 
@@ -113,7 +82,7 @@ const tiles: TileEntry[] = [
   {
     Icon: Target, iconColor: "var(--accent)", iconBg: "var(--accent-tint)",
     title: "Prospection", metric: "18", unit: "%",
-    caption: "Taux de conversion · 12 prospects actifs",
+    caption: "Taux de conversion · 12 prospects",
     alert: "3 relances dues", alertTone: "warn",
     sources: ["BrokerStar"], modalKey: "prospection",
     spark: [10, 12, 11, 14, 14, 15, 16, 17, 17, 18, 18, 18],
@@ -121,23 +90,23 @@ const tiles: TileEntry[] = [
   {
     Icon: FolderArchive, iconColor: "var(--info)", iconBg: "var(--info-tint)",
     title: "Portefeuille", metric: "189", unit: "",
-    caption: "Contrats actifs · 85 K CHF de primes",
-    alert: "4 renouvellements J-30", alertTone: "neutral",
+    caption: "Contrats · 85 K CHF de primes",
+    alert: "4 renouv. J-30", alertTone: "neutral",
     sources: ["BrokerStar"], modalKey: "portefeuille",
     spark: [182, 183, 184, 184, 185, 186, 186, 187, 188, 188, 189, 189],
   },
   {
     Icon: Flame, iconColor: "var(--danger)", iconBg: "var(--danger-tint)",
     title: "Sinistres", metric: "3", unit: "",
-    caption: "Dossiers ouverts · ratio 12 % CA",
-    alert: "SIN-0047 — 68 jours", alertTone: "danger",
+    caption: "Ouverts · ratio 12 % CA",
+    alert: "SIN-0047 · 68 j", alertTone: "danger",
     sources: ["BrokerStar"], modalKey: "sinistres",
   },
   {
     Icon: Wallet, iconColor: "var(--warn)", iconBg: "var(--warn-tint)",
     title: "Finance", metric: "+18", unit: "K",
-    caption: "Cash-flow net · commissions 11.2 K",
-    alert: "2 impayés — 3 200 CHF", alertTone: "warn",
+    caption: "Cash-flow net · comm. 11.2 K",
+    alert: "2 impayés", alertTone: "warn",
     sources: ["BrokerStar", "Odoo"], modalKey: "finance",
     spark: [4, 6, 8, 7, 10, 12, 11, 14, 15, 16, 17, 18],
   },
@@ -145,12 +114,12 @@ const tiles: TileEntry[] = [
     Icon: Globe, iconColor: "var(--accent)", iconBg: "var(--accent-tint)",
     title: "Vue d'ensemble", metric: "68", unit: "%",
     caption: "Marge consolidée · vision combinée",
-    alert: "+4 pt vs marché CH", alertTone: "good",
+    alert: "+4 pt vs marché", alertTone: "good",
     sources: ["BrokerStar", "Odoo"], modalKey: "vue360",
     spark: [55, 58, 60, 62, 63, 64, 64, 66, 67, 67, 68, 68],
   },
   {
-    Icon: Sparkles, iconColor: "#7C3AED", iconBg: "#F1ECFE",
+    Icon: Sparkles, iconColor: "var(--accent)", iconBg: "var(--accent-tint)",
     title: "Agents IA", metric: "3", unit: "",
     caption: "Actions préparées · prêtes à valider",
     alert: "Validation requise", alertTone: "neutral",
@@ -161,29 +130,26 @@ const tiles: TileEntry[] = [
 const agents = [
   {
     Icon: Mail, iconColor: "var(--info)", iconBg: "var(--info-tint)",
-    name: "Renouvellement",
+    name: "Agent · Renouvellement",
     desc: "4 courriers rédigés — échéances J-28",
-    source: "BrokerStar",
-    time: "il y a 12 min",
+    source: "BrokerStar", time: "12 min",
   },
   {
     Icon: AlertCircle, iconColor: "var(--warn)", iconBg: "var(--warn-tint)",
-    name: "Impayé Rossi SA",
+    name: "Agent · Impayé Rossi SA",
     desc: "Relance préparée — 1 800 CHF · 67 jours",
-    source: "Odoo",
-    time: "il y a 28 min",
+    source: "Odoo", time: "28 min",
   },
   {
     Icon: FileText, iconColor: "var(--accent)", iconBg: "var(--accent-tint)",
-    name: "Rapport direction",
+    name: "Agent · Rapport direction",
     desc: "Synthèse mensuelle BrokerStar + Odoo prête",
-    source: "Combiné",
-    time: "il y a 1 h",
+    source: "Combiné", time: "1 h",
     modalKey: "rapport" as ModalKey,
   },
 ];
 
-export default function DashboardPageB() {
+export default function DashboardPageE() {
   const router = useRouter();
   const [modalKey, setModalKey] = useState<ModalKey | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -205,9 +171,9 @@ export default function DashboardPageB() {
           style={{
             position: "fixed",
             inset: 0,
-            background: "rgba(15,23,42,0.4)",
+            background: "rgba(0,0,0,0.55)",
             zIndex: 40,
-            backdropFilter: "blur(2px)",
+            backdropFilter: "blur(4px)",
           }}
         />
       )}
@@ -220,8 +186,25 @@ export default function DashboardPageB() {
           minWidth: 0,
           display: "flex",
           flexDirection: "column",
+          position: "relative",
         }}
       >
+        {/* Subtle ambient glow at top */}
+        <div
+          aria-hidden
+          style={{
+            position: "absolute",
+            top: -60,
+            left: "30%",
+            right: "20%",
+            height: 240,
+            background:
+              "radial-gradient(60% 70% at 50% 0%, rgba(129,140,248,0.10), transparent 70%)",
+            pointerEvents: "none",
+            zIndex: 0,
+          }}
+        />
+
         <TopBar
           onLogout={() => router.push("/")}
           onToggleSidebar={() => setSidebarOpen((o) => !o)}
@@ -231,12 +214,14 @@ export default function DashboardPageB() {
           style={{
             flex: 1,
             padding: "clamp(1.5rem, 3vw, 2.25rem) clamp(1.25rem, 2.5vw, 2rem) 3rem",
+            position: "relative",
+            zIndex: 1,
           }}
         >
           <motion.section
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.45 }}
+            transition={{ duration: 0.5 }}
           >
             <div
               style={{
@@ -245,13 +230,13 @@ export default function DashboardPageB() {
                 alignItems: "flex-end",
                 gap: "1rem",
                 flexWrap: "wrap",
-                marginBottom: "1rem",
+                marginBottom: "1.25rem",
               }}
             >
               <div>
                 <h1
                   style={{
-                    fontSize: "clamp(1.4rem, 2.5vw, 1.7rem)",
+                    fontSize: "clamp(1.5rem, 2.5vw, 1.75rem)",
                     fontWeight: 600,
                     letterSpacing: "-0.025em",
                     color: "var(--text)",
@@ -263,19 +248,37 @@ export default function DashboardPageB() {
                 </h1>
                 <p
                   style={{
-                    fontSize: "0.88rem",
+                    fontSize: "0.86rem",
                     color: "var(--text-3)",
                     margin: 0,
                   }}
                 >
-                  Mardi 12 mai 2026 · semaine 19 · 5 courtiers, Zürich
+                  Mardi 12 mai 2026 · 14:32 CEST
                 </p>
               </div>
-              <DeltaStrip />
+              <div style={{ display: "flex", gap: "0.4rem" }}>
+                <span
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "0.3rem",
+                    fontSize: "0.74rem",
+                    fontWeight: 500,
+                    color: "var(--text-2)",
+                    background: "var(--surface)",
+                    border: "1px solid var(--border)",
+                    padding: "0.3rem 0.55rem",
+                    borderRadius: "100px",
+                  }}
+                >
+                  <Circle size={5} strokeWidth={0} fill="var(--success)" />
+                  Sync live
+                </span>
+              </div>
             </div>
 
             <div
-              className="forge-kpis"
+              className="onyx-kpis"
               style={{
                 display: "grid",
                 gridTemplateColumns: "repeat(5, 1fr)",
@@ -292,16 +295,12 @@ export default function DashboardPageB() {
           <motion.section
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.06, duration: 0.45 }}
+            transition={{ delay: 0.06, duration: 0.5 }}
             style={{ marginBottom: "1.5rem" }}
           >
-            <SectionHeader
-              title="Domaines"
-              count="6"
-              action="Tout voir"
-            />
+            <SectionHeader title="Domaines" count="6" action="Tout voir" />
             <div
-              className="forge-tiles"
+              className="onyx-tiles"
               style={{
                 display: "grid",
                 gridTemplateColumns: "repeat(3, 1fr)",
@@ -317,13 +316,9 @@ export default function DashboardPageB() {
           <motion.section
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1, duration: 0.45 }}
+            transition={{ delay: 0.1, duration: 0.5 }}
           >
-            <SectionHeader
-              title="Boîte de réception"
-              count="3"
-              subtitle="Agents IA — actions préparées cette nuit"
-            />
+            <SectionHeader title="Boîte de réception" count="3" subtitle="Agents IA — actions préparées cette nuit" />
             <AgentInbox onOpen={open} />
           </motion.section>
 
@@ -331,17 +326,17 @@ export default function DashboardPageB() {
         </main>
       </div>
 
-      <ForgeModal open={modalKey !== null} modalKey={modalKey} onClose={close} />
+      <OnyxModal open={modalKey !== null} modalKey={modalKey} onClose={close} />
 
       <style>{`
         @media (max-width: 1280px) {
-          .forge-kpis { grid-template-columns: repeat(3, 1fr) !important; }
+          .onyx-kpis { grid-template-columns: repeat(3, 1fr) !important; }
         }
         @media (max-width: 960px) {
-          .forge-tiles { grid-template-columns: repeat(2, 1fr) !important; }
+          .onyx-tiles { grid-template-columns: repeat(2, 1fr) !important; }
         }
         @media (max-width: 800px) {
-          .forge-sidebar {
+          .onyx-sidebar {
             position: fixed;
             top: 0;
             left: 0;
@@ -350,69 +345,14 @@ export default function DashboardPageB() {
             transform: translateX(-100%);
             transition: transform 0.25s ease;
           }
-          .forge-sidebar.open { transform: translateX(0); box-shadow: 4px 0 32px rgba(15,23,42,0.16); }
-          .forge-hamburger { display: inline-flex !important; }
+          .onyx-sidebar.open { transform: translateX(0); }
+          .onyx-hamburger { display: inline-flex !important; }
         }
-        @media (max-width: 640px) {
-          .forge-kpis { grid-template-columns: repeat(2, 1fr) !important; }
-          .forge-tiles { grid-template-columns: 1fr !important; }
+        @media (max-width: 600px) {
+          .onyx-kpis { grid-template-columns: repeat(2, 1fr) !important; }
+          .onyx-tiles { grid-template-columns: 1fr !important; }
         }
       `}</style>
-    </div>
-  );
-}
-
-function DeltaStrip() {
-  const items = [
-    { Icon: TrendingUp, color: "var(--success)", label: "CA +2.4 K depuis hier" },
-    { Icon: TrendingUp, color: "var(--success)", label: "Rétention +1 pt" },
-    { Icon: Circle, color: "var(--danger)", label: "1 nouveau sinistre" },
-    { Icon: Clock, color: "var(--text-3)", label: "14:32 CEST" },
-  ];
-  return (
-    <div
-      style={{
-        display: "flex",
-        gap: "0.85rem",
-        alignItems: "center",
-        flexWrap: "wrap",
-      }}
-    >
-      <span
-        style={{
-          fontSize: "0.66rem",
-          fontWeight: 600,
-          color: "var(--text-3)",
-          letterSpacing: "0.16em",
-          textTransform: "uppercase",
-        }}
-      >
-        Depuis hier
-      </span>
-      {items.map((item, i) => {
-        const I = item.Icon;
-        return (
-          <span
-            key={i}
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "0.3rem",
-              fontSize: "0.76rem",
-              fontWeight: 500,
-              color: "var(--text-2)",
-            }}
-          >
-            <I
-              size={item.Icon === Circle ? 6 : 12}
-              strokeWidth={item.Icon === Circle ? 0 : 2.5}
-              fill={item.Icon === Circle ? item.color : "none"}
-              color={item.color}
-            />
-            {item.label}
-          </span>
-        );
-      })}
     </div>
   );
 }
@@ -420,7 +360,7 @@ function DeltaStrip() {
 function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const sections = [
     {
-      title: "Mon cabinet",
+      title: "Espace",
       items: [
         { Icon: Home, label: "Accueil", active: true },
         { Icon: BarChart3, label: "Rapports" },
@@ -455,7 +395,7 @@ function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) 
 
   return (
     <aside
-      className={`forge-sidebar${isOpen ? " open" : ""}`}
+      className={`onyx-sidebar${isOpen ? " open" : ""}`}
       style={{
         width: 244,
         flexShrink: 0,
@@ -484,13 +424,7 @@ function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) 
             cursor: "pointer",
             fontFamily: "inherit",
             transition: "background 0.15s, border-color 0.15s",
-            boxShadow: "0 1px 0 rgba(255,255,255,0.4) inset, 0 1px 2px rgba(15,23,42,0.04)",
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.borderColor = "var(--border-strong)";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.borderColor = "var(--border)";
+            boxShadow: "0 0 0 1px var(--inset-highlight) inset",
           }}
         >
           <span
@@ -498,13 +432,14 @@ function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) 
               width: 24,
               height: 24,
               background: "var(--accent)",
-              color: "#FFFFFF",
+              color: "#0B0C0F",
               borderRadius: "6px",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               fontSize: "0.62rem",
               fontWeight: 700,
+              boxShadow: "0 0 0 1px var(--inset-highlight) inset, 0 2px 8px -2px rgba(129,140,248,0.5)",
             }}
           >
             CMA
@@ -567,13 +502,7 @@ function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) 
         </div>
       </div>
 
-      <nav
-        style={{
-          flex: 1,
-          overflowY: "auto",
-          padding: "0.65rem 0.75rem 0.65rem",
-        }}
-      >
+      <nav style={{ flex: 1, overflowY: "auto", padding: "0.65rem 0.75rem 0.65rem" }}>
         {sections.map((section) => (
           <div key={section.title} style={{ marginTop: "1rem" }}>
             <div
@@ -608,8 +537,8 @@ function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) 
           style={{
             width: 28,
             height: 28,
-            background: "var(--text)",
-            color: "var(--surface)",
+            background: "var(--surface-2)",
+            color: "var(--text)",
             borderRadius: "50%",
             display: "flex",
             alignItems: "center",
@@ -617,6 +546,7 @@ function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) 
             fontSize: "0.66rem",
             fontWeight: 700,
             flexShrink: 0,
+            border: "1px solid var(--border)",
           }}
         >
           TM
@@ -641,7 +571,7 @@ function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) 
               textOverflow: "ellipsis",
             }}
           >
-            Associé · thomas@muller.ch
+            Associé
           </div>
         </div>
       </div>
@@ -684,14 +614,20 @@ function NavItem({
         color: item.active ? "var(--text)" : "var(--text-2)",
         cursor: "pointer",
         textAlign: "left",
-        boxShadow: item.active ? "0 1px 2px rgba(15,23,42,0.04)" : "none",
+        boxShadow: item.active ? "0 0 0 1px var(--inset-highlight) inset" : "none",
         transition: "background 0.15s, color 0.15s",
       }}
       onMouseEnter={(e) => {
-        if (!item.active) e.currentTarget.style.background = "var(--surface)";
+        if (!item.active) {
+          e.currentTarget.style.background = "var(--surface)";
+          e.currentTarget.style.color = "var(--text)";
+        }
       }}
       onMouseLeave={(e) => {
-        if (!item.active) e.currentTarget.style.background = "transparent";
+        if (!item.active) {
+          e.currentTarget.style.background = "transparent";
+          e.currentTarget.style.color = "var(--text-2)";
+        }
       }}
     >
       <Icon size={14} strokeWidth={2} color={item.active ? "var(--accent)" : "var(--text-3)"} />
@@ -704,7 +640,7 @@ function NavItem({
             fontWeight: 600,
             color: badgeColor,
             padding: "0.05rem 0.4rem",
-            background: "var(--surface)",
+            background: "var(--surface-2)",
             border: "1px solid var(--border)",
             borderRadius: "100px",
           }}
@@ -727,7 +663,8 @@ function TopBar({
     <header
       style={{
         height: 52,
-        background: "var(--surface)",
+        background: "rgba(11,12,15,0.7)",
+        backdropFilter: "saturate(150%) blur(10px)",
         borderBottom: "1px solid var(--border)",
         display: "flex",
         alignItems: "center",
@@ -742,7 +679,7 @@ function TopBar({
         <button
           onClick={onToggleSidebar}
           aria-label="Menu"
-          className="forge-hamburger"
+          className="onyx-hamburger"
           style={{
             display: "none",
             alignItems: "center",
@@ -767,7 +704,7 @@ function TopBar({
             gap: "0.4rem",
           }}
         >
-          <span>Mon cabinet</span>
+          <span>Espace</span>
           <ChevronRight size={12} strokeWidth={2} />
           <span style={{ color: "var(--text)", fontWeight: 500 }}>Accueil</span>
         </span>
@@ -840,7 +777,7 @@ function IconBtn({
         transition: "background 0.15s, border-color 0.15s",
       }}
       onMouseEnter={(e) => {
-        e.currentTarget.style.background = "var(--surface-2)";
+        e.currentTarget.style.background = "var(--surface)";
         e.currentTarget.style.borderColor = "var(--border)";
       }}
       onMouseLeave={(e) => {
@@ -860,13 +797,13 @@ function IconBtn({
             padding: "0 3px",
             borderRadius: "7px",
             background: "var(--danger)",
-            color: "#FFFFFF",
+            color: "#0B0C0F",
             fontSize: "0.56rem",
             fontWeight: 700,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            border: "1.5px solid var(--surface)",
+            border: "1.5px solid var(--bg)",
           }}
         >
           {badge}
@@ -883,76 +820,56 @@ function KPICard({
   kpi: typeof kpis[number];
   delay: number;
 }) {
-  const trendColor = kpi.danger
-    ? "var(--danger)"
-    : kpi.trendDir === "up"
-    ? "var(--success)"
-    : "var(--danger)";
-  const trendBg = kpi.danger
-    ? "var(--danger-tint)"
-    : kpi.trendDir === "up"
-    ? "var(--success-tint)"
-    : "var(--danger-tint)";
-
   return (
     <div
-      className="forge-kpi-card"
+      className="onyx-kpi"
       style={{
         background: "var(--surface)",
         border: "1px solid var(--border)",
         borderRadius: "11px",
-        padding: "0.85rem 0.9rem",
+        padding: "0.9rem 0.95rem",
         position: "relative",
         overflow: "hidden",
         display: "flex",
         flexDirection: "column",
         gap: "0.5rem",
-        transition: "border-color 0.18s, box-shadow 0.18s",
-        cursor: "default",
+        boxShadow: "0 0 0 1px var(--inset-highlight) inset",
+        transition: "border-color 0.22s, box-shadow 0.22s",
       }}
     >
       <div
         style={{
-          display: "flex",
+          fontSize: "0.74rem",
+          fontWeight: 500,
+          color: "var(--text-3)",
+          display: "inline-flex",
           alignItems: "center",
-          justifyContent: "space-between",
-          gap: "0.4rem",
+          gap: "0.35rem",
         }}
       >
-        <span
-          style={{
-            fontSize: "0.74rem",
-            fontWeight: 500,
-            color: "var(--text-3)",
-            display: "inline-flex",
-            alignItems: "center",
-            gap: "0.35rem",
-          }}
-        >
-          {kpi.label}
-          {kpi.combined && (
-            <span
-              style={{
-                fontSize: "0.55rem",
-                fontWeight: 700,
-                color: "var(--accent)",
-                background: "var(--accent-tint)",
-                padding: "0.05rem 0.3rem",
-                borderRadius: "3px",
-                letterSpacing: "0.04em",
-              }}
-            >
-              ⊕
-            </span>
-          )}
-        </span>
+        {kpi.label}
+        {kpi.combined && (
+          <span
+            style={{
+              fontSize: "0.55rem",
+              fontWeight: 700,
+              color: "var(--accent)",
+              background: "var(--accent-tint)",
+              padding: "0.05rem 0.3rem",
+              borderRadius: "3px",
+              letterSpacing: "0.04em",
+            }}
+          >
+            ⊕
+          </span>
+        )}
       </div>
 
       <div style={{ display: "flex", alignItems: "baseline", gap: "0.3rem" }}>
         <span
           style={{
             fontFamily: "var(--font-mono)",
-            fontSize: "1.65rem",
+            fontSize: "1.7rem",
             fontWeight: 500,
             letterSpacing: "-0.03em",
             color: kpi.danger ? "var(--danger)" : "var(--text)",
@@ -963,13 +880,7 @@ function KPICard({
           <CountUp value={kpi.target} format={kpi.format} duration={900} delay={delay} />
         </span>
         {kpi.unit && (
-          <span
-            style={{
-              fontSize: "0.74rem",
-              fontWeight: 500,
-              color: "var(--text-3)",
-            }}
-          >
+          <span style={{ fontSize: "0.74rem", fontWeight: 500, color: "var(--text-3)" }}>
             {kpi.unit}
           </span>
         )}
@@ -983,10 +894,7 @@ function KPICard({
             gap: "0.2rem",
             fontSize: "0.7rem",
             fontWeight: 600,
-            color: trendColor,
-            background: trendBg,
-            padding: "0.15rem 0.4rem",
-            borderRadius: "4px",
+            color: kpi.danger ? "var(--danger)" : "var(--success)",
           }}
         >
           <TrendingUp size={10} strokeWidth={2.5} />
@@ -1003,40 +911,10 @@ function KPICard({
         </span>
       </div>
 
-      <div className="forge-kpi-reveal">
-        {kpi.breakdown.map((b) => (
-          <div
-            key={b.src}
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              fontSize: "0.72rem",
-              fontFamily: "var(--font-mono)",
-              color: "var(--text-3)",
-              padding: "0.15rem 0",
-              borderTop: "1px solid var(--border)",
-            }}
-          >
-            <span style={{ fontFamily: "var(--font-sans)" }}>{b.src}</span>
-            <span style={{ color: "var(--text-2)", fontVariantNumeric: "tabular-nums" }}>{b.val}</span>
-          </div>
-        ))}
-      </div>
-
       <style>{`
-        .forge-kpi-card { will-change: border-color; }
-        .forge-kpi-card:hover { border-color: var(--border-strong); box-shadow: 0 4px 16px -8px rgba(15,23,42,0.08); }
-        .forge-kpi-reveal {
-          max-height: 0;
-          overflow: hidden;
-          opacity: 0;
-          margin-top: 0;
-          transition: max-height 0.28s ease, opacity 0.22s ease, margin-top 0.28s ease;
-        }
-        .forge-kpi-card:hover .forge-kpi-reveal {
-          max-height: 200px;
-          opacity: 1;
-          margin-top: 0.25rem;
+        .onyx-kpi:hover {
+          border-color: var(--border-strong);
+          box-shadow: 0 0 0 1px var(--inset-highlight) inset, 0 0 0 4px var(--accent-tint), 0 8px 32px -16px rgba(129,140,248,0.18);
         }
       `}</style>
     </div>
@@ -1139,19 +1017,9 @@ function TileCard({
       : tile.alertTone === "danger"
       ? "var(--danger)"
       : "var(--text-3)";
-  const alertBg =
-    tile.alertTone === "warn"
-      ? "var(--warn-tint)"
-      : tile.alertTone === "good"
-      ? "var(--success-tint)"
-      : tile.alertTone === "danger"
-      ? "var(--danger-tint)"
-      : "var(--surface-2)";
   return (
-    <motion.button
+    <button
       onClick={() => onOpen(tile.modalKey)}
-      whileHover={{ y: -2 }}
-      transition={{ duration: 0.18 }}
       style={{
         background: "var(--surface)",
         border: "1px solid var(--border)",
@@ -1164,15 +1032,19 @@ function TileCard({
         display: "flex",
         flexDirection: "column",
         gap: "0.7rem",
-        transition: "border-color 0.18s, box-shadow 0.18s",
+        boxShadow: "0 0 0 1px var(--inset-highlight) inset",
+        transition: "border-color 0.22s, box-shadow 0.22s, transform 0.18s",
       }}
       onMouseEnter={(e) => {
         e.currentTarget.style.borderColor = "var(--border-strong)";
-        e.currentTarget.style.boxShadow = "0 4px 16px -8px rgba(15,23,42,0.08)";
+        e.currentTarget.style.transform = "translateY(-2px)";
+        e.currentTarget.style.boxShadow =
+          "0 0 0 1px var(--inset-highlight) inset, 0 12px 32px -16px rgba(129,140,248,0.22)";
       }}
       onMouseLeave={(e) => {
         e.currentTarget.style.borderColor = "var(--border)";
-        e.currentTarget.style.boxShadow = "none";
+        e.currentTarget.style.transform = "translateY(0)";
+        e.currentTarget.style.boxShadow = "0 0 0 1px var(--inset-highlight) inset";
       }}
     >
       <div
@@ -1278,26 +1150,17 @@ function TileCard({
             fontSize: "0.7rem",
             fontWeight: 600,
             color: alertColor,
-            background: alertBg,
-            padding: "0.18rem 0.45rem",
-            borderRadius: "5px",
           }}
         >
           <Circle size={5} strokeWidth={0} fill="currentColor" />
           {tile.alert}
         </span>
         <span style={{ flex: 1 }} />
-        <span
-          style={{
-            fontSize: "0.66rem",
-            color: "var(--text-4)",
-            fontWeight: 500,
-          }}
-        >
+        <span style={{ fontSize: "0.66rem", color: "var(--text-4)", fontWeight: 500 }}>
           {tile.sources.join(" · ")}
         </span>
       </div>
-    </motion.button>
+    </button>
   );
 }
 
@@ -1309,6 +1172,7 @@ function AgentInbox({ onOpen }: { onOpen: (k: ModalKey) => void }) {
         border: "1px solid var(--border)",
         borderRadius: "11px",
         overflow: "hidden",
+        boxShadow: "0 0 0 1px var(--inset-highlight) inset",
       }}
     >
       <div
@@ -1326,9 +1190,7 @@ function AgentInbox({ onOpen }: { onOpen: (k: ModalKey) => void }) {
           letterSpacing: "0.02em",
         }}
       >
-        <div style={{ display: "flex", gap: "1.5rem" }}>
-          <span>Agent</span>
-        </div>
+        <span>Agent</span>
         <button
           style={{
             display: "inline-flex",
@@ -1390,7 +1252,7 @@ function AgentRow({
         padding: "0.8rem 1rem",
         borderBottom: isLast ? "none" : "1px solid var(--border)",
         opacity: done !== "none" ? 0.4 : 1,
-        transition: "opacity 0.25s, background 0.15s",
+        transition: "opacity 0.25s",
       }}
     >
       <span
@@ -1416,7 +1278,7 @@ function AgentRow({
             letterSpacing: "-0.005em",
           }}
         >
-          Agent — {agent.name}
+          {agent.name}
         </div>
         <div
           style={{
@@ -1425,8 +1287,7 @@ function AgentRow({
             marginTop: "0.1rem",
           }}
         >
-          {agent.desc}{" "}
-          <span style={{ color: "var(--text-4)" }}>· {agent.source} · {agent.time}</span>
+          {agent.desc} <span style={{ color: "var(--text-4)" }}>· {agent.source} · {agent.time}</span>
         </div>
       </div>
       <div style={{ display: "flex", gap: "0.35rem" }}>
@@ -1442,20 +1303,15 @@ function AgentRow({
             gap: "0.25rem",
             padding: "0.4rem 0.7rem",
             background: done === "none" ? "var(--accent)" : "transparent",
-            color: done === "none" ? "#FFFFFF" : "var(--text-3)",
+            color: done === "none" ? "#0B0C0F" : "var(--text-3)",
             border: `1px solid ${done === "none" ? "var(--accent)" : "var(--border)"}`,
             borderRadius: "7px",
             fontFamily: "inherit",
             fontSize: "0.76rem",
             fontWeight: 600,
             cursor: done === "none" ? "pointer" : "default",
-            transition: "background 0.15s",
-          }}
-          onMouseEnter={(e) => {
-            if (done === "none") e.currentTarget.style.background = "var(--accent-2)";
-          }}
-          onMouseLeave={(e) => {
-            if (done === "none") e.currentTarget.style.background = "var(--accent)";
+            transition: "background 0.15s, box-shadow 0.15s",
+            boxShadow: done === "none" ? "0 0 0 0 var(--accent-tint), 0 4px 12px -4px rgba(129,140,248,0.32)" : "none",
           }}
         >
           {done === "validated" && <Check size={11} strokeWidth={2.5} />}
@@ -1471,7 +1327,7 @@ function AgentRow({
             justifyContent: "center",
             width: 30,
             padding: "0.4rem",
-            background: "var(--surface)",
+            background: "var(--surface-2)",
             color: "var(--text-3)",
             border: "1px solid var(--border)",
             borderRadius: "7px",
