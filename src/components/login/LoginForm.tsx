@@ -27,14 +27,17 @@ export default function LoginForm() {
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
-        padding: "3rem",
+        padding: "clamp(1.5rem, 5vw, 3rem)",
+        minHeight: 0,
+        overflowY: "auto",
       }}
     >
-      {/* Wordmark */}
+      {/* Wordmark — desktop only (brand panel visible) */}
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3, duration: 0.4 }}
+        className="hidden md:block"
         style={{
           position: "absolute",
           top: "2rem",
@@ -54,6 +57,19 @@ export default function LoginForm() {
         transition={{ delay: 0.2, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
         style={{ width: "100%", maxWidth: "380px" }}
       >
+        {/* Mobile logo — hidden on md+ where BrandPanel shows */}
+        <div className="flex md:hidden items-center gap-2 mb-8">
+          <svg viewBox="0 0 60 70" fill="none" style={{ width: 36, height: 36 }}>
+            <polygon points="30,2 58,17.5 58,52.5 30,68 2,52.5 2,17.5" fill="none" stroke="#2B3AE8" strokeWidth="3" />
+            <polygon points="30,12 48,22.5 48,47.5 30,58 12,47.5 12,22.5" fill="#2B3AE8" opacity="0.5" />
+            <polygon points="30,22 38,27 38,43 30,48 22,43 22,27" fill="#2B3AE8" />
+          </svg>
+          <div>
+            <div style={{ fontSize: "0.8rem", fontWeight: 800, color: "#1E2761", letterSpacing: "2px", textTransform: "uppercase" }}>Malyz</div>
+            <div style={{ fontSize: "0.6rem", color: "#6B7280", letterSpacing: "0.5px", textTransform: "uppercase" }}>Consulting Sàrl</div>
+          </div>
+        </div>
+
         {/* Heading */}
         <h2
           style={{

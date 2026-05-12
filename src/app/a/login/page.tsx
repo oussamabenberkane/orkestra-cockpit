@@ -3,14 +3,7 @@ import LoginForm from "@/components/login/LoginForm";
 
 export default function LoginPage() {
   return (
-    <div
-      style={{
-        display: "flex",
-        height: "100vh",
-        overflow: "hidden",
-        position: "relative",
-      }}
-    >
+    <div className="flex flex-col md:flex-row h-dvh overflow-hidden relative">
       <BrandPanel />
       <LoginForm />
     </div>

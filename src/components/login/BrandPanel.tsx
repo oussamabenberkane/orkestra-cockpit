@@ -8,8 +8,8 @@ export default function BrandPanel() {
       initial={{ x: "-100%", opacity: 0 }}
       animate={{ x: 0, opacity: 1 }}
       transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-      style={{ backgroundColor: "#1E2761", width: "42%" }}
-      className="relative flex flex-col justify-between p-10 overflow-hidden flex-shrink-0"
+      style={{ backgroundColor: "#1E2761" }}
+      className="hidden md:flex relative flex-col justify-between p-10 overflow-hidden shrink-0 md:w-[42%]"
     >
       {/* Hex grid background */}
       <div className="hex-grid-bg">
