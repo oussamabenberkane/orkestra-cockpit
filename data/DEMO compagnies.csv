@@ -1,0 +1,11 @@
+id,nom,contact_email,commission_base
+CMP001,AXA,contact@axa.ch,9.23
+CMP002,Zurich,contact@zurich.ch,17.88
+CMP003,Helvetia,contact@helvetia.ch,13.74
+CMP004,Allianz,contact@allianz.ch,16.56
+CMP005,Generali,contact@generali.ch,11.26
+CMP006,Mobilière,contact@mobilière.ch,17.81
+CMP007,Bâloise,contact@bâloise.ch,8.59
+CMP008,Swiss Life,contact@swisslife.ch,11.04
+CMP009,Vaudoise,contact@vaudoise.ch,10.90
+CMP010,Winterthur,contact@winterthur.ch,14.71

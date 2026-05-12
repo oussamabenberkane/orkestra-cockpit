@@ -1,0 +1,51 @@
+id,raison_sociale,type,numero_client,ville,code_postal,secteur,courtier_id,segment,date_entree,actif,nb_employes,chiffre_affaires_annuel
+CLT001,GmbH Group H.,PME,CH81984,Morges,6479,Agriculture,C001,bronze,2022-09-14,true,146,4799907
+CLT002,SA Commerce M.,PME,CH20663,Sion,4063,Immobilier,C002,bronze,2023-11-28,true,99,2995028
+CLT003,Sàrl Health Y.,PME,CH95350,Nyon,5660,Agriculture,C003,bronze,2024-02-05,true,102,1154600
+CLT004,GmbH Commerce U.,PME,CH52505,Lausanne,6495,Agriculture,C005,silver,2021-07-07,true,103,2238685
+CLT005,GmbH Commerce E.,PME,CH42987,Sion,2127,Services financiers,C002,gold,2025-01-29,false,134,1612123
+CLT006,SA Building R.,PME,CH96687,Genève,5537,Construction,C001,gold,2022-10-29,true,92,4216888
+CLT007,AG Commerce P.,PME,CH41425,Fribourg,7940,Restauration,C005,bronze,2023-03-13,true,49,679281
+CLT008,SA Tech P.,PME,CH83710,Morges,2250,Commerce de détail,C002,bronze,2024-03-04,true,91,3008620
+CLT009,SA Transport H.,PME,CH28715,Berne,4126,Commerce de détail,C002,gold,2023-06-13,true,116,367756
+CLT010,Sàrl Building U.,PME,CH32470,Berne,3795,Construction,C001,bronze,2024-06-16,true,68,4735008
+CLT011,Sàrl Transport I.,PME,CH84481,Yverdon,4874,Construction,C005,silver,2024-05-04,true,106,1822788
+CLT012,SA Solutions P.,PME,CH70872,Neuchâtel,2328,IT & Conseil,C005,bronze,2022-03-24,true,31,1009870
+CLT013,AG Commerce S.,PME,CH51466,Martigny,7140,Immobilier,C004,silver,2024-10-05,true,92,2491424
+CLT014,SA Transport B.,PME,CH60979,Yverdon,6453,Agriculture,C004,silver,2024-05-22,true,109,758947
+CLT015,Sàrl Commerce Z.,PME,CH12202,Montreux,9325,Agriculture,C004,silver,2024-06-16,true,6,4542506
+CLT016,SA Conseil I.,PME,CH55097,Vevey,6201,Construction,C001,silver,2023-06-08,true,68,690750
+CLT017,GmbH Health X.,PME,CH67473,Lausanne,5043,Services financiers,C005,gold,2022-07-18,true,146,997300
+CLT018,Sàrl Services Y.,PME,CH20581,Montreux,5664,Services financiers,C004,gold,2024-05-22,true,132,3526023
+CLT019,AG Building Q.,PME,CH47446,Sion,1096,Construction,C003,gold,2024-03-17,true,29,2953835
+CLT020,AG Conseil B.,PME,CH49003,Genève,6139,Commerce de détail,C003,bronze,2023-11-23,true,139,4531190
+CLT021,SA Tech A.,PME,CH30308,Neuchâtel,6774,Santé,C003,silver,2023-08-12,true,81,4939462
+CLT022,SA Group R.,PME,CH99016,Genève,5951,Immobilier,C003,bronze,2021-07-17,true,68,4526565
+CLT023,SA Industries F.,PME,CH28440,Nyon,3154,Industrie,C001,bronze,2021-12-27,true,63,4525349
+CLT024,AG Transport L.,PME,CH33222,Fribourg,4055,Services financiers,C005,silver,2023-08-21,true,61,3895548
+CLT025,AG Transport F.,PME,CH54842,Martigny,2105,Industrie,C001,silver,2023-01-15,true,133,4369575
+CLT026,GmbH Group K.,PME,CH22104,Zurich,1604,Restauration,C004,gold,2025-03-07,true,140,4734826
+CLT027,SA Health V.,PME,CH83741,Nyon,3011,IT & Conseil,C001,silver,2023-02-28,true,41,2429436
+CLT028,SA Group X.,PME,CH81894,Montreux,8649,Santé,C003,silver,2022-04-26,true,130,4690411
+CLT029,AG Industries W.,PME,CH26348,Morges,5001,Services financiers,C003,bronze,2024-07-16,true,11,850272
+CLT030,Sàrl Conseil J.,PME,CH43207,Fribourg,4600,Industrie,C002,bronze,2023-05-19,false,133,4701383
+CLT031,GmbH Health Y.,PME,CH20231,Montreux,5917,Services financiers,C002,gold,2023-12-05,true,84,1289962
+CLT032,AG Industries U.,PME,CH59780,Montreux,3211,Santé,C003,gold,2023-06-18,true,110,4146782
+CLT033,Sàrl Transport L.,PME,CH90980,Bulle,2943,Transport,C001,gold,2024-09-17,true,116,2177399
+CLT034,AG Group M.,PME,CH65734,Fribourg,2290,Transport,C001,silver,2023-12-18,false,86,1557708
+CLT035,Sàrl Solutions X.,PME,CH38747,Fribourg,8803,Immobilier,C004,silver,2023-08-30,true,66,4049259
+CLT036,SA Tech X.,PME,CH40210,Yverdon,2404,Restauration,C003,bronze,2023-10-17,true,115,3735924
+CLT037,SA Transport J.,PME,CH35925,Lausanne,7352,Transport,C004,silver,2024-08-24,true,30,4224852
+CLT038,Sàrl Commerce S.,PME,CH22860,Zurich,1691,Services financiers,C003,silver,2024-10-23,true,133,478144
+CLT039,Sàrl Solutions Q.,PME,CH44976,Bulle,7097,Agriculture,C005,silver,2021-05-19,true,125,1135813
+CLT040,AG Tech P.,PME,CH71228,Vevey,1310,Santé,C002,bronze,2021-09-23,true,99,3874391
+CLT041,SA Industries A.,PME,CH13269,Bulle,1367,Construction,C004,silver,2023-05-11,true,94,634616
+CLT042,Sàrl Transport W.,PME,CH93063,Zurich,3236,Immobilier,C002,silver,2024-02-06,true,147,4324616
+CLT043,AG Commerce W.,PME,CH78888,Martigny,1962,Services financiers,C003,gold,2023-04-09,true,134,2547228
+CLT044,SA Group N.,PME,CH84288,Sierre,9141,Services financiers,C004,gold,2023-09-18,true,87,1435292
+CLT045,SA Commerce V.,PME,CH40338,Berne,6191,Industrie,C003,gold,2024-01-13,true,70,2471798
+CLT046,SA Services R.,PME,CH27295,Fribourg,3809,Construction,C003,gold,2023-12-20,true,4,261206
+CLT047,GmbH Services U.,PME,CH10492,Montreux,2445,Immobilier,C002,silver,2023-01-26,false,130,1412026
+CLT048,SA Conseil Y.,PME,CH79860,Fribourg,9226,Construction,C005,silver,2023-08-24,true,70,1857961
+CLT049,Sàrl Building K.,PME,CH17984,Genève,1924,Agriculture,C005,silver,2024-05-18,true,49,4676373
+CLT050,AG Transport T.,PME,CH95929,Genève,4284,Immobilier,C001,bronze,2021-06-07,false,59,2404022

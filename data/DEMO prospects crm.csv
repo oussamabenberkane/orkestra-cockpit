@@ -1,0 +1,31 @@
+id,courtier_id,raison_sociale,ville,secteur,potentiel_prime_annuelle,statut,date_premier_contact,date_relance,motif_perte,source,nb_employes
+PROS001,C004,Prospect AG G.,Yverdon,Industrie,21544,perdu,2026-02-13,2026-05-18,Faillite client,prospection,11
+PROS002,C003,Prospect SA D.,Sierre,Transport,24363,offre_envoyée,2026-02-14,2026-05-18,,reseau,63
+PROS003,C001,Prospect Sàrl A.,Fribourg,Immobilier,36304,nouveau,2026-02-05,2026-05-07,,reseau,62
+PROS004,C005,Prospect Sàrl J.,Montreux,Santé,23058,contacté,2026-04-03,2026-06-01,,site_web,33
+PROS005,C005,Prospect SA W.,Fribourg,Restauration,4328,rendez_vous,2026-02-23,2026-05-26,,recommandation,6
+PROS006,C003,Prospect SA G.,Neuchâtel,Restauration,30700,contacté,2026-03-06,2026-05-03,,prospection,58
+PROS007,C004,Prospect Sàrl T.,Martigny,Immobilier,15353,rendez_vous,2026-03-23,2026-05-19,,prospection,61
+PROS008,C005,Prospect Sàrl G.,Sion,Construction,41864,nouveau,2026-03-03,2026-05-25,,prospection,66
+PROS009,C003,Prospect SA F.,Neuchâtel,Agriculture,46560,nouveau,2026-01-10,2026-05-13,,recommandation,47
+PROS010,C001,Prospect SA U.,Zurich,Services financiers,19200,perdu,2026-01-19,2026-05-07,Faillite client,recommandation,80
+PROS011,C004,Prospect AG K.,Yverdon,Commerce de détail,4268,contacté,2026-04-23,2026-05-05,,prospection,16
+PROS012,C004,Prospect Sàrl B.,Fribourg,Construction,6981,perdu,2026-03-03,2026-05-04,Insatisfaction service,site_web,9
+PROS013,C003,Prospect AG H.,Berne,IT & Conseil,19648,contacté,2026-04-09,2026-05-21,,reseau,79
+PROS014,C005,Prospect AG X.,Montreux,Construction,46622,nouveau,2026-04-14,2026-05-20,,site_web,12
+PROS015,C003,Prospect AG H.,Montreux,Services financiers,41806,perdu,2026-04-20,2026-05-23,Offre concurrente,reseau,72
+PROS016,C002,Prospect SA W.,Bulle,Commerce de détail,32700,rendez_vous,2026-03-28,2026-05-05,,site_web,58
+PROS017,C004,Prospect SA R.,Bulle,IT & Conseil,25610,offre_envoyée,2026-04-12,2026-05-17,,prospection,57
+PROS018,C002,Prospect Sàrl R.,Berne,IT & Conseil,28348,rendez_vous,2026-03-05,2026-05-18,,site_web,63
+PROS019,C002,Prospect AG Z.,Nyon,Restauration,24886,offre_envoyée,2026-03-17,2026-05-22,,site_web,66
+PROS020,C001,Prospect Sàrl N.,Sierre,Restauration,30601,gagné,2026-03-29,2026-05-10,,reseau,59
+PROS021,C002,Prospect SA O.,Lausanne,Restauration,19636,rendez_vous,2026-03-10,2026-05-18,,prospection,35
+PROS022,C005,Prospect SA Y.,Montreux,Santé,8514,gagné,2026-01-14,2026-05-07,,site_web,35
+PROS023,C002,Prospect SA O.,Montreux,Services financiers,38824,nouveau,2026-02-11,2026-05-09,,recommandation,16
+PROS024,C001,Prospect SA Z.,Zurich,IT & Conseil,43066,nouveau,2026-01-29,2026-05-16,,reseau,66
+PROS025,C001,Prospect AG K.,Yverdon,Industrie,47534,nouveau,2026-03-27,2026-05-07,,reseau,17
+PROS026,C002,Prospect Sàrl S.,Sion,Santé,6788,nouveau,2026-03-14,2026-05-05,,recommandation,13
+PROS027,C002,Prospect Sàrl W.,Martigny,Construction,5080,perdu,2026-02-10,2026-05-13,Prix trop élevé,reseau,36
+PROS028,C004,Prospect Sàrl N.,Yverdon,Immobilier,15802,rendez_vous,2026-03-20,2026-05-26,,recommandation,6
+PROS029,C002,Prospect SA T.,Yverdon,Santé,11303,perdu,2026-01-13,2026-05-09,Prix trop élevé,reseau,57
+PROS030,C002,Prospect AG X.,Morges,Santé,30945,gagné,2026-04-10,2026-05-19,,prospection,20
