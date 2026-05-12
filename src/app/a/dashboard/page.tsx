@@ -35,7 +35,6 @@ export default function DashboardPage() {
       />
 
       <div style={{ display: "flex", flex: 1, overflow: "hidden", position: "relative" }}>
-        {/* Mobile backdrop */}
         {sidebarOpen && (
           <div
             onClick={() => setSidebarOpen(false)}
@@ -64,7 +63,6 @@ export default function DashboardPage() {
             background: "#F4F6FB",
           }}
         >
-          {/* Page header */}
           <div className="page-header-row">
             <div>
               <h1

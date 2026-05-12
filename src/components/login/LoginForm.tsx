@@ -14,7 +14,7 @@ export default function LoginForm() {
     e.preventDefault();
     setLoading(true);
     setTimeout(() => {
-      router.push("/dashboard");
+      router.push("/a/dashboard");
     }, 400);
   };
 

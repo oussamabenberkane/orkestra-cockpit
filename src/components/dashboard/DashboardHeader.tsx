@@ -167,7 +167,7 @@ export default function DashboardHeader({ onOpenSettings, onToggleSidebar }: Das
         {/* Logout button — hidden on small mobile */}
         <button
           className="header-logout-btn"
-          onClick={() => router.push("/login")}
+          onClick={() => router.push("/")}
           style={{
             display: "flex",
             alignItems: "center",
