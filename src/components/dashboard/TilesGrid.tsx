@@ -144,14 +144,7 @@ export default function TilesGrid({ onOpenModal }: TilesGridProps) {
   ];
 
   return (
-    <div
-      style={{
-        display: "grid",
-        gridTemplateColumns: "repeat(3, 1fr)",
-        gap: "1rem",
-        marginBottom: "1.25rem",
-      }}
-    >
+    <div className="tiles-grid-responsive">
       {tiles.map((tile, i) => (
         <Tile key={tile.title} {...tile} index={i} onOpenModal={onOpenModal} />
       ))}

@@ -2,6 +2,8 @@
 
 interface SidebarProps {
   onOpenSettings: () => void;
+  isOpen: boolean;
+  onClose: () => void;
 }
 
 interface NavItem {
@@ -18,7 +20,7 @@ interface NavSection {
   items: NavItem[];
 }
 
-export default function Sidebar({ onOpenSettings }: SidebarProps) {
+export default function Sidebar({ onOpenSettings, isOpen, onClose }: SidebarProps) {
   const sections: NavSection[] = [
     {
       title: "Menu",
@@ -73,15 +75,30 @@ export default function Sidebar({ onOpenSettings }: SidebarProps) {
 
   return (
     <aside
-      style={{
-        width: "200px",
-        background: "#1E2761",
-        padding: "1rem 0",
-        display: "flex",
-        flexDirection: "column",
-        flexShrink: 0,
-      }}
+      className={`sidebar-nav${isOpen ? " sidebar-open" : ""}`}
     >
+      {/* Mobile close button */}
+      <button
+        onClick={onClose}
+        style={{
+          display: "none",
+          alignSelf: "flex-end",
+          margin: "0 0.75rem 0.5rem",
+          background: "rgba(255,255,255,0.08)",
+          border: "1px solid rgba(255,255,255,0.12)",
+          borderRadius: "6px",
+          color: "rgba(255,255,255,0.6)",
+          fontSize: "0.8rem",
+          padding: "0.25rem 0.6rem",
+          cursor: "pointer",
+          fontFamily: "inherit",
+        }}
+        className="sidebar-close-btn"
+        aria-label="Fermer le menu"
+      >
+        ✕
+      </button>
+
       {sections.map((section) => (
         <div key={section.title}>
           <div
@@ -100,7 +117,7 @@ export default function Sidebar({ onOpenSettings }: SidebarProps) {
           {section.items.map((item) => (
             <div
               key={item.label}
-              onClick={item.onClick}
+              onClick={() => { item.onClick?.(); onClose(); }}
               style={{
                 display: "flex",
                 alignItems: "center",

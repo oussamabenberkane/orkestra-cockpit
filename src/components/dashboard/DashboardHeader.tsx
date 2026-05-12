@@ -4,9 +4,10 @@ import { useRouter } from "next/navigation";
 
 interface DashboardHeaderProps {
   onOpenSettings: () => void;
+  onToggleSidebar: () => void;
 }
 
-export default function DashboardHeader({ onOpenSettings }: DashboardHeaderProps) {
+export default function DashboardHeader({ onOpenSettings, onToggleSidebar }: DashboardHeaderProps) {
   const router = useRouter();
   return (
     <header
@@ -24,7 +25,11 @@ export default function DashboardHeader({ onOpenSettings }: DashboardHeaderProps
       }}
     >
       {/* Left */}
-      <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+        {/* Hamburger — visible on mobile only */}
+        <button className="hamburger-btn" onClick={onToggleSidebar} aria-label="Menu">
+          ☰
+        </button>
         {/* Malyz Logo */}
         <a
           href="#"
@@ -60,6 +65,7 @@ export default function DashboardHeader({ onOpenSettings }: DashboardHeaderProps
               Malyz
             </span>
             <span
+              className="header-malyz-sub"
               style={{
                 fontSize: "0.55rem",
                 color: "#6B7280",
@@ -72,13 +78,15 @@ export default function DashboardHeader({ onOpenSettings }: DashboardHeaderProps
           </div>
         </a>
 
-        {/* Divider */}
+        {/* Divider — hidden on mobile */}
         <div
+          className="header-divider"
           style={{ width: "1px", height: "24px", background: "#E4E7F0" }}
         />
 
-        {/* Orkestra wordmark */}
+        {/* Orkestra wordmark — hidden on mobile */}
         <div
+          className="header-orkestra-brand"
           style={{
             fontSize: "1.1rem",
             fontWeight: 800,
@@ -90,8 +98,8 @@ export default function DashboardHeader({ onOpenSettings }: DashboardHeaderProps
         </div>
       </div>
 
-      {/* Center */}
-      <div style={{ fontSize: "0.8rem", color: "#6B7280", fontWeight: 500 }}>
+      {/* Center — hidden on mobile */}
+      <div className="header-center-text">
         Cabinet Müller &amp; Associés SA — 5 courtiers · 4 juin 2026
       </div>
 
@@ -121,7 +129,7 @@ export default function DashboardHeader({ onOpenSettings }: DashboardHeaderProps
               borderRadius: "50%",
             }}
           />
-          Temps réel
+          <span className="header-live-text">Temps réel</span>
         </div>
 
         {/* Settings button */}
@@ -153,11 +161,12 @@ export default function DashboardHeader({ onOpenSettings }: DashboardHeaderProps
             e.currentTarget.style.color = "#1A1F36";
           }}
         >
-          ⚙️ Paramètres
+          ⚙️ <span className="header-settings-text">Paramètres</span>
         </button>
 
-        {/* Logout button */}
+        {/* Logout button — hidden on small mobile */}
         <button
+          className="header-logout-btn"
           onClick={() => router.push("/login")}
           style={{
             display: "flex",
@@ -183,7 +192,7 @@ export default function DashboardHeader({ onOpenSettings }: DashboardHeaderProps
             e.currentTarget.style.color = "#6B7280";
           }}
         >
-          ↩ Déconnexion
+          ↩ <span className="header-logout-text">Déconnexion</span>
         </button>
 
         {/* Avatar */}

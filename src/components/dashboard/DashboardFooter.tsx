@@ -7,19 +7,7 @@ export default function DashboardFooter() {
   ];
 
   return (
-    <div
-      style={{
-        background: "white",
-        borderTop: "1px solid #E4E7F0",
-        padding: "0.5rem 1.5rem",
-        display: "flex",
-        alignItems: "center",
-        gap: "1.5rem",
-        fontSize: "0.68rem",
-        color: "#6B7280",
-        flexShrink: 0,
-      }}
-    >
+    <div className="footer-responsive">
       {items.map((item) => (
         <div
           key={item.label}
@@ -31,10 +19,10 @@ export default function DashboardFooter() {
             fontWeight: 500,
           }}
         >
-          {item.icon} {item.label}
+          {item.icon} <span className="footer-item-label">{item.label}</span>
         </div>
       ))}
-      <div style={{ marginLeft: "auto", fontSize: "0.65rem", color: "#6B7280" }}>
+      <div className="footer-sync">
         Sync BrokerStar : il y a 3 min · Odoo : il y a 5 min
       </div>
     </div>

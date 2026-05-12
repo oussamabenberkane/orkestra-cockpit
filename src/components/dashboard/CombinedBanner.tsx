@@ -7,19 +7,7 @@ export default function CombinedBanner() {
   ];
 
   return (
-    <div
-      style={{
-        background: "white",
-        border: "1px solid #E4E7F0",
-        borderRadius: "14px",
-        padding: "1rem 1.25rem",
-        marginBottom: "1.25rem",
-        display: "flex",
-        alignItems: "center",
-        gap: "1.5rem",
-        boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
-      }}
-    >
+    <div className="combined-banner-responsive">
       {/* Tag */}
       <div
         style={{
@@ -34,6 +22,7 @@ export default function CombinedBanner() {
           letterSpacing: "0.5px",
           whiteSpace: "nowrap",
           textAlign: "center",
+          flexShrink: 0,
         }}
       >
         ⊕ KPIs
@@ -42,7 +31,7 @@ export default function CombinedBanner() {
       </div>
 
       {/* Items */}
-      <div style={{ display: "flex", gap: "2rem", flex: 1 }}>
+      <div className="combined-items-responsive">
         {items.map((item) => (
           <div key={item.lbl}>
             <div
@@ -62,16 +51,8 @@ export default function CombinedBanner() {
         ))}
       </div>
 
-      {/* Formula */}
-      <div
-        style={{
-          fontSize: "0.7rem",
-          color: "#6B7280",
-          lineHeight: 1.6,
-          borderLeft: "2px solid #E4E7F0",
-          paddingLeft: "1rem",
-        }}
-      >
+      {/* Formula — hidden on mobile */}
+      <div className="combined-formula-responsive">
         <strong style={{ color: "#1A1F36", fontWeight: 600 }}>
           KPIs impossibles dans un seul ERP
         </strong>

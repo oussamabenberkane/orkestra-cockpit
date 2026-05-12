@@ -48,19 +48,13 @@ export default function AgentsSection({ onOpenModal }: AgentsSectionProps) {
           />
           Agents IA — Actions en attente
         </div>
-        <span style={{ fontSize: "0.72rem", color: "#6B7280" }}>
+        <span className="agents-lpd-text" style={{ fontSize: "0.72rem", color: "#6B7280" }}>
           🇨🇭 LLM souverain Infomaniak — LPD conforme
         </span>
       </div>
 
       {/* Grid */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(3, 1fr)",
-          gap: "0.75rem",
-        }}
-      >
+      <div className="agents-grid-responsive">
         <AgentCard
           icon="📧"
           name="Agent Renouvellement"

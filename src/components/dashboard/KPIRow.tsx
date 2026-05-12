@@ -37,14 +37,7 @@ const kpis: Omit<KPICardProps, "index">[] = [
 
 export default function KPIRow() {
   return (
-    <div
-      style={{
-        display: "grid",
-        gridTemplateColumns: "repeat(5, 1fr)",
-        gap: "0.85rem",
-        marginBottom: "1.25rem",
-      }}
-    >
+    <div className="kpi-grid">
       {kpis.map((kpi, i) => (
         <KPICard key={kpi.label} {...kpi} index={i} />
       ))}

@@ -15,6 +15,7 @@ import type { ModalKey } from "@/lib/types";
 export default function DashboardPage() {
   const [modalKey, setModalKey] = useState<ModalKey | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const openModal = (key: ModalKey) => setModalKey(key);
   const closeModal = () => setModalKey(null);
@@ -28,12 +29,34 @@ export default function DashboardPage() {
         overflow: "hidden",
       }}
     >
-      <DashboardHeader onOpenSettings={() => setSettingsOpen(true)} />
+      <DashboardHeader
+        onOpenSettings={() => setSettingsOpen(true)}
+        onToggleSidebar={() => setSidebarOpen((o) => !o)}
+      />
 
-      <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
-        <Sidebar onOpenSettings={() => setSettingsOpen(true)} />
+      <div style={{ display: "flex", flex: 1, overflow: "hidden", position: "relative" }}>
+        {/* Mobile backdrop */}
+        {sidebarOpen && (
+          <div
+            onClick={() => setSidebarOpen(false)}
+            style={{
+              position: "fixed",
+              inset: 0,
+              background: "rgba(0,0,0,0.4)",
+              zIndex: 40,
+              backdropFilter: "blur(2px)",
+            }}
+          />
+        )}
+
+        <Sidebar
+          onOpenSettings={() => setSettingsOpen(true)}
+          isOpen={sidebarOpen}
+          onClose={() => setSidebarOpen(false)}
+        />
 
         <main
+          className="dashboard-main-padding"
           style={{
             flex: 1,
             overflowY: "auto",
@@ -42,14 +65,7 @@ export default function DashboardPage() {
           }}
         >
           {/* Page header */}
-          <div
-            style={{
-              display: "flex",
-              alignItems: "flex-start",
-              justifyContent: "space-between",
-              marginBottom: "1.25rem",
-            }}
-          >
+          <div className="page-header-row">
             <div>
               <h1
                 style={{
@@ -65,7 +81,7 @@ export default function DashboardPage() {
                 Données consolidées en temps réel — BrokerStar + Odoo
               </p>
             </div>
-            <div style={{ display: "flex", gap: "0.4rem" }}>
+            <div className="source-pills-row">
               <span
                 style={{
                   background: "#EFF6FF",
