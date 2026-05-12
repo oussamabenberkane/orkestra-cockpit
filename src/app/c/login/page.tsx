@@ -6,7 +6,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 
-export default function LoginPageC() {
+export default function LoginPageF() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -45,35 +45,34 @@ export default function LoginPageC() {
             fontWeight: 500,
             color: "var(--text-3)",
             textDecoration: "none",
-            padding: "0.35rem 0.65rem",
-            borderRadius: "8px",
-            transition: "color 0.15s, background 0.15s",
+            padding: "0.45rem 0.7rem",
+            background: "var(--surface)",
+            borderRadius: "10px",
+            boxShadow: "var(--tier-1)",
+            transition: "transform 0.22s ease, color 0.22s ease",
           }}
           onMouseEnter={(e) => {
+            e.currentTarget.style.transform = "translateY(-1px)";
             e.currentTarget.style.color = "var(--text)";
-            e.currentTarget.style.background = "var(--surface-2)";
           }}
           onMouseLeave={(e) => {
+            e.currentTarget.style.transform = "translateY(0)";
             e.currentTarget.style.color = "var(--text-3)";
-            e.currentTarget.style.background = "transparent";
           }}
         >
           <ArrowLeft size={13} strokeWidth={2.25} />
           Sélection
         </Link>
-
-        <BrandMark />
-
         <span
           style={{
-            fontSize: "0.66rem",
+            fontSize: "0.72rem",
             fontWeight: 600,
             color: "var(--accent)",
-            letterSpacing: "0.2em",
+            letterSpacing: "0.18em",
             textTransform: "uppercase",
           }}
         >
-          Variante C — Halo
+          Variante F · Plinth
         </span>
       </header>
 
@@ -89,55 +88,39 @@ export default function LoginPageC() {
         <motion.div
           initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+          transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
           style={{
             width: "100%",
             maxWidth: "420px",
-            textAlign: "left",
+            background: "var(--surface)",
+            borderRadius: "18px",
+            padding: "clamp(1.85rem, 3vw, 2.5rem)",
+            boxShadow: "var(--tier-2)",
           }}
         >
-          <div style={{ textAlign: "center", marginBottom: "2.5rem" }}>
-            <span
-              style={{
-                display: "inline-block",
-                fontSize: "0.66rem",
-                fontWeight: 600,
-                color: "var(--text-3)",
-                letterSpacing: "0.22em",
-                textTransform: "uppercase",
-                marginBottom: "0.85rem",
-              }}
-            >
-              Cabinet Müller &amp; Associés
-            </span>
+          <div style={{ marginBottom: "1.75rem", textAlign: "center" }}>
+            <BrandMark />
             <h1
               style={{
-                fontSize: "clamp(2rem, 4vw, 2.6rem)",
+                fontSize: "1.75rem",
                 fontWeight: 600,
-                lineHeight: 1.08,
                 letterSpacing: "-0.025em",
                 color: "var(--text)",
                 margin: 0,
-                marginBottom: "0.6rem",
+                marginTop: "1.5rem",
+                marginBottom: "0.4rem",
               }}
             >
               Bonjour, Thomas.
             </h1>
-            <p
-              style={{
-                fontSize: "1rem",
-                color: "var(--text-3)",
-                margin: 0,
-                lineHeight: 1.55,
-              }}
-            >
-              Votre cockpit vous attend.
+            <p style={{ fontSize: "0.92rem", color: "var(--text-3)", margin: 0 }}>
+              Reconnectez-vous au cockpit.
             </p>
           </div>
 
           <form onSubmit={handleSubmit}>
             <Field
-              id="email-c"
+              id="email-f"
               label="E-mail"
               type="email"
               value={email}
@@ -145,12 +128,12 @@ export default function LoginPageC() {
               placeholder="thomas@muller.ch"
             />
             <Field
-              id="password-c"
+              id="password-f"
               label="Mot de passe"
               type="password"
               value={password}
               onChange={setPassword}
-              placeholder=""
+              placeholder="••••••••"
             />
 
             <button
@@ -159,12 +142,14 @@ export default function LoginPageC() {
               style={{
                 width: "100%",
                 marginTop: "0.5rem",
-                padding: "0.85rem",
-                background: loading ? "var(--text-3)" : "var(--accent)",
-                color: "#FFFFFF",
+                padding: "0.78rem",
+                background: loading
+                  ? "var(--surface-3)"
+                  : "linear-gradient(to bottom, var(--accent), var(--accent-2))",
+                color: loading ? "var(--text-3)" : "#FFFFFF",
                 border: "none",
-                borderRadius: "12px",
-                fontFamily: "var(--font-sans)",
+                borderRadius: "11px",
+                fontFamily: "inherit",
                 fontSize: "0.92rem",
                 fontWeight: 600,
                 cursor: loading ? "not-allowed" : "pointer",
@@ -173,39 +158,45 @@ export default function LoginPageC() {
                 alignItems: "center",
                 gap: "0.45rem",
                 letterSpacing: "-0.005em",
-                transition: "background 0.2s",
+                transition: "transform 0.22s ease, box-shadow 0.22s ease",
                 boxShadow: loading
                   ? "none"
-                  : "0 1px 2px rgba(31,111,91,0.18), 0 4px 12px -4px rgba(31,111,91,0.22)",
+                  : "inset 0 1px 0 rgba(255,255,255,0.25), 0 0 0 1px rgba(68,65,200,0.30), 0 8px 24px -6px rgba(88,86,214,0.45)",
               }}
               onMouseEnter={(e) => {
-                if (!loading) e.currentTarget.style.background = "var(--accent-2)";
+                if (!loading) {
+                  e.currentTarget.style.transform = "translateY(-1px)";
+                  e.currentTarget.style.boxShadow =
+                    "inset 0 1px 0 rgba(255,255,255,0.25), 0 0 0 1px rgba(68,65,200,0.30), 0 12px 30px -6px rgba(88,86,214,0.55)";
+                }
               }}
               onMouseLeave={(e) => {
-                if (!loading) e.currentTarget.style.background = "var(--accent)";
+                if (!loading) {
+                  e.currentTarget.style.transform = "translateY(0)";
+                  e.currentTarget.style.boxShadow =
+                    "inset 0 1px 0 rgba(255,255,255,0.25), 0 0 0 1px rgba(68,65,200,0.30), 0 8px 24px -6px rgba(88,86,214,0.45)";
+                }
               }}
             >
-              {loading ? "Connexion…" : "Entrer dans le cockpit"}
-              {!loading && <ArrowRight size={15} strokeWidth={2.25} />}
+              {loading ? "Connexion…" : "Continuer"}
+              {!loading && <ArrowRight size={14} strokeWidth={2.25} />}
             </button>
           </form>
 
           <div
             style={{
-              marginTop: "2.5rem",
-              paddingTop: "1.5rem",
+              marginTop: "1.75rem",
+              paddingTop: "1.25rem",
               borderTop: "1px solid var(--border)",
               fontSize: "0.74rem",
               color: "var(--text-3)",
               textAlign: "center",
-              display: "flex",
-              justifyContent: "center",
-              gap: "1.5rem",
-              flexWrap: "wrap",
             }}
           >
-            <span>BrokerStar · Odoo · Combiné</span>
-            <span>LPD Art.16 · Infomaniak CH</span>
+            Pas de compte ?{" "}
+            <span style={{ color: "var(--accent)", fontWeight: 500 }}>
+              Contactez votre administrateur
+            </span>
           </div>
         </motion.div>
       </main>
@@ -213,12 +204,16 @@ export default function LoginPageC() {
       <footer
         style={{
           padding: "1rem clamp(1.5rem, 4vw, 3rem)",
+          display: "flex",
+          justifyContent: "space-between",
           fontSize: "0.72rem",
           color: "var(--text-3)",
-          textAlign: "center",
+          flexWrap: "wrap",
+          gap: "0.5rem",
         }}
       >
-        © 2026 Cabinet Müller &amp; Associés SA · Zürich
+        <span>Cabinet Müller &amp; Associés SA · Zürich</span>
+        <span>LPD Art.16 · Infomaniak CH</span>
       </footer>
     </div>
   );
@@ -226,34 +221,42 @@ export default function LoginPageC() {
 
 function BrandMark() {
   return (
-    <div style={{ display: "inline-flex", alignItems: "center", gap: "0.55rem" }}>
+    <div
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: "0.55rem",
+        margin: "0 auto",
+      }}
+    >
       <div
         style={{
-          width: 28,
-          height: 28,
-          background: "var(--accent)",
+          width: 36,
+          height: 36,
+          background: "linear-gradient(to bottom, var(--accent), var(--accent-2))",
           color: "#FFFFFF",
-          borderRadius: "8px",
+          borderRadius: "10px",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          fontSize: "0.68rem",
+          fontSize: "0.78rem",
           fontWeight: 700,
           letterSpacing: "-0.02em",
-          boxShadow: "0 1px 2px rgba(31,111,91,0.18)",
+          boxShadow:
+            "inset 0 1px 0 rgba(255,255,255,0.3), 0 0 0 1px rgba(68,65,200,0.2), 0 4px 14px -4px rgba(88,86,214,0.40)",
         }}
       >
         CMA
       </div>
       <span
         style={{
-          fontSize: "0.92rem",
+          fontSize: "0.96rem",
           fontWeight: 600,
           color: "var(--text)",
           letterSpacing: "-0.01em",
         }}
       >
-        Orkestra
+        Cabinet Müller
       </span>
     </div>
   );
@@ -275,7 +278,7 @@ function Field({
   placeholder: string;
 }) {
   return (
-    <div style={{ marginBottom: "1.1rem" }}>
+    <div style={{ marginBottom: "0.9rem" }}>
       <label
         htmlFor={id}
         style={{
@@ -284,7 +287,6 @@ function Field({
           fontWeight: 500,
           color: "var(--text-2)",
           marginBottom: "0.4rem",
-          letterSpacing: "-0.005em",
         }}
       >
         {label}
@@ -297,23 +299,26 @@ function Field({
         placeholder={placeholder}
         style={{
           width: "100%",
-          padding: "0.75rem 0.95rem",
-          background: "var(--surface)",
-          border: "1px solid var(--border)",
-          borderRadius: "12px",
-          fontFamily: "var(--font-sans)",
+          padding: "0.7rem 0.9rem",
+          background: "var(--surface-2)",
+          border: "none",
+          borderRadius: "11px",
+          fontFamily: "inherit",
           fontSize: "0.92rem",
           color: "var(--text)",
           outline: "none",
-          transition: "border-color 0.18s, box-shadow 0.18s",
+          boxShadow: "inset 0 1px 2px rgba(0,0,0,0.04), inset 0 0 0 1px rgba(0,0,0,0.06)",
+          transition: "box-shadow 0.22s ease, background 0.22s ease",
         }}
         onFocus={(e) => {
-          e.target.style.borderColor = "var(--accent)";
-          e.target.style.boxShadow = "0 0 0 4px var(--accent-tint)";
+          e.target.style.boxShadow =
+            "inset 0 1px 2px rgba(0,0,0,0.04), inset 0 0 0 1px var(--accent), 0 0 0 4px var(--accent-tint)";
+          e.target.style.background = "var(--surface)";
         }}
         onBlur={(e) => {
-          e.target.style.borderColor = "var(--border)";
-          e.target.style.boxShadow = "none";
+          e.target.style.boxShadow =
+            "inset 0 1px 2px rgba(0,0,0,0.04), inset 0 0 0 1px rgba(0,0,0,0.06)";
+          e.target.style.background = "var(--surface-2)";
         }}
       />
     </div>

@@ -2,95 +2,96 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
-  Home, BarChart3, Target, FolderArchive, Flame, Wallet, Globe,
-  Sparkles, MessageSquare, AlertTriangle, Settings, HelpCircle,
-  ChevronDown, ChevronRight, Search, Bell, LogOut, Plus,
-  TrendingUp, ArrowUpRight, Check, X, Circle, Mail, AlertCircle,
-  FileText, Clock,
+  Search, Bell, ChevronDown, LogOut, Settings,
+  TrendingUp, ArrowUpRight, ArrowRight, Check, X, Circle,
+  Target, FolderArchive, Flame, Wallet, Globe, Sparkles,
+  Mail, AlertCircle, FileText, Calendar, CheckCircle2,
 } from "lucide-react";
 import type { ModalKey } from "@/lib/types";
-import ForgeModal from "@/components/b/ForgeModal";
+import ApertureModal from "@/components/b/ApertureModal";
+import { ExpandingNav, type NavTab } from "@/components/b/ExpandingNav";
 import { Sparkline } from "@/components/shared/Sparkline";
-import { CountUp, formatThousands } from "@/components/shared/CountUp";
+import { Popover } from "@/components/shared/Popover";
+import { NotificationsContent } from "@/components/shared/NotificationsContent";
+import { UserMenuContent } from "@/components/shared/UserMenuContent";
+import { CommandPalette } from "@/components/shared/CommandPalette";
 
-const kpis = [
-  {
-    label: "CA mensuel",
-    target: 92400,
-    format: (n: number) => formatThousands(n),
-    unit: "CHF",
-    trend: "+12.0%",
-    trendDir: "up" as const,
-    spark: [62, 64, 70, 68, 72, 78, 80, 82, 86, 88, 92, 92],
-    combined: true,
-    breakdown: [
-      { src: "BrokerStar", val: "64 200" },
-      { src: "Odoo (charges)", val: "−27 200" },
-      { src: "⊕ Net consolidé", val: "92 400" },
-    ],
-  },
+const heroData = [62, 64, 70, 68, 72, 78, 80, 82, 86, 88, 92, 92];
+const heroMonths = ["juin", "juil.", "août", "sept.", "oct.", "nov.", "déc.", "janv.", "févr.", "mars", "avril", "mai"];
+
+const heroEvents: { i: number; label: string; sub: string }[] = [
+  { i: 6, label: "+9 200 CHF", sub: "Commission Dubois SA · décembre" },
+  { i: 9, label: "−1 800 CHF", sub: "Impayé Rossi SA détecté · mars" },
+];
+
+const satellites = [
   {
     label: "Marge nette",
-    target: 68,
-    format: (n: number) => String(Math.round(n)),
+    value: "68",
     unit: "%",
     trend: "+4 pt",
-    trendDir: "up" as const,
     spark: [55, 58, 60, 62, 63, 64, 64, 66, 67, 67, 68, 68],
     combined: true,
     breakdown: [
-      { src: "Primes BS", val: "85 K" },
+      { src: "Primes BS", val: "85.0 K" },
       { src: "Charges Odoo", val: "27.2 K" },
       { src: "⊕ Marge", val: "68 %" },
     ],
   },
   {
     label: "Cash-flow",
-    target: 18,
-    format: (n: number) => "+" + Math.round(n),
-    unit: "K CHF",
-    trend: "+K vs M-1",
-    trendDir: "up" as const,
+    value: "+18",
+    unit: "K",
+    trend: "stable",
     spark: [4, 6, 8, 7, 10, 12, 11, 14, 15, 16, 17, 18],
     combined: true,
     breakdown: [
-      { src: "Encaissements", val: "+45.6 K" },
-      { src: "Charges + imp.", val: "−27.2 K" },
-      { src: "⊕ Cash net", val: "+18.4 K" },
+      { src: "Encaissé", val: "+45.6 K" },
+      { src: "Sortant", val: "−27.2 K" },
+      { src: "⊕ Net", val: "+18.4 K" },
     ],
   },
   {
     label: "Rétention",
-    target: 87,
-    format: (n: number) => String(Math.round(n)),
+    value: "87",
     unit: "%",
     trend: "+3 pt",
-    trendDir: "up" as const,
     spark: [81, 82, 83, 83, 84, 85, 85, 86, 86, 87, 87, 87],
     combined: false,
     breakdown: [
-      { src: "Contrats actifs", val: "189" },
-      { src: "Renouvellements", val: "+12" },
-      { src: "Pertes (12 mois)", val: "−4" },
+      { src: "Renouvelés", val: "12" },
+      { src: "Pertes 12m", val: "−4" },
+      { src: "Solde", val: "+8" },
     ],
   },
+];
+
+const trois = [
   {
-    label: "Alertes",
-    target: 5,
-    format: (n: number) => String(Math.round(n)),
-    unit: "",
-    trend: "3 urgentes",
-    trendDir: "down" as const,
-    spark: [2, 2, 3, 3, 4, 4, 4, 5, 5, 5, 5, 5],
-    combined: false,
-    danger: true,
-    breakdown: [
-      { src: "Sinistres", val: "1 critique" },
-      { src: "Impayés", val: "2" },
-      { src: "Relances dues", val: "2" },
-    ],
+    Icon: Mail,
+    color: "var(--info)",
+    bg: "var(--info-tint)",
+    sentence: "Valider 4 renouvellements préparés par l'agent BrokerStar.",
+    cta: "Valider",
+    modalKey: undefined as ModalKey | undefined,
+  },
+  {
+    Icon: AlertCircle,
+    color: "var(--warn)",
+    bg: "var(--warn-tint)",
+    sentence: "Relancer Rossi SA pour son impayé de 1 800 CHF (67 jours).",
+    cta: "Ouvrir",
+    modalKey: "finance" as ModalKey,
+  },
+  {
+    Icon: FileText,
+    color: "var(--accent)",
+    bg: "var(--accent-tint)",
+    sentence: "Signer le rapport mensuel combiné BrokerStar + Odoo.",
+    cta: "Signer",
+    modalKey: "rapport" as ModalKey,
   },
 ];
 
@@ -122,7 +123,7 @@ const tiles: TileEntry[] = [
     Icon: FolderArchive, iconColor: "var(--info)", iconBg: "var(--info-tint)",
     title: "Portefeuille", metric: "189", unit: "",
     caption: "Contrats actifs · 85 K CHF de primes",
-    alert: "4 renouvellements J-30", alertTone: "neutral",
+    alert: "4 renouv. J-30", alertTone: "neutral",
     sources: ["BrokerStar"], modalKey: "portefeuille",
     spark: [182, 183, 184, 184, 185, 186, 186, 187, 188, 188, 189, 189],
   },
@@ -130,16 +131,15 @@ const tiles: TileEntry[] = [
     Icon: Flame, iconColor: "var(--danger)", iconBg: "var(--danger-tint)",
     title: "Sinistres", metric: "3", unit: "",
     caption: "Dossiers ouverts · ratio 12 % CA",
-    alert: "SIN-0047 — 68 jours", alertTone: "danger",
+    alert: "SIN-0047 · 68 j", alertTone: "danger",
     sources: ["BrokerStar"], modalKey: "sinistres",
   },
   {
     Icon: Wallet, iconColor: "var(--warn)", iconBg: "var(--warn-tint)",
     title: "Finance", metric: "+18", unit: "K",
     caption: "Cash-flow net · commissions 11.2 K",
-    alert: "2 impayés — 3 200 CHF", alertTone: "warn",
+    alert: "2 impayés", alertTone: "warn",
     sources: ["BrokerStar", "Odoo"], modalKey: "finance",
-    spark: [4, 6, 8, 7, 10, 12, 11, 14, 15, 16, 17, 18],
   },
   {
     Icon: Globe, iconColor: "var(--accent)", iconBg: "var(--accent-tint)",
@@ -147,10 +147,9 @@ const tiles: TileEntry[] = [
     caption: "Marge consolidée · vision combinée",
     alert: "+4 pt vs marché CH", alertTone: "good",
     sources: ["BrokerStar", "Odoo"], modalKey: "vue360",
-    spark: [55, 58, 60, 62, 63, 64, 64, 66, 67, 67, 68, 68],
   },
   {
-    Icon: Sparkles, iconColor: "#7C3AED", iconBg: "#F1ECFE",
+    Icon: Sparkles, iconColor: "var(--purple)", iconBg: "var(--purple-tint)",
     title: "Agents IA", metric: "3", unit: "",
     caption: "Actions préparées · prêtes à valider",
     alert: "Validation requise", alertTone: "neutral",
@@ -158,824 +157,871 @@ const tiles: TileEntry[] = [
   },
 ];
 
-const agents = [
+const navTabs: NavTab[] = [
   {
-    Icon: Mail, iconColor: "var(--info)", iconBg: "var(--info-tint)",
-    name: "Renouvellement",
-    desc: "4 courriers rédigés — échéances J-28",
-    source: "BrokerStar",
-    time: "il y a 12 min",
+    label: "Vue d'ensemble",
+    active: true,
+    subSections: ["Aujourd'hui", "Cette semaine", "Mois", "Trimestre"],
   },
   {
-    Icon: AlertCircle, iconColor: "var(--warn)", iconBg: "var(--warn-tint)",
-    name: "Impayé Rossi SA",
-    desc: "Relance préparée — 1 800 CHF · 67 jours",
-    source: "Odoo",
-    time: "il y a 28 min",
+    label: "Domaines",
+    subSections: ["Prospection", "Portefeuille", "Sinistres", "Finance", "Vue 360°", "Agents IA"],
   },
   {
-    Icon: FileText, iconColor: "var(--accent)", iconBg: "var(--accent-tint)",
-    name: "Rapport direction",
-    desc: "Synthèse mensuelle BrokerStar + Odoo prête",
-    source: "Combiné",
-    time: "il y a 1 h",
-    modalKey: "rapport" as ModalKey,
+    label: "Agents",
+    subSections: ["Inbox", "Historique", "Configuration"],
   },
+  {
+    label: "Rapports",
+    subSections: ["Mensuel", "Direction", "Personnalisé"],
+  },
+  { label: "Équipe" },
+  { label: "Paramètres" },
 ];
 
 export default function DashboardPageB() {
   const router = useRouter();
   const [modalKey, setModalKey] = useState<ModalKey | null>(null);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [period, setPeriod] = useState<"M" | "T" | "A">("M");
+  const [paletteOpen, setPaletteOpen] = useState(false);
   const open = (k: ModalKey) => setModalKey(k);
   const close = () => setModalKey(null);
+  const onLogout = () => router.push("/");
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        background: "var(--bg)",
-        color: "var(--text)",
-        display: "flex",
-      }}
-    >
-      {sidebarOpen && (
-        <div
-          onClick={() => setSidebarOpen(false)}
-          style={{
-            position: "fixed",
-            inset: 0,
-            background: "rgba(15,23,42,0.4)",
-            zIndex: 40,
-            backdropFilter: "blur(2px)",
-          }}
-        />
-      )}
+    <div style={{ minHeight: "100vh", background: "var(--bg)", color: "var(--text)" }}>
+      <TopBar
+        onLogout={onLogout}
+        onOpenPalette={() => setPaletteOpen(true)}
+      />
 
-      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-
-      <div
+      <main
         style={{
-          flex: 1,
-          minWidth: 0,
-          display: "flex",
-          flexDirection: "column",
+          maxWidth: "1240px",
+          margin: "0 auto",
+          padding: "clamp(1.75rem, 3vw, 2.5rem) clamp(1.25rem, 3vw, 2.5rem) 3rem",
         }}
       >
-        <TopBar
-          onLogout={() => router.push("/")}
-          onToggleSidebar={() => setSidebarOpen((o) => !o)}
-        />
-
-        <main
-          style={{
-            flex: 1,
-            padding: "clamp(1.5rem, 3vw, 2.25rem) clamp(1.25rem, 2.5vw, 2rem) 3rem",
-          }}
+        <motion.section
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
         >
-          <motion.section
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.45 }}
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "flex-end",
+              gap: "1rem",
+              flexWrap: "wrap",
+              marginBottom: "1.25rem",
+            }}
           >
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "flex-end",
-                gap: "1rem",
-                flexWrap: "wrap",
-                marginBottom: "1rem",
-              }}
-            >
-              <div>
-                <h1
-                  style={{
-                    fontSize: "clamp(1.4rem, 2.5vw, 1.7rem)",
-                    fontWeight: 600,
-                    letterSpacing: "-0.025em",
-                    color: "var(--text)",
-                    margin: 0,
-                    marginBottom: "0.2rem",
-                  }}
-                >
-                  Bonjour Thomas
-                </h1>
-                <p
-                  style={{
-                    fontSize: "0.88rem",
-                    color: "var(--text-3)",
-                    margin: 0,
-                  }}
-                >
-                  Mardi 12 mai 2026 · semaine 19 · 5 courtiers, Zürich
-                </p>
-              </div>
-              <DeltaStrip />
+            <div>
+              <span
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "0.35rem",
+                  fontSize: "0.72rem",
+                  fontWeight: 600,
+                  color: "var(--text-3)",
+                  marginBottom: "0.3rem",
+                }}
+              >
+                <Calendar size={11} strokeWidth={2.25} />
+                Mardi 12 mai 2026 · semaine 19
+              </span>
+              <h1
+                style={{
+                  fontSize: "clamp(1.6rem, 3vw, 1.95rem)",
+                  fontWeight: 700,
+                  letterSpacing: "-0.025em",
+                  color: "var(--text)",
+                  margin: 0,
+                }}
+              >
+                Bonjour Thomas
+              </h1>
             </div>
+            <div style={{ display: "flex", gap: "0.4rem" }}>
+              <SourceBadge dot="var(--info)" label="BrokerStar · 3 min" />
+              <SourceBadge dot="var(--purple)" label="Odoo · 5 min" />
+            </div>
+          </div>
+
+          <div
+            className="aperture-hero"
+            style={{
+              display: "grid",
+              gridTemplateColumns: "1.55fr 1fr",
+              gap: "0.85rem",
+            }}
+          >
+            <HeroPanel period={period} onPeriodChange={setPeriod} />
 
             <div
-              className="forge-kpis"
               style={{
                 display: "grid",
-                gridTemplateColumns: "repeat(5, 1fr)",
-                gap: "0.7rem",
-                marginBottom: "1.5rem",
+                gridTemplateRows: "repeat(3, 1fr)",
+                gap: "0.85rem",
               }}
             >
-              {kpis.map((k, i) => (
-                <KPICard key={k.label} kpi={k} delay={i * 60} />
+              {satellites.map((s) => (
+                <SatelliteKPI key={s.label} kpi={s} />
               ))}
             </div>
-          </motion.section>
+          </div>
+        </motion.section>
 
-          <motion.section
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.06, duration: 0.45 }}
-            style={{ marginBottom: "1.5rem" }}
+        <motion.section
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.08, duration: 0.5 }}
+          style={{ marginTop: "clamp(1.5rem, 3vw, 2.25rem)" }}
+        >
+          <TroisChoses onOpen={open} />
+        </motion.section>
+
+        <motion.section
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.14, duration: 0.5 }}
+          style={{ marginTop: "clamp(1.5rem, 3vw, 2.25rem)" }}
+        >
+          <SectionHeader title="Domaines" subtitle="Six tableaux opérationnels — cliquez pour ouvrir." />
+          <div
+            className="aperture-tiles"
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(3, 1fr)",
+              gap: "0.85rem",
+            }}
           >
-            <SectionHeader
-              title="Domaines"
-              count="6"
-              action="Tout voir"
-            />
-            <div
-              className="forge-tiles"
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(3, 1fr)",
-                gap: "0.75rem",
-              }}
-            >
-              {tiles.map((t) => (
-                <TileCard key={t.title} tile={t} onOpen={open} />
-              ))}
-            </div>
-          </motion.section>
+            {tiles.map((t) => (
+              <TileCard key={t.title} tile={t} onOpen={open} />
+            ))}
+          </div>
+        </motion.section>
 
-          <motion.section
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1, duration: 0.45 }}
-          >
-            <SectionHeader
-              title="Boîte de réception"
-              count="3"
-              subtitle="Agents IA — actions préparées cette nuit"
-            />
-            <AgentInbox onOpen={open} />
-          </motion.section>
+        <Footer />
+      </main>
 
-          <Footer />
-        </main>
-      </div>
+      <ApertureModal open={modalKey !== null} modalKey={modalKey} onClose={close} />
 
-      <ForgeModal open={modalKey !== null} modalKey={modalKey} onClose={close} />
+      <CommandPalette
+        open={paletteOpen}
+        onClose={() => setPaletteOpen(false)}
+        onOpenModal={open}
+        onLogout={onLogout}
+      />
 
       <style>{`
-        @media (max-width: 1280px) {
-          .forge-kpis { grid-template-columns: repeat(3, 1fr) !important; }
-        }
-        @media (max-width: 960px) {
-          .forge-tiles { grid-template-columns: repeat(2, 1fr) !important; }
+        @media (max-width: 1024px) {
+          .aperture-hero { grid-template-columns: 1fr !important; }
         }
         @media (max-width: 800px) {
-          .forge-sidebar {
-            position: fixed;
-            top: 0;
-            left: 0;
-            height: 100vh;
-            z-index: 50;
-            transform: translateX(-100%);
-            transition: transform 0.25s ease;
-          }
-          .forge-sidebar.open { transform: translateX(0); box-shadow: 4px 0 32px rgba(15,23,42,0.16); }
-          .forge-hamburger { display: inline-flex !important; }
+          .aperture-tiles { grid-template-columns: repeat(2, 1fr) !important; }
         }
-        @media (max-width: 640px) {
-          .forge-kpis { grid-template-columns: repeat(2, 1fr) !important; }
-          .forge-tiles { grid-template-columns: 1fr !important; }
+        @media (max-width: 600px) {
+          .aperture-tiles { grid-template-columns: 1fr !important; }
         }
       `}</style>
     </div>
   );
 }
 
-function DeltaStrip() {
-  const items = [
-    { Icon: TrendingUp, color: "var(--success)", label: "CA +2.4 K depuis hier" },
-    { Icon: TrendingUp, color: "var(--success)", label: "Rétention +1 pt" },
-    { Icon: Circle, color: "var(--danger)", label: "1 nouveau sinistre" },
-    { Icon: Clock, color: "var(--text-3)", label: "14:32 CEST" },
-  ];
-  return (
-    <div
-      style={{
-        display: "flex",
-        gap: "0.85rem",
-        alignItems: "center",
-        flexWrap: "wrap",
-      }}
-    >
-      <span
-        style={{
-          fontSize: "0.66rem",
-          fontWeight: 600,
-          color: "var(--text-3)",
-          letterSpacing: "0.16em",
-          textTransform: "uppercase",
-        }}
-      >
-        Depuis hier
-      </span>
-      {items.map((item, i) => {
-        const I = item.Icon;
-        return (
-          <span
-            key={i}
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "0.3rem",
-              fontSize: "0.76rem",
-              fontWeight: 500,
-              color: "var(--text-2)",
-            }}
-          >
-            <I
-              size={item.Icon === Circle ? 6 : 12}
-              strokeWidth={item.Icon === Circle ? 0 : 2.5}
-              fill={item.Icon === Circle ? item.color : "none"}
-              color={item.color}
-            />
-            {item.label}
-          </span>
-        );
-      })}
-    </div>
-  );
-}
-
-function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
-  const sections = [
-    {
-      title: "Mon cabinet",
-      items: [
-        { Icon: Home, label: "Accueil", active: true },
-        { Icon: BarChart3, label: "Rapports" },
-      ],
-    },
-    {
-      title: "Métier",
-      items: [
-        { Icon: Target, label: "Prospection", badge: "12", badgeTone: "neutral" as const },
-        { Icon: FolderArchive, label: "Portefeuille" },
-        { Icon: Flame, label: "Sinistres", badge: "3", badgeTone: "danger" as const },
-        { Icon: Wallet, label: "Finance", badge: "2", badgeTone: "warn" as const },
-        { Icon: Globe, label: "Vue d'ensemble" },
-      ],
-    },
-    {
-      title: "Intelligence",
-      items: [
-        { Icon: MessageSquare, label: "Chat IA", badge: "3", badgeTone: "warn" as const },
-        { Icon: AlertTriangle, label: "Alertes", badge: "5", badgeTone: "danger" as const },
-        { Icon: Sparkles, label: "Agents", badge: "3", badgeTone: "neutral" as const },
-      ],
-    },
-    {
-      title: "Administration",
-      items: [
-        { Icon: Settings, label: "Paramètres" },
-        { Icon: HelpCircle, label: "Support" },
-      ],
-    },
-  ];
-
-  return (
-    <aside
-      className={`forge-sidebar${isOpen ? " open" : ""}`}
-      style={{
-        width: 244,
-        flexShrink: 0,
-        background: "var(--sidebar-bg)",
-        borderRight: "1px solid var(--border)",
-        display: "flex",
-        flexDirection: "column",
-        height: "100vh",
-        position: "sticky",
-        top: 0,
-        overflow: "hidden",
-      }}
-    >
-      <div style={{ padding: "0.85rem 0.75rem 0.5rem", flexShrink: 0 }}>
-        <button
-          onClick={onClose}
-          style={{
-            width: "100%",
-            display: "flex",
-            alignItems: "center",
-            gap: "0.55rem",
-            padding: "0.4rem 0.5rem",
-            background: "var(--surface)",
-            border: "1px solid var(--border)",
-            borderRadius: "8px",
-            cursor: "pointer",
-            fontFamily: "inherit",
-            transition: "background 0.15s, border-color 0.15s",
-            boxShadow: "0 1px 0 rgba(255,255,255,0.4) inset, 0 1px 2px rgba(15,23,42,0.04)",
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.borderColor = "var(--border-strong)";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.borderColor = "var(--border)";
-          }}
-        >
-          <span
-            style={{
-              width: 24,
-              height: 24,
-              background: "var(--accent)",
-              color: "#FFFFFF",
-              borderRadius: "6px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: "0.62rem",
-              fontWeight: 700,
-            }}
-          >
-            CMA
-          </span>
-          <div
-            style={{
-              flex: 1,
-              textAlign: "left",
-              lineHeight: 1.1,
-            }}
-          >
-            <div
-              style={{
-                fontSize: "0.84rem",
-                fontWeight: 600,
-                color: "var(--text)",
-                letterSpacing: "-0.005em",
-              }}
-            >
-              Cabinet Müller
-            </div>
-            <div style={{ fontSize: "0.66rem", color: "var(--text-3)" }}>
-              5 courtiers
-            </div>
-          </div>
-          <ChevronDown size={13} strokeWidth={2} color="var(--text-3)" />
-        </button>
-      </div>
-
-      <div style={{ padding: "0 0.75rem", flexShrink: 0 }}>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "0.45rem",
-            padding: "0.4rem 0.6rem",
-            background: "var(--surface)",
-            border: "1px solid var(--border)",
-            borderRadius: "8px",
-            fontSize: "0.8rem",
-            color: "var(--text-3)",
-            cursor: "text",
-          }}
-        >
-          <Search size={13} strokeWidth={2} />
-          <span style={{ flex: 1 }}>Rechercher…</span>
-          <kbd
-            style={{
-              fontFamily: "var(--font-mono)",
-              fontSize: "0.66rem",
-              padding: "0.05rem 0.3rem",
-              background: "var(--surface-2)",
-              border: "1px solid var(--border)",
-              borderRadius: "4px",
-              color: "var(--text-3)",
-            }}
-          >
-            ⌘K
-          </kbd>
-        </div>
-      </div>
-
-      <nav
-        style={{
-          flex: 1,
-          overflowY: "auto",
-          padding: "0.65rem 0.75rem 0.65rem",
-        }}
-      >
-        {sections.map((section) => (
-          <div key={section.title} style={{ marginTop: "1rem" }}>
-            <div
-              style={{
-                padding: "0 0.55rem 0.4rem",
-                fontSize: "0.66rem",
-                fontWeight: 600,
-                color: "var(--text-4)",
-                textTransform: "uppercase",
-                letterSpacing: "0.08em",
-              }}
-            >
-              {section.title}
-            </div>
-            {section.items.map((item) => (
-              <NavItem key={item.label} item={item} />
-            ))}
-          </div>
-        ))}
-      </nav>
-
-      <div
-        style={{
-          padding: "0.6rem 0.75rem",
-          borderTop: "1px solid var(--border)",
-          display: "flex",
-          alignItems: "center",
-          gap: "0.55rem",
-        }}
-      >
-        <span
-          style={{
-            width: 28,
-            height: 28,
-            background: "var(--text)",
-            color: "var(--surface)",
-            borderRadius: "50%",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontSize: "0.66rem",
-            fontWeight: 700,
-            flexShrink: 0,
-          }}
-        >
-          TM
-        </span>
-        <div style={{ flex: 1, minWidth: 0, lineHeight: 1.2 }}>
-          <div
-            style={{
-              fontSize: "0.8rem",
-              fontWeight: 600,
-              color: "var(--text)",
-              letterSpacing: "-0.005em",
-            }}
-          >
-            Thomas Müller
-          </div>
-          <div
-            style={{
-              fontSize: "0.68rem",
-              color: "var(--text-3)",
-              whiteSpace: "nowrap",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-            }}
-          >
-            Associé · thomas@muller.ch
-          </div>
-        </div>
-      </div>
-    </aside>
-  );
-}
-
-function NavItem({
-  item,
-}: {
-  item: {
-    Icon: typeof Home;
-    label: string;
-    active?: boolean;
-    badge?: string;
-    badgeTone?: "neutral" | "warn" | "danger";
-  };
-}) {
-  const { Icon } = item;
-  const badgeColor =
-    item.badgeTone === "danger"
-      ? "var(--danger)"
-      : item.badgeTone === "warn"
-      ? "var(--warn)"
-      : "var(--text-3)";
-  return (
-    <button
-      style={{
-        width: "100%",
-        display: "flex",
-        alignItems: "center",
-        gap: "0.55rem",
-        padding: "0.42rem 0.55rem",
-        background: item.active ? "var(--surface)" : "transparent",
-        border: item.active ? "1px solid var(--border)" : "1px solid transparent",
-        borderRadius: "7px",
-        fontFamily: "inherit",
-        fontSize: "0.84rem",
-        fontWeight: item.active ? 600 : 500,
-        color: item.active ? "var(--text)" : "var(--text-2)",
-        cursor: "pointer",
-        textAlign: "left",
-        boxShadow: item.active ? "0 1px 2px rgba(15,23,42,0.04)" : "none",
-        transition: "background 0.15s, color 0.15s",
-      }}
-      onMouseEnter={(e) => {
-        if (!item.active) e.currentTarget.style.background = "var(--surface)";
-      }}
-      onMouseLeave={(e) => {
-        if (!item.active) e.currentTarget.style.background = "transparent";
-      }}
-    >
-      <Icon size={14} strokeWidth={2} color={item.active ? "var(--accent)" : "var(--text-3)"} />
-      <span style={{ flex: 1 }}>{item.label}</span>
-      {item.badge && (
-        <span
-          style={{
-            fontFamily: "var(--font-mono)",
-            fontSize: "0.68rem",
-            fontWeight: 600,
-            color: badgeColor,
-            padding: "0.05rem 0.4rem",
-            background: "var(--surface)",
-            border: "1px solid var(--border)",
-            borderRadius: "100px",
-          }}
-        >
-          {item.badge}
-        </span>
-      )}
-    </button>
-  );
-}
-
 function TopBar({
   onLogout,
-  onToggleSidebar,
+  onOpenPalette,
 }: {
   onLogout: () => void;
-  onToggleSidebar: () => void;
+  onOpenPalette: () => void;
 }) {
   return (
     <header
       style={{
-        height: 52,
         background: "var(--surface)",
         borderBottom: "1px solid var(--border)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        padding: "0 clamp(1.25rem, 2.5vw, 2rem)",
         position: "sticky",
         top: 0,
-        zIndex: 20,
+        zIndex: 30,
+        height: 56,
       }}
     >
-      <div style={{ display: "flex", alignItems: "center", gap: "0.65rem" }}>
-        <button
-          onClick={onToggleSidebar}
-          aria-label="Menu"
-          className="forge-hamburger"
-          style={{
-            display: "none",
-            alignItems: "center",
-            justifyContent: "center",
-            width: 30,
-            height: 30,
-            background: "transparent",
-            border: "1px solid var(--border)",
-            borderRadius: "7px",
-            color: "var(--text-2)",
-            cursor: "pointer",
-          }}
-        >
-          ☰
-        </button>
-        <span
-          style={{
-            fontSize: "0.84rem",
-            color: "var(--text-3)",
-            display: "inline-flex",
-            alignItems: "center",
-            gap: "0.4rem",
-          }}
-        >
-          <span>Mon cabinet</span>
-          <ChevronRight size={12} strokeWidth={2} />
-          <span style={{ color: "var(--text)", fontWeight: 500 }}>Accueil</span>
-        </span>
-      </div>
+      <div
+        style={{
+          maxWidth: "1240px",
+          margin: "0 auto",
+          padding: "0 clamp(1.25rem, 3vw, 2.5rem)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: "1rem",
+          height: "100%",
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: "1rem", flex: 1, minWidth: 0, height: "100%" }}>
+          <button
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "0.55rem",
+              background: "transparent",
+              border: "none",
+              padding: 0,
+              cursor: "pointer",
+              fontFamily: "inherit",
+              flexShrink: 0,
+            }}
+          >
+            <span
+              style={{
+                width: 28,
+                height: 28,
+                background: "var(--accent)",
+                color: "#FFFFFF",
+                borderRadius: "7px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: "0.66rem",
+                fontWeight: 800,
+                boxShadow: "0 1px 2px rgba(30,64,175,0.22)",
+              }}
+            >
+              CMA
+            </span>
+            <span
+              style={{
+                fontSize: "0.92rem",
+                fontWeight: 700,
+                color: "var(--text)",
+                letterSpacing: "-0.015em",
+              }}
+            >
+              Cabinet Müller
+            </span>
+            <ChevronDown size={13} strokeWidth={2.25} color="var(--text-3)" />
+          </button>
 
-      <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-        <IconBtn label="Notifications" badge="5">
-          <Bell size={14} strokeWidth={2} />
-        </IconBtn>
-        <IconBtn label="Aide">
-          <HelpCircle size={14} strokeWidth={2} />
-        </IconBtn>
-        <button
-          onClick={onLogout}
-          aria-label="Déconnexion"
-          title="Déconnexion"
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            width: 30,
-            height: 30,
-            background: "transparent",
-            border: "1px solid transparent",
-            borderRadius: "7px",
-            color: "var(--text-3)",
-            cursor: "pointer",
-            transition: "color 0.15s, border-color 0.15s",
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.color = "var(--danger)";
-            e.currentTarget.style.borderColor = "var(--border)";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.color = "var(--text-3)";
-            e.currentTarget.style.borderColor = "transparent";
-          }}
-        >
-          <LogOut size={13} strokeWidth={2} />
-        </button>
+          <div
+            style={{
+              width: 1,
+              height: 24,
+              background: "var(--border-strong)",
+              flexShrink: 0,
+            }}
+          />
+
+          <ExpandingNav tabs={navTabs} />
+        </div>
+
+        <div style={{ display: "flex", alignItems: "center", gap: "0.45rem", flexShrink: 0 }}>
+          <button
+            onClick={onOpenPalette}
+            className="aperture-search"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "0.5rem",
+              background: "var(--surface-2)",
+              border: "1px solid var(--border)",
+              borderRadius: "8px",
+              padding: "0.4rem 0.7rem 0.4rem 0.7rem",
+              color: "var(--text-3)",
+              fontSize: "0.8rem",
+              cursor: "pointer",
+              minWidth: "200px",
+              fontFamily: "inherit",
+              transition: "background 0.18s, border-color 0.18s, color 0.18s",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = "var(--surface)";
+              e.currentTarget.style.borderColor = "var(--border-strong)";
+              e.currentTarget.style.color = "var(--text-2)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = "var(--surface-2)";
+              e.currentTarget.style.borderColor = "var(--border)";
+              e.currentTarget.style.color = "var(--text-3)";
+            }}
+          >
+            <Search size={13} strokeWidth={2} />
+            <span style={{ flex: 1, textAlign: "left" }}>Rechercher…</span>
+          </button>
+
+          <Popover
+            placement="bottom-end"
+            trigger={({ open: o, toggle }) => (
+              <button
+                onClick={toggle}
+                aria-label="Notifications"
+                aria-expanded={o}
+                style={{
+                  position: "relative",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  width: 32,
+                  height: 32,
+                  background: o ? "var(--surface-2)" : "transparent",
+                  border: `1px solid ${o ? "var(--border)" : "transparent"}`,
+                  borderRadius: "8px",
+                  color: "var(--text-2)",
+                  cursor: "pointer",
+                  transition: "background 0.15s, border-color 0.15s",
+                }}
+                onMouseEnter={(e) => {
+                  if (!o) {
+                    e.currentTarget.style.background = "var(--surface-2)";
+                    e.currentTarget.style.borderColor = "var(--border)";
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!o) {
+                    e.currentTarget.style.background = "transparent";
+                    e.currentTarget.style.borderColor = "transparent";
+                  }
+                }}
+              >
+                <Bell size={15} strokeWidth={2} />
+                <span
+                  style={{
+                    position: "absolute",
+                    top: 4,
+                    right: 4,
+                    minWidth: 14,
+                    height: 14,
+                    padding: "0 3px",
+                    borderRadius: "7px",
+                    background: "var(--danger)",
+                    color: "#FFFFFF",
+                    fontSize: "0.58rem",
+                    fontWeight: 700,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    border: "1.5px solid var(--surface)",
+                  }}
+                >
+                  3
+                </span>
+              </button>
+            )}
+          >
+            {(close) => <NotificationsContent onClose={close} />}
+          </Popover>
+
+          <Popover
+            placement="bottom-end"
+            trigger={({ open: o, toggle }) => (
+              <button
+                onClick={toggle}
+                aria-label="Menu utilisateur"
+                aria-expanded={o}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.35rem",
+                  background: o ? "var(--surface-2)" : "transparent",
+                  border: `1px solid ${o ? "var(--border)" : "transparent"}`,
+                  borderRadius: "100px",
+                  padding: "0.2rem 0.35rem 0.2rem 0.3rem",
+                  cursor: "pointer",
+                  fontFamily: "inherit",
+                  transition: "background 0.15s, border-color 0.15s",
+                }}
+                onMouseEnter={(e) => {
+                  if (!o) {
+                    e.currentTarget.style.background = "var(--surface-2)";
+                    e.currentTarget.style.borderColor = "var(--border)";
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!o) {
+                    e.currentTarget.style.background = "transparent";
+                    e.currentTarget.style.borderColor = "transparent";
+                  }
+                }}
+              >
+                <span
+                  style={{
+                    width: 28,
+                    height: 28,
+                    background: "var(--text)",
+                    color: "#FFFFFF",
+                    borderRadius: "50%",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: "0.66rem",
+                    fontWeight: 700,
+                  }}
+                >
+                  TM
+                </span>
+                <ChevronDown size={12} strokeWidth={2} color="var(--text-3)" />
+              </button>
+            )}
+          >
+            <UserMenuContent onLogout={onLogout} />
+          </Popover>
+        </div>
       </div>
     </header>
   );
 }
 
-function IconBtn({
-  label,
-  badge,
-  children,
-}: {
-  label: string;
-  badge?: string;
-  children: React.ReactNode;
-}) {
+function SourceBadge({ dot, label }: { dot: string; label: string }) {
   return (
-    <button
-      aria-label={label}
+    <span
       style={{
-        display: "flex",
+        display: "inline-flex",
         alignItems: "center",
-        justifyContent: "center",
-        position: "relative",
-        width: 30,
-        height: 30,
-        background: "transparent",
-        border: "1px solid transparent",
-        borderRadius: "7px",
+        gap: "0.3rem",
+        fontSize: "0.74rem",
+        fontWeight: 500,
         color: "var(--text-2)",
-        cursor: "pointer",
-        transition: "background 0.15s, border-color 0.15s",
-      }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.background = "var(--surface-2)";
-        e.currentTarget.style.borderColor = "var(--border)";
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.background = "transparent";
-        e.currentTarget.style.borderColor = "transparent";
+        background: "var(--surface)",
+        border: "1px solid var(--border)",
+        padding: "0.3rem 0.55rem",
+        borderRadius: "100px",
       }}
     >
-      {children}
-      {badge && (
-        <span
-          style={{
-            position: "absolute",
-            top: 2,
-            right: 2,
-            minWidth: 13,
-            height: 13,
-            padding: "0 3px",
-            borderRadius: "7px",
-            background: "var(--danger)",
-            color: "#FFFFFF",
-            fontSize: "0.56rem",
-            fontWeight: 700,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            border: "1.5px solid var(--surface)",
-          }}
-        >
-          {badge}
-        </span>
-      )}
-    </button>
+      <Circle size={5} strokeWidth={0} fill={dot} />
+      {label}
+    </span>
   );
 }
 
-function KPICard({
-  kpi,
-  delay,
+function HeroPanel({
+  period,
+  onPeriodChange,
 }: {
-  kpi: typeof kpis[number];
-  delay: number;
+  period: "M" | "T" | "A";
+  onPeriodChange: (p: "M" | "T" | "A") => void;
 }) {
-  const trendColor = kpi.danger
-    ? "var(--danger)"
-    : kpi.trendDir === "up"
-    ? "var(--success)"
-    : "var(--danger)";
-  const trendBg = kpi.danger
-    ? "var(--danger-tint)"
-    : kpi.trendDir === "up"
-    ? "var(--success-tint)"
-    : "var(--danger-tint)";
+  const [hoveredEvent, setHoveredEvent] = useState<number | null>(null);
+
+  const w = 600;
+  const h = 200;
+  const padX = 28;
+  const padY = 24;
+  const stepX = (w - padX * 2) / (heroData.length - 1);
+  const max = Math.max(...heroData);
+  const min = Math.min(...heroData);
+  const range = max - min || 1;
+  const pts = heroData.map((v, i) => {
+    const x = padX + i * stepX;
+    const y = padY + (1 - (v - min) / range) * (h - padY * 2);
+    return [x, y] as const;
+  });
+  const line = pts.map(([x, y], i) => `${i === 0 ? "M" : "L"} ${x.toFixed(1)} ${y.toFixed(1)}`).join(" ");
+  const area = `${line} L ${pts[pts.length - 1][0].toFixed(1)} ${h - padY / 2} L ${pts[0][0].toFixed(1)} ${h - padY / 2} Z`;
+
+  const [nowX, nowY] = pts[pts.length - 1];
 
   return (
     <div
-      className="forge-kpi-card"
       style={{
         background: "var(--surface)",
         border: "1px solid var(--border)",
-        borderRadius: "11px",
-        padding: "0.85rem 0.9rem",
-        position: "relative",
-        overflow: "hidden",
+        borderRadius: "14px",
+        padding: "1.1rem 1.25rem 0.85rem",
+        boxShadow:
+          "0 1px 2px rgba(15,23,42,0.04), 0 4px 14px -8px rgba(15,23,42,0.08)",
         display: "flex",
         flexDirection: "column",
-        gap: "0.5rem",
-        transition: "border-color 0.18s, box-shadow 0.18s",
-        cursor: "default",
+        gap: "0.85rem",
+        minHeight: "340px",
       }}
     >
       <div
         style={{
           display: "flex",
-          alignItems: "center",
           justifyContent: "space-between",
-          gap: "0.4rem",
+          alignItems: "center",
+          gap: "0.5rem",
         }}
       >
-        <span
+        <div
           style={{
-            fontSize: "0.74rem",
+            fontSize: "0.78rem",
             fontWeight: 500,
             color: "var(--text-3)",
-            display: "inline-flex",
+            display: "flex",
             alignItems: "center",
-            gap: "0.35rem",
+            gap: "0.4rem",
           }}
         >
-          {kpi.label}
-          {kpi.combined && (
-            <span
+          Chiffre d&apos;affaires
+          <span
+            style={{
+              fontSize: "0.58rem",
+              fontWeight: 700,
+              color: "var(--accent)",
+              background: "var(--accent-tint)",
+              padding: "0.1rem 0.35rem",
+              borderRadius: "4px",
+              letterSpacing: "0.06em",
+            }}
+          >
+            ⊕ COMBINÉ
+          </span>
+        </div>
+        <PeriodToggle value={period} onChange={onPeriodChange} />
+      </div>
+
+      <div style={{ display: "flex", alignItems: "baseline", gap: "0.85rem" }}>
+        <span
+          style={{
+            fontFamily: "var(--font-mono)",
+            fontSize: "2.7rem",
+            fontWeight: 600,
+            letterSpacing: "-0.035em",
+            color: "var(--text)",
+            lineHeight: 0.95,
+            fontVariantNumeric: "tabular-nums",
+          }}
+        >
+          92 400
+        </span>
+        <span style={{ fontSize: "0.84rem", fontWeight: 500, color: "var(--text-3)" }}>
+          CHF
+        </span>
+        <span
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "0.25rem",
+            fontSize: "0.72rem",
+            fontWeight: 700,
+            color: "var(--success)",
+            background: "var(--success-tint)",
+            padding: "0.18rem 0.5rem",
+            borderRadius: "5px",
+            marginLeft: "0.25rem",
+          }}
+        >
+          <TrendingUp size={11} strokeWidth={2.5} />
+          +12.0% YoY
+        </span>
+      </div>
+
+      <div style={{ position: "relative", flex: 1, minHeight: 180 }}>
+        <svg
+          viewBox={`0 0 ${w} ${h}`}
+          preserveAspectRatio="none"
+          style={{ width: "100%", height: "100%", display: "block" }}
+        >
+          <defs>
+            <linearGradient id="aperture-grad" x1="0" x2="0" y1="0" y2="1">
+              <stop offset="0%" stopColor="#1E40AF" stopOpacity="0.22" />
+              <stop offset="100%" stopColor="#1E40AF" stopOpacity="0" />
+            </linearGradient>
+          </defs>
+          {[0.25, 0.5, 0.75].map((p) => (
+            <line
+              key={p}
+              x1={padX}
+              x2={w - padX}
+              y1={padY + p * (h - padY * 2)}
+              y2={padY + p * (h - padY * 2)}
+              stroke="#E2E8F0"
+              strokeWidth="1"
+              strokeDasharray="2 4"
+            />
+          ))}
+          <path d={area} fill="url(#aperture-grad)" />
+          <motion.path
+            d={line}
+            fill="none"
+            stroke="#1E40AF"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            initial={{ pathLength: 0 }}
+            animate={{ pathLength: 1 }}
+            transition={{ duration: 1.4, ease: [0.22, 1, 0.36, 1] }}
+          />
+          {/* Now indicator */}
+          <line
+            x1={nowX}
+            x2={nowX}
+            y1={padY}
+            y2={h - padY / 2}
+            stroke="#1E40AF"
+            strokeWidth="1.2"
+            strokeDasharray="3 3"
+            opacity="0.45"
+          />
+          <motion.circle
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 1.1, duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+            cx={nowX}
+            cy={nowY}
+            r="4"
+            fill="#FFFFFF"
+            stroke="#1E40AF"
+            strokeWidth="2"
+          />
+          {heroEvents.map((ev) => {
+            const [x, y] = pts[ev.i];
+            const isHovered = hoveredEvent === ev.i;
+            return (
+              <g key={ev.i}>
+                <circle
+                  cx={x}
+                  cy={y}
+                  r={isHovered ? 7 : 5}
+                  fill="#FFFFFF"
+                  stroke="#1E40AF"
+                  strokeWidth="2"
+                  style={{ cursor: "pointer", transition: "r 0.18s" }}
+                  onMouseEnter={() => setHoveredEvent(ev.i)}
+                  onMouseLeave={() => setHoveredEvent(null)}
+                />
+                <circle
+                  cx={x}
+                  cy={y}
+                  r="2"
+                  fill="#1E40AF"
+                  style={{ pointerEvents: "none" }}
+                />
+              </g>
+            );
+          })}
+        </svg>
+
+        {/* "Maintenant" label anchored to last point */}
+        <div
+          style={{
+            position: "absolute",
+            left: `${(nowX / w) * 100}%`,
+            top: `${(padY / h) * 100}%`,
+            transform: "translate(-50%, -120%)",
+            pointerEvents: "none",
+          }}
+        >
+          <span
+            style={{
+              display: "inline-block",
+              fontFamily: "var(--font-mono)",
+              fontSize: "0.6rem",
+              fontWeight: 600,
+              color: "var(--accent)",
+              background: "var(--accent-tint)",
+              padding: "0.15rem 0.4rem",
+              borderRadius: "4px",
+              letterSpacing: "0.02em",
+              whiteSpace: "nowrap",
+            }}
+          >
+            Aujourd&apos;hui
+          </span>
+        </div>
+
+        {hoveredEvent !== null && (() => {
+          const ev = heroEvents.find((e) => e.i === hoveredEvent)!;
+          const [x, y] = pts[ev.i];
+          const xPct = (x / w) * 100;
+          const yPct = (y / h) * 100;
+          return (
+            <div
               style={{
-                fontSize: "0.55rem",
-                fontWeight: 700,
-                color: "var(--accent)",
-                background: "var(--accent-tint)",
-                padding: "0.05rem 0.3rem",
-                borderRadius: "3px",
-                letterSpacing: "0.04em",
+                position: "absolute",
+                left: `${xPct}%`,
+                top: `${yPct}%`,
+                transform: "translate(-50%, calc(-100% - 14px))",
+                background: "var(--text)",
+                color: "var(--surface)",
+                padding: "0.55rem 0.75rem",
+                borderRadius: "8px",
+                fontSize: "0.74rem",
+                fontWeight: 500,
+                whiteSpace: "nowrap",
+                pointerEvents: "none",
+                boxShadow: "0 8px 20px -6px rgba(15,23,42,0.32)",
+                zIndex: 5,
               }}
             >
-              ⊕
-            </span>
-          )}
-        </span>
+              <div style={{ fontWeight: 700, marginBottom: "0.1rem" }}>{ev.label}</div>
+              <div style={{ color: "rgba(255,255,255,0.7)", fontSize: "0.7rem" }}>{ev.sub}</div>
+              <span
+                aria-hidden
+                style={{
+                  position: "absolute",
+                  left: "50%",
+                  bottom: -4,
+                  transform: "translateX(-50%) rotate(45deg)",
+                  width: 8,
+                  height: 8,
+                  background: "var(--text)",
+                }}
+              />
+            </div>
+          );
+        })()}
+      </div>
+
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          fontFamily: "var(--font-mono)",
+          fontSize: "0.66rem",
+          color: "var(--text-4)",
+          padding: "0 0.4rem",
+        }}
+      >
+        {heroMonths.map((m, i) => (
+          <span key={m} style={{ opacity: i % 2 === 0 ? 1 : 0.55 }}>
+            {m}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function PeriodToggle({
+  value,
+  onChange,
+}: {
+  value: "M" | "T" | "A";
+  onChange: (v: "M" | "T" | "A") => void;
+}) {
+  const options: { v: "M" | "T" | "A"; label: string }[] = [
+    { v: "M", label: "Mois" },
+    { v: "T", label: "Trim." },
+    { v: "A", label: "Année" },
+  ];
+  const idx = options.findIndex((o) => o.v === value);
+  return (
+    <div
+      style={{
+        display: "flex",
+        background: "var(--surface-2)",
+        border: "1px solid var(--border)",
+        borderRadius: "8px",
+        padding: "2px",
+        gap: 0,
+        position: "relative",
+      }}
+    >
+      <span
+        aria-hidden
+        style={{
+          position: "absolute",
+          top: 2,
+          bottom: 2,
+          left: `calc(2px + ${idx} * (100% - 4px) / 3)`,
+          width: "calc((100% - 4px) / 3)",
+          background: "var(--surface)",
+          borderRadius: "6px",
+          boxShadow: "0 1px 2px rgba(15,23,42,0.08)",
+          transition: "left 0.22s cubic-bezier(0.22, 1, 0.36, 1)",
+        }}
+      />
+      {options.map((o) => (
+        <button
+          key={o.v}
+          onClick={() => onChange(o.v)}
+          style={{
+            position: "relative",
+            zIndex: 1,
+            background: "transparent",
+            color: value === o.v ? "var(--text)" : "var(--text-3)",
+            border: "none",
+            borderRadius: "6px",
+            padding: "0.3rem 0.7rem",
+            fontFamily: "inherit",
+            fontSize: "0.72rem",
+            fontWeight: 600,
+            cursor: "pointer",
+            transition: "color 0.18s",
+          }}
+        >
+          {o.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function SatelliteKPI({
+  kpi,
+}: {
+  kpi: typeof satellites[number];
+}) {
+  return (
+    <div
+      className="aperture-sat"
+      style={{
+        background: "var(--surface)",
+        border: "1px solid var(--border)",
+        borderRadius: "12px",
+        padding: "0.9rem 1rem",
+        boxShadow:
+          "0 1px 2px rgba(15,23,42,0.04), 0 2px 8px -4px rgba(15,23,42,0.05)",
+        display: "flex",
+        flexDirection: "column",
+        gap: "0.4rem",
+        position: "relative",
+        overflow: "hidden",
+        transition: "border-color 0.2s, box-shadow 0.2s",
+      }}
+    >
+      <div
+        style={{
+          fontSize: "0.74rem",
+          fontWeight: 500,
+          color: "var(--text-3)",
+          display: "flex",
+          alignItems: "center",
+          gap: "0.3rem",
+        }}
+      >
+        {kpi.label}
+        {kpi.combined && (
+          <span
+            style={{
+              fontSize: "0.55rem",
+              fontWeight: 700,
+              color: "var(--accent)",
+              background: "var(--accent-tint)",
+              padding: "0.05rem 0.3rem",
+              borderRadius: "3px",
+              letterSpacing: "0.04em",
+            }}
+          >
+            ⊕
+          </span>
+        )}
       </div>
 
       <div style={{ display: "flex", alignItems: "baseline", gap: "0.3rem" }}>
         <span
           style={{
             fontFamily: "var(--font-mono)",
-            fontSize: "1.65rem",
-            fontWeight: 500,
-            letterSpacing: "-0.03em",
-            color: kpi.danger ? "var(--danger)" : "var(--text)",
-            lineHeight: 0.95,
+            fontSize: "1.5rem",
+            fontWeight: 600,
+            letterSpacing: "-0.025em",
+            color: "var(--text)",
+            lineHeight: 1,
             fontVariantNumeric: "tabular-nums",
           }}
         >
-          <CountUp value={kpi.target} format={kpi.format} duration={900} delay={delay} />
+          {kpi.value}
         </span>
         {kpi.unit && (
-          <span
-            style={{
-              fontSize: "0.74rem",
-              fontWeight: 500,
-              color: "var(--text-3)",
-            }}
-          >
+          <span style={{ fontSize: "0.78rem", color: "var(--text-3)" }}>
             {kpi.unit}
           </span>
         )}
-      </div>
-
-      <div style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
+        <span style={{ flex: 1 }} />
         <span
           style={{
             display: "inline-flex",
@@ -983,141 +1029,385 @@ function KPICard({
             gap: "0.2rem",
             fontSize: "0.7rem",
             fontWeight: 600,
-            color: trendColor,
-            background: trendBg,
-            padding: "0.15rem 0.4rem",
-            borderRadius: "4px",
+            color: "var(--success)",
           }}
         >
           <TrendingUp size={10} strokeWidth={2.5} />
           {kpi.trend}
         </span>
-        <span style={{ flex: 1, marginLeft: "0.3rem" }}>
-          <Sparkline
-            data={kpi.spark}
-            width={110}
-            height={20}
-            stroke={kpi.danger ? "var(--danger)" : "var(--accent)"}
-            strokeWidth={1.5}
-          />
-        </span>
       </div>
 
-      <div className="forge-kpi-reveal">
+      <div style={{ marginTop: "auto" }}>
+        <Sparkline
+          data={kpi.spark}
+          width={180}
+          height={18}
+          stroke="var(--accent)"
+          strokeWidth={1.4}
+        />
+      </div>
+
+      <div className="aperture-sat-reveal">
         {kpi.breakdown.map((b) => (
           <div
             key={b.src}
             style={{
               display: "flex",
               justifyContent: "space-between",
-              fontSize: "0.72rem",
-              fontFamily: "var(--font-mono)",
+              fontSize: "0.7rem",
               color: "var(--text-3)",
-              padding: "0.15rem 0",
+              padding: "0.18rem 0",
               borderTop: "1px solid var(--border)",
             }}
           >
-            <span style={{ fontFamily: "var(--font-sans)" }}>{b.src}</span>
-            <span style={{ color: "var(--text-2)", fontVariantNumeric: "tabular-nums" }}>{b.val}</span>
+            <span>{b.src}</span>
+            <span
+              style={{
+                color: "var(--text-2)",
+                fontVariantNumeric: "tabular-nums",
+                fontFamily: "var(--font-mono)",
+              }}
+            >
+              {b.val}
+            </span>
           </div>
         ))}
       </div>
 
       <style>{`
-        .forge-kpi-card { will-change: border-color; }
-        .forge-kpi-card:hover { border-color: var(--border-strong); box-shadow: 0 4px 16px -8px rgba(15,23,42,0.08); }
-        .forge-kpi-reveal {
+        .aperture-sat:hover {
+          border-color: var(--border-strong);
+          box-shadow: 0 1px 2px rgba(15,23,42,0.04), 0 8px 24px -10px rgba(15,23,42,0.10);
+        }
+        .aperture-sat-reveal {
           max-height: 0;
           overflow: hidden;
           opacity: 0;
           margin-top: 0;
-          transition: max-height 0.28s ease, opacity 0.22s ease, margin-top 0.28s ease;
+          transition: max-height 0.3s ease, opacity 0.22s ease, margin-top 0.3s ease;
         }
-        .forge-kpi-card:hover .forge-kpi-reveal {
+        .aperture-sat:hover .aperture-sat-reveal {
           max-height: 200px;
           opacity: 1;
-          margin-top: 0.25rem;
+          margin-top: 0.3rem;
         }
       `}</style>
     </div>
   );
 }
 
-function SectionHeader({
-  title,
-  count,
-  subtitle,
-  action,
-}: {
-  title: string;
-  count?: string;
-  subtitle?: string;
-  action?: string;
-}) {
+function TroisChoses({ onOpen }: { onOpen: (k: ModalKey) => void }) {
+  const [done, setDone] = useState<boolean[]>([false, false, false]);
+  const allDone = done.every(Boolean);
+
   return (
     <div
       style={{
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "baseline",
-        gap: "1rem",
-        marginBottom: "0.7rem",
-        flexWrap: "wrap",
+        background: "var(--surface)",
+        border: "1px solid var(--border)",
+        borderRadius: "14px",
+        padding: "1.2rem 1.4rem",
+        boxShadow:
+          "0 1px 2px rgba(15,23,42,0.04), 0 4px 12px -8px rgba(15,23,42,0.06)",
+        position: "relative",
+        overflow: "hidden",
       }}
     >
-      <div style={{ display: "flex", alignItems: "baseline", gap: "0.6rem" }}>
-        <h2
-          style={{
-            fontSize: "1rem",
-            fontWeight: 600,
-            color: "var(--text)",
-            letterSpacing: "-0.015em",
-            margin: 0,
-          }}
-        >
-          {title}
-        </h2>
-        {count && (
+      <div
+        style={{
+          fontSize: "0.7rem",
+          fontWeight: 700,
+          letterSpacing: "0.16em",
+          textTransform: "uppercase",
+          color: "var(--accent)",
+          marginBottom: "0.4rem",
+          display: "flex",
+          alignItems: "center",
+          gap: "0.45rem",
+        }}
+      >
+        Trois choses aujourd&apos;hui
+        {!allDone && (
           <span
             style={{
-              fontFamily: "var(--font-mono)",
-              fontSize: "0.72rem",
-              fontWeight: 600,
+              fontSize: "0.62rem",
+              fontWeight: 700,
               color: "var(--text-3)",
-              padding: "0.08rem 0.4rem",
-              background: "var(--surface)",
-              border: "1px solid var(--border)",
+              background: "var(--surface-2)",
+              padding: "0.1rem 0.4rem",
               borderRadius: "100px",
+              letterSpacing: "0.04em",
             }}
           >
-            {count}
-          </span>
-        )}
-        {subtitle && (
-          <span style={{ fontSize: "0.8rem", color: "var(--text-3)" }}>
-            {subtitle}
+            {done.filter(Boolean).length}/{trois.length}
           </span>
         )}
       </div>
-      {action && (
+      <h2
+        style={{
+          fontSize: "1.05rem",
+          fontWeight: 600,
+          color: "var(--text)",
+          margin: 0,
+          marginBottom: "1rem",
+          letterSpacing: "-0.015em",
+        }}
+      >
+        Vos priorités du matin, mises au premier plan.
+      </h2>
+
+      <AnimatePresence mode="wait">
+        {allDone ? (
+          <motion.div
+            key="empty"
+            initial={{ opacity: 0, scale: 0.96, y: 6 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              padding: "2rem 1rem",
+              textAlign: "center",
+              gap: "0.45rem",
+            }}
+          >
+            <span
+              style={{
+                width: 48,
+                height: 48,
+                background: "var(--success-tint)",
+                color: "var(--success)",
+                borderRadius: "12px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                marginBottom: "0.35rem",
+              }}
+            >
+              <CheckCircle2 size={22} strokeWidth={2} />
+            </span>
+            <div
+              style={{
+                fontSize: "1.05rem",
+                fontWeight: 600,
+                color: "var(--text)",
+                letterSpacing: "-0.015em",
+              }}
+            >
+              Tout est fait.
+            </div>
+            <div
+              style={{
+                fontSize: "0.86rem",
+                color: "var(--text-3)",
+                maxWidth: "36ch",
+                lineHeight: 1.5,
+              }}
+            >
+              Bonne journée, Thomas. Vos agents IA continuent de surveiller en arrière-plan.
+            </div>
+            <button
+              onClick={() => setDone([false, false, false])}
+              style={{
+                marginTop: "0.6rem",
+                padding: "0.4rem 0.85rem",
+                background: "transparent",
+                border: "1px solid var(--border)",
+                color: "var(--text-2)",
+                fontFamily: "inherit",
+                fontSize: "0.78rem",
+                fontWeight: 500,
+                cursor: "pointer",
+                borderRadius: "8px",
+                transition: "border-color 0.15s",
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.borderColor = "var(--border-strong)")}
+              onMouseLeave={(e) => (e.currentTarget.style.borderColor = "var(--border)")}
+            >
+              Réinitialiser
+            </button>
+          </motion.div>
+        ) : (
+          <motion.div
+            key="list"
+            initial={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.18 }}
+            style={{ display: "flex", flexDirection: "column", gap: "0.1rem" }}
+          >
+            {trois.map((t, i) =>
+              done[i] ? null : (
+                <TroisRow
+                  key={i}
+                  item={t}
+                  onDone={() => {
+                    setDone((prev) => {
+                      const next = [...prev];
+                      next[i] = true;
+                      return next;
+                    });
+                  }}
+                  onOpen={t.modalKey ? () => onOpen(t.modalKey!) : undefined}
+                />
+              )
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+function TroisRow({
+  item,
+  onDone,
+  onOpen,
+}: {
+  item: typeof trois[number];
+  onDone: () => void;
+  onOpen?: () => void;
+}) {
+  const { Icon } = item;
+  return (
+    <motion.div
+      layout
+      initial={{ opacity: 1 }}
+      exit={{ opacity: 0, height: 0, marginTop: 0, marginBottom: 0 }}
+      transition={{ duration: 0.22 }}
+      style={{
+        display: "grid",
+        gridTemplateColumns: "auto 1fr auto",
+        gap: "0.85rem",
+        alignItems: "center",
+        padding: "0.75rem 0.5rem",
+        borderRadius: "8px",
+        transition: "background 0.15s",
+      }}
+      onMouseEnter={(e) => (e.currentTarget.style.background = "var(--surface-2)")}
+      onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+    >
+      <span
+        style={{
+          width: 28,
+          height: 28,
+          background: item.bg,
+          color: item.color,
+          borderRadius: "7px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          flexShrink: 0,
+        }}
+      >
+        <Icon size={14} strokeWidth={2.25} />
+      </span>
+      <span
+        style={{
+          fontSize: "0.9rem",
+          color: "var(--text)",
+          lineHeight: 1.5,
+          fontWeight: 500,
+          letterSpacing: "-0.005em",
+        }}
+      >
+        {item.sentence}
+      </span>
+      <div style={{ display: "flex", gap: "0.35rem" }}>
         <button
+          onClick={() => {
+            onOpen?.();
+            setTimeout(onDone, 100);
+          }}
+          className="aperture-cta"
           style={{
             display: "inline-flex",
             alignItems: "center",
-            gap: "0.25rem",
+            gap: "0.3rem",
+            padding: "0.45rem 0.85rem",
+            background: "var(--accent)",
+            color: "#FFFFFF",
+            border: "1px solid var(--accent)",
+            borderRadius: "8px",
             fontFamily: "inherit",
-            background: "transparent",
-            border: "none",
-            color: "var(--accent)",
-            fontSize: "0.8rem",
+            fontSize: "0.78rem",
             fontWeight: 600,
             cursor: "pointer",
-            padding: 0,
+            transition: "background 0.15s, transform 0.12s",
+            boxShadow: "0 1px 2px rgba(30,64,175,0.18)",
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.background = "var(--accent-2)")}
+          onMouseLeave={(e) => (e.currentTarget.style.background = "var(--accent)")}
+          onMouseDown={(e) => (e.currentTarget.style.transform = "scale(0.97)")}
+          onMouseUp={(e) => (e.currentTarget.style.transform = "scale(1)")}
+        >
+          {item.cta}
+          <ArrowRight size={11} strokeWidth={2.5} />
+        </button>
+        <button
+          onClick={onDone}
+          aria-label="Marquer comme fait"
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: 32,
+            background: "var(--surface)",
+            color: "var(--text-3)",
+            border: "1px solid var(--border)",
+            borderRadius: "8px",
+            cursor: "pointer",
+            transition: "border-color 0.15s, color 0.15s",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.borderColor = "var(--success)";
+            e.currentTarget.style.color = "var(--success)";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.borderColor = "var(--border)";
+            e.currentTarget.style.color = "var(--text-3)";
           }}
         >
-          {action}
-          <ArrowUpRight size={12} strokeWidth={2.25} />
+          <Check size={12} strokeWidth={2.25} />
         </button>
+      </div>
+    </motion.div>
+  );
+}
+
+function SectionHeader({
+  title,
+  subtitle,
+}: {
+  title: string;
+  subtitle?: string;
+}) {
+  return (
+    <div style={{ marginBottom: "0.85rem" }}>
+      <h2
+        style={{
+          fontSize: "1.1rem",
+          fontWeight: 700,
+          color: "var(--text)",
+          letterSpacing: "-0.02em",
+          margin: 0,
+        }}
+      >
+        {title}
+      </h2>
+      {subtitle && (
+        <p
+          style={{
+            fontSize: "0.84rem",
+            color: "var(--text-3)",
+            margin: 0,
+            marginTop: "0.15rem",
+          }}
+        >
+          {subtitle}
+        </p>
       )}
     </div>
   );
@@ -1139,24 +1429,20 @@ function TileCard({
       : tile.alertTone === "danger"
       ? "var(--danger)"
       : "var(--text-3)";
-  const alertBg =
-    tile.alertTone === "warn"
-      ? "var(--warn-tint)"
-      : tile.alertTone === "good"
-      ? "var(--success-tint)"
-      : tile.alertTone === "danger"
-      ? "var(--danger-tint)"
-      : "var(--surface-2)";
+
+  // Extract base color for glow (strip CSS var indirection by using direct hex when iconColor maps)
+  // Since iconColor is "var(--accent)", we'll use the var directly in box-shadow.
   return (
     <motion.button
       onClick={() => onOpen(tile.modalKey)}
       whileHover={{ y: -2 }}
+      whileTap={{ scale: 0.985 }}
       transition={{ duration: 0.18 }}
       style={{
         background: "var(--surface)",
         border: "1px solid var(--border)",
-        borderRadius: "11px",
-        padding: "0.95rem 1rem 0.85rem",
+        borderRadius: "12px",
+        padding: "1rem 1.05rem 0.95rem",
         textAlign: "left",
         fontFamily: "inherit",
         color: "inherit",
@@ -1164,15 +1450,23 @@ function TileCard({
         display: "flex",
         flexDirection: "column",
         gap: "0.7rem",
-        transition: "border-color 0.18s, box-shadow 0.18s",
+        boxShadow: "0 1px 2px rgba(15,23,42,0.04), 0 2px 8px -4px rgba(15,23,42,0.04)",
+        transition: "border-color 0.2s, box-shadow 0.25s",
+        position: "relative",
+        overflow: "hidden",
       }}
       onMouseEnter={(e) => {
         e.currentTarget.style.borderColor = "var(--border-strong)";
-        e.currentTarget.style.boxShadow = "0 4px 16px -8px rgba(15,23,42,0.08)";
+        e.currentTarget.style.boxShadow = `0 1px 2px rgba(15,23,42,0.04), 0 12px 28px -14px rgba(15,23,42,0.18), 0 0 0 4px ${tile.iconBg}`;
+        const icon = e.currentTarget.querySelector("[data-tile-icon]") as HTMLElement | null;
+        if (icon) icon.style.transform = "rotate(4deg) scale(1.06)";
       }}
       onMouseLeave={(e) => {
         e.currentTarget.style.borderColor = "var(--border)";
-        e.currentTarget.style.boxShadow = "none";
+        e.currentTarget.style.boxShadow =
+          "0 1px 2px rgba(15,23,42,0.04), 0 2px 8px -4px rgba(15,23,42,0.04)";
+        const icon = e.currentTarget.querySelector("[data-tile-icon]") as HTMLElement | null;
+        if (icon) icon.style.transform = "rotate(0) scale(1)";
       }}
     >
       <div
@@ -1182,24 +1476,26 @@ function TileCard({
           justifyContent: "space-between",
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.55rem" }}>
           <span
+            data-tile-icon
             style={{
-              width: 26,
-              height: 26,
+              width: 30,
+              height: 30,
               background: tile.iconBg,
               color: tile.iconColor,
-              borderRadius: "6px",
+              borderRadius: "8px",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
+              transition: "transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1)",
             }}
           >
-            <Icon size={13} strokeWidth={2} />
+            <Icon size={14} strokeWidth={2} />
           </span>
           <span
             style={{
-              fontSize: "0.9rem",
+              fontSize: "0.92rem",
               fontWeight: 600,
               color: "var(--text)",
               letterSpacing: "-0.01em",
@@ -1211,12 +1507,12 @@ function TileCard({
         <ArrowUpRight size={13} strokeWidth={2.25} color="var(--text-4)" />
       </div>
 
-      <div style={{ display: "flex", alignItems: "flex-end", gap: "0.7rem" }}>
+      <div style={{ display: "flex", alignItems: "flex-end", gap: "0.65rem" }}>
         <span
           style={{
             fontFamily: "var(--font-mono)",
-            fontSize: "1.7rem",
-            fontWeight: 500,
+            fontSize: "1.8rem",
+            fontWeight: 600,
             letterSpacing: "-0.03em",
             color: "var(--text)",
             lineHeight: 0.95,
@@ -1238,12 +1534,14 @@ function TileCard({
           )}
         </span>
         {tile.spark && (
-          <div style={{ flex: 1, marginBottom: "0.2rem", opacity: 0.85 }}>
+          <div
+            style={{ flex: 1, marginBottom: "0.2rem", color: tile.iconColor, opacity: 0.85 }}
+          >
             <Sparkline
               data={tile.spark}
-              width={130}
+              width={120}
               height={20}
-              stroke={tile.iconColor}
+              stroke="currentColor"
               strokeWidth={1.4}
             />
           </div>
@@ -1255,7 +1553,6 @@ function TileCard({
           fontSize: "0.78rem",
           color: "var(--text-3)",
           lineHeight: 1.4,
-          minHeight: "1.1rem",
         }}
       >
         {tile.caption}
@@ -1266,7 +1563,7 @@ function TileCard({
           display: "flex",
           alignItems: "center",
           gap: "0.5rem",
-          paddingTop: "0.5rem",
+          paddingTop: "0.55rem",
           borderTop: "1px solid var(--border)",
         }}
       >
@@ -1275,12 +1572,9 @@ function TileCard({
             display: "inline-flex",
             alignItems: "center",
             gap: "0.3rem",
-            fontSize: "0.7rem",
+            fontSize: "0.72rem",
             fontWeight: 600,
             color: alertColor,
-            background: alertBg,
-            padding: "0.18rem 0.45rem",
-            borderRadius: "5px",
           }}
         >
           <Circle size={5} strokeWidth={0} fill="currentColor" />
@@ -1289,7 +1583,7 @@ function TileCard({
         <span style={{ flex: 1 }} />
         <span
           style={{
-            fontSize: "0.66rem",
+            fontSize: "0.68rem",
             color: "var(--text-4)",
             fontWeight: 500,
           }}
@@ -1301,209 +1595,24 @@ function TileCard({
   );
 }
 
-function AgentInbox({ onOpen }: { onOpen: (k: ModalKey) => void }) {
-  return (
-    <div
-      style={{
-        background: "var(--surface)",
-        border: "1px solid var(--border)",
-        borderRadius: "11px",
-        overflow: "hidden",
-      }}
-    >
-      <div
-        style={{
-          padding: "0.5rem 1rem",
-          borderBottom: "1px solid var(--border)",
-          background: "var(--surface-2)",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          gap: "0.5rem",
-          fontFamily: "var(--font-mono)",
-          fontSize: "0.7rem",
-          color: "var(--text-3)",
-          letterSpacing: "0.02em",
-        }}
-      >
-        <div style={{ display: "flex", gap: "1.5rem" }}>
-          <span>Agent</span>
-        </div>
-        <button
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: "0.3rem",
-            padding: "0.2rem 0.55rem",
-            fontFamily: "var(--font-sans)",
-            fontSize: "0.74rem",
-            fontWeight: 500,
-            color: "var(--text-2)",
-            background: "var(--surface)",
-            border: "1px solid var(--border)",
-            borderRadius: "5px",
-            cursor: "pointer",
-          }}
-        >
-          <Plus size={11} strokeWidth={2.25} />
-          Nouvelle action
-        </button>
-      </div>
-      {agents.map((a, i) => (
-        <AgentRow
-          key={a.name}
-          agent={a}
-          isLast={i === agents.length - 1}
-          onOpen={a.modalKey ? () => onOpen(a.modalKey!) : undefined}
-        />
-      ))}
-    </div>
-  );
-}
-
-function AgentRow({
-  agent,
-  isLast,
-  onOpen,
-}: {
-  agent: {
-    Icon: typeof Mail;
-    iconColor: string;
-    iconBg: string;
-    name: string;
-    desc: string;
-    source: string;
-    time: string;
-  };
-  isLast: boolean;
-  onOpen?: () => void;
-}) {
-  const [done, setDone] = useState<"none" | "validated" | "dismissed">("none");
-  const { Icon } = agent;
-  return (
-    <div
-      style={{
-        display: "grid",
-        gridTemplateColumns: "auto 1fr auto",
-        gap: "0.85rem",
-        alignItems: "center",
-        padding: "0.8rem 1rem",
-        borderBottom: isLast ? "none" : "1px solid var(--border)",
-        opacity: done !== "none" ? 0.4 : 1,
-        transition: "opacity 0.25s, background 0.15s",
-      }}
-    >
-      <span
-        style={{
-          width: 30,
-          height: 30,
-          background: agent.iconBg,
-          color: agent.iconColor,
-          borderRadius: "7px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <Icon size={14} strokeWidth={2} />
-      </span>
-      <div>
-        <div
-          style={{
-            fontSize: "0.88rem",
-            fontWeight: 600,
-            color: "var(--text)",
-            letterSpacing: "-0.005em",
-          }}
-        >
-          Agent — {agent.name}
-        </div>
-        <div
-          style={{
-            fontSize: "0.76rem",
-            color: "var(--text-3)",
-            marginTop: "0.1rem",
-          }}
-        >
-          {agent.desc}{" "}
-          <span style={{ color: "var(--text-4)" }}>· {agent.source} · {agent.time}</span>
-        </div>
-      </div>
-      <div style={{ display: "flex", gap: "0.35rem" }}>
-        <button
-          onClick={() => {
-            setDone("validated");
-            onOpen?.();
-          }}
-          disabled={done !== "none"}
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: "0.25rem",
-            padding: "0.4rem 0.7rem",
-            background: done === "none" ? "var(--accent)" : "transparent",
-            color: done === "none" ? "#FFFFFF" : "var(--text-3)",
-            border: `1px solid ${done === "none" ? "var(--accent)" : "var(--border)"}`,
-            borderRadius: "7px",
-            fontFamily: "inherit",
-            fontSize: "0.76rem",
-            fontWeight: 600,
-            cursor: done === "none" ? "pointer" : "default",
-            transition: "background 0.15s",
-          }}
-          onMouseEnter={(e) => {
-            if (done === "none") e.currentTarget.style.background = "var(--accent-2)";
-          }}
-          onMouseLeave={(e) => {
-            if (done === "none") e.currentTarget.style.background = "var(--accent)";
-          }}
-        >
-          {done === "validated" && <Check size={11} strokeWidth={2.5} />}
-          {done === "validated" ? "Fait" : onOpen ? "Ouvrir" : "Valider"}
-        </button>
-        <button
-          onClick={() => setDone("dismissed")}
-          disabled={done !== "none"}
-          aria-label="Ignorer"
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            justifyContent: "center",
-            width: 30,
-            padding: "0.4rem",
-            background: "var(--surface)",
-            color: "var(--text-3)",
-            border: "1px solid var(--border)",
-            borderRadius: "7px",
-            cursor: done === "none" ? "pointer" : "default",
-          }}
-        >
-          <X size={11} strokeWidth={2.25} />
-        </button>
-      </div>
-    </div>
-  );
-}
-
 function Footer() {
   return (
     <footer
       style={{
-        marginTop: "2rem",
+        marginTop: "2.5rem",
         paddingTop: "1.25rem",
         borderTop: "1px solid var(--border)",
         display: "flex",
         justifyContent: "space-between",
         gap: "1rem",
-        fontFamily: "var(--font-mono)",
-        fontSize: "0.7rem",
+        fontSize: "0.74rem",
         color: "var(--text-3)",
         flexWrap: "wrap",
       }}
     >
-      <span>cabinet müller &amp; associés sa · zürich</span>
-      <span>sync brokerstar 3m · odoo 5m</span>
-      <span>lpd art.16 · infomaniak ch</span>
+      <span>© 2026 Cabinet Müller &amp; Associés SA · Zürich</span>
+      <span>Sync BrokerStar 3 min · Odoo 5 min</span>
+      <span>LPD Art.16 · Infomaniak CH</span>
     </footer>
   );
 }

@@ -1,9 +1,9 @@
-import { Inter_Tight, JetBrains_Mono } from "next/font/google";
+import { Manrope, JetBrains_Mono } from "next/font/google";
 
-const interTight = Inter_Tight({
+const manrope = Manrope({
   variable: "--font-sans",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+  weight: ["400", "500", "600", "700", "800"],
   display: "swap",
 });
 
@@ -14,21 +14,20 @@ const jetBrainsMono = JetBrains_Mono({
   display: "swap",
 });
 
-export default function DesignBLayout({
+export default function DesignDLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
     <div
-      className={`${interTight.variable} ${jetBrainsMono.variable}`}
+      className={`${manrope.variable} ${jetBrainsMono.variable}`}
       style={{
         fontFamily: "var(--font-sans), system-ui, sans-serif",
-        background: "#F8FAFC",
+        background: "#FAFBFB",
         color: "#0F172A",
         minHeight: "100vh",
-        ["--bg" as string]: "#F8FAFC",
-        ["--sidebar-bg" as string]: "#F1F5F9",
+        ["--bg" as string]: "#FAFBFB",
         ["--surface" as string]: "#FFFFFF",
         ["--surface-2" as string]: "#F1F5F9",
         ["--surface-3" as string]: "#E2E8F0",
@@ -38,18 +37,20 @@ export default function DesignBLayout({
         ["--text-2" as string]: "#334155",
         ["--text-3" as string]: "#64748B",
         ["--text-4" as string]: "#94A3B8",
-        ["--accent" as string]: "#3B5B7E",
-        ["--accent-2" as string]: "#2D4663",
-        ["--accent-tint" as string]: "#E1E7EE",
-        ["--accent-tint-2" as string]: "#D1DAE5",
-        ["--success" as string]: "#047857",
-        ["--success-tint" as string]: "#D1FAE5",
-        ["--warn" as string]: "#B45309",
+        ["--accent" as string]: "#1E40AF",
+        ["--accent-2" as string]: "#1E3A8A",
+        ["--accent-tint" as string]: "#DBEAFE",
+        ["--accent-tint-2" as string]: "#EFF6FF",
+        ["--success" as string]: "#059669",
+        ["--success-tint" as string]: "#ECFDF5",
+        ["--warn" as string]: "#D97706",
         ["--warn-tint" as string]: "#FEF3C7",
-        ["--danger" as string]: "#B91C1C",
+        ["--danger" as string]: "#DC2626",
         ["--danger-tint" as string]: "#FEE2E2",
-        ["--info" as string]: "#1D4ED8",
-        ["--info-tint" as string]: "#DBEAFE",
+        ["--info" as string]: "#0284C7",
+        ["--info-tint" as string]: "#E0F2FE",
+        ["--purple" as string]: "#7C3AED",
+        ["--purple-tint" as string]: "#F3E8FF",
       }}
     >
       {children}

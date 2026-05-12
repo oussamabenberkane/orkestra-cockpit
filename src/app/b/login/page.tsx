@@ -4,9 +4,9 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { ArrowLeft, ArrowRight, ShieldCheck, Sparkles, Activity } from "lucide-react";
+import { ArrowLeft, ArrowRight, ShieldCheck, BarChart3, Sparkles } from "lucide-react";
 
-export default function LoginPageB() {
+export default function LoginPageD() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -20,62 +20,76 @@ export default function LoginPageB() {
 
   return (
     <div
-      className="forge-login"
       style={{
         minHeight: "100vh",
         background: "var(--bg)",
         display: "grid",
-        gridTemplateColumns: "1.1fr 1fr",
+        gridTemplateColumns: "1fr 1fr",
       }}
+      className="aperture-login"
     >
-      {/* Left — brand panel */}
-      <aside
+      {/* Left — form */}
+      <main
         style={{
-          position: "relative",
           background: "var(--surface)",
-          borderRight: "1px solid var(--border)",
           padding: "clamp(2rem, 4vw, 3.5rem)",
           display: "flex",
           flexDirection: "column",
           justifyContent: "space-between",
-          overflow: "hidden",
         }}
       >
-        <div
-          aria-hidden
-          style={{
-            position: "absolute",
-            inset: 0,
-            background:
-              "radial-gradient(50% 40% at 20% 10%, rgba(59,91,126,0.05), transparent 65%)",
-            pointerEvents: "none",
-          }}
-        />
-
-        <div style={{ position: "relative", zIndex: 1 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
+            <div
+              style={{
+                width: 32,
+                height: 32,
+                background: "var(--accent)",
+                color: "#FFFFFF",
+                borderRadius: "8px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: "0.72rem",
+                fontWeight: 800,
+                letterSpacing: "-0.02em",
+                boxShadow: "0 1px 2px rgba(30,64,175,0.18)",
+              }}
+            >
+              CMA
+            </div>
+            <span
+              style={{
+                fontSize: "0.92rem",
+                fontWeight: 700,
+                color: "var(--text)",
+                letterSpacing: "-0.015em",
+              }}
+            >
+              Orkestra Cockpit
+            </span>
+          </div>
           <Link
             href="/"
             style={{
               display: "inline-flex",
               alignItems: "center",
-              gap: "0.4rem",
-              textDecoration: "none",
-              color: "var(--text-3)",
+              gap: "0.35rem",
               fontSize: "0.78rem",
               fontWeight: 500,
+              color: "var(--text-3)",
+              textDecoration: "none",
               padding: "0.35rem 0.65rem",
-              background: "var(--surface)",
-              border: "1px solid var(--border)",
               borderRadius: "8px",
-              transition: "color 0.15s, border-color 0.15s",
+              transition: "color 0.15s, background 0.15s",
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.color = "var(--text)";
-              e.currentTarget.style.borderColor = "var(--border-strong)";
+              e.currentTarget.style.background = "var(--surface-2)";
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.color = "var(--text-3)";
-              e.currentTarget.style.borderColor = "var(--border)";
+              e.currentTarget.style.background = "transparent";
             }}
           >
             <ArrowLeft size={13} strokeWidth={2.25} />
@@ -86,117 +100,50 @@ export default function LoginPageB() {
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-          style={{ position: "relative", zIndex: 1 }}
+          transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+          style={{ maxWidth: "400px", width: "100%" }}
         >
-          <BrandMark />
-          <h1
+          <span
             style={{
-              fontSize: "clamp(2rem, 4vw, 2.85rem)",
-              fontWeight: 600,
-              lineHeight: 1.08,
-              letterSpacing: "-0.025em",
-              color: "var(--text)",
-              margin: "1.75rem 0 0.85rem",
-              maxWidth: "16ch",
+              fontSize: "0.66rem",
+              fontWeight: 700,
+              letterSpacing: "0.18em",
+              textTransform: "uppercase",
+              color: "var(--accent)",
+              marginBottom: "0.65rem",
+              display: "inline-block",
             }}
           >
-            Pilotez votre cabinet avec intelligence.
+            Variante D · Aperture
+          </span>
+          <h1
+            style={{
+              fontSize: "clamp(1.9rem, 3.5vw, 2.4rem)",
+              fontWeight: 700,
+              lineHeight: 1.1,
+              letterSpacing: "-0.025em",
+              color: "var(--text)",
+              margin: 0,
+              marginBottom: "0.55rem",
+            }}
+          >
+            Bonjour, Thomas.
           </h1>
           <p
             style={{
-              fontSize: "1rem",
-              lineHeight: 1.55,
-              color: "var(--text-2)",
-              maxWidth: "36ch",
-              marginBottom: "2.25rem",
-            }}
-          >
-            Tous vos KPIs combinés BrokerStar + Odoo, agents IA inclus, dans une vue unifiée.
-          </p>
-
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              gap: "0.6rem",
-              maxWidth: "32rem",
-            }}
-          >
-            <Feature
-              icon={<Sparkles size={13} strokeWidth={2.25} />}
-              text="KPIs combinés mis à jour en continu."
-            />
-            <Feature
-              icon={<Activity size={13} strokeWidth={2.25} />}
-              text="Strip de variations depuis la dernière session."
-            />
-            <Feature
-              icon={<ShieldCheck size={13} strokeWidth={2.25} />}
-              text="LLM souverain Infomaniak — LPD Art.16."
-            />
-          </div>
-        </motion.div>
-
-        <div
-          style={{
-            position: "relative",
-            zIndex: 1,
-            display: "flex",
-            justifyContent: "space-between",
-            fontSize: "0.74rem",
-            color: "var(--text-3)",
-            gap: "1rem",
-            flexWrap: "wrap",
-          }}
-        >
-          <span>Variante B — Forge</span>
-          <span>BrokerStar · Odoo · Combiné</span>
-        </div>
-      </aside>
-
-      {/* Right — form */}
-      <main
-        style={{
-          background: "var(--bg)",
-          padding: "clamp(2rem, 4vw, 3.5rem)",
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "center",
-          alignItems: "center",
-        }}
-      >
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1, duration: 0.5 }}
-          style={{ width: "100%", maxWidth: "380px" }}
-        >
-          <h2
-            style={{
-              fontSize: "1.6rem",
-              fontWeight: 600,
-              letterSpacing: "-0.02em",
-              color: "var(--text)",
-              margin: 0,
-              marginBottom: "0.4rem",
-            }}
-          >
-            Connexion
-          </h2>
-          <p
-            style={{
-              fontSize: "0.92rem",
+              fontSize: "0.96rem",
               color: "var(--text-3)",
               marginBottom: "2rem",
+              maxWidth: "34ch",
+              lineHeight: 1.55,
             }}
           >
-            Continuez avec votre compte Cabinet Müller.
+            Connectez-vous pour voir le chiffre du mois et les trois actions qui vous attendent.
           </p>
 
           <form onSubmit={handleSubmit}>
             <Field
-              id="email-b"
+              id="email-d"
               label="Adresse e-mail"
               type="email"
               value={email}
@@ -204,7 +151,7 @@ export default function LoginPageB() {
               placeholder="thomas@muller.ch"
             />
             <Field
-              id="password-b"
+              id="password-d"
               label="Mot de passe"
               type="password"
               value={password}
@@ -256,14 +203,14 @@ export default function LoginPageB() {
               disabled={loading}
               style={{
                 width: "100%",
-                padding: "0.75rem",
+                padding: "0.78rem",
                 background: loading ? "var(--text-3)" : "var(--accent)",
                 color: "#FFFFFF",
                 border: "none",
                 borderRadius: "10px",
-                fontFamily: "var(--font-sans)",
+                fontFamily: "inherit",
                 fontSize: "0.92rem",
-                fontWeight: 600,
+                fontWeight: 700,
                 cursor: loading ? "not-allowed" : "pointer",
                 display: "inline-flex",
                 justifyContent: "center",
@@ -271,7 +218,7 @@ export default function LoginPageB() {
                 gap: "0.45rem",
                 letterSpacing: "-0.005em",
                 transition: "background 0.2s",
-                boxShadow: loading ? "none" : "0 2px 6px rgba(59,91,126,0.18)",
+                boxShadow: loading ? "none" : "0 2px 8px rgba(30,64,175,0.22)",
               }}
               onMouseEnter={(e) => {
                 if (!loading) e.currentTarget.style.background = "var(--accent-2)";
@@ -284,105 +231,189 @@ export default function LoginPageB() {
               {!loading && <ArrowRight size={15} strokeWidth={2.25} />}
             </button>
           </form>
+        </motion.div>
 
-          <div
+        <footer
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            fontSize: "0.72rem",
+            color: "var(--text-3)",
+            gap: "0.5rem",
+            flexWrap: "wrap",
+          }}
+        >
+          <span>© 2026 Cabinet Müller &amp; Associés SA</span>
+          <span>LPD Art.16 · Infomaniak CH</span>
+        </footer>
+      </main>
+
+      {/* Right — feature panel */}
+      <aside
+        style={{
+          background: "var(--accent)",
+          color: "#FFFFFF",
+          padding: "clamp(2rem, 4vw, 3.5rem)",
+          position: "relative",
+          overflow: "hidden",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "space-between",
+        }}
+        className="aperture-aside"
+      >
+        <div
+          aria-hidden
+          style={{
+            position: "absolute",
+            inset: 0,
+            background:
+              "radial-gradient(50% 40% at 80% 10%, rgba(255,255,255,0.10), transparent 60%), radial-gradient(60% 50% at 10% 90%, rgba(0,0,0,0.10), transparent 60%)",
+            pointerEvents: "none",
+          }}
+        />
+        <div
+          aria-hidden
+          style={{
+            position: "absolute",
+            inset: 0,
+            backgroundImage:
+              "linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px)",
+            backgroundSize: "36px 36px",
+            pointerEvents: "none",
+          }}
+        />
+
+        <motion.div
+          initial={{ opacity: 0, y: 14 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.12, duration: 0.6 }}
+          style={{ position: "relative", zIndex: 1 }}
+        >
+          <h2
             style={{
-              marginTop: "2rem",
-              paddingTop: "1.25rem",
-              borderTop: "1px solid var(--border)",
-              fontSize: "0.74rem",
-              color: "var(--text-3)",
-              textAlign: "center",
+              fontSize: "clamp(1.7rem, 3vw, 2.15rem)",
+              fontWeight: 700,
+              letterSpacing: "-0.025em",
+              lineHeight: 1.15,
+              margin: 0,
+              marginBottom: "1.25rem",
+              maxWidth: "22ch",
             }}
           >
-            Pas de compte ?{" "}
-            <span style={{ color: "var(--text-2)", fontWeight: 500 }}>
-              Contactez votre administrateur
-            </span>
-          </div>
+            Un chiffre par mois, trois actions par matin.
+          </h2>
+          <p
+            style={{
+              fontSize: "0.95rem",
+              color: "rgba(255,255,255,0.78)",
+              lineHeight: 1.6,
+              maxWidth: "38ch",
+              margin: 0,
+            }}
+          >
+            Aperture met en avant l&apos;essentiel — le chiffre d&apos;affaires, les actions
+            prioritaires, et tout le reste en support.
+          </p>
         </motion.div>
-      </main>
+
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.22, duration: 0.6 }}
+          style={{
+            position: "relative",
+            zIndex: 1,
+            display: "flex",
+            flexDirection: "column",
+            gap: "0.85rem",
+          }}
+        >
+          <Feature
+            icon={<BarChart3 size={14} strokeWidth={2.25} />}
+            title="Hero KPI"
+            desc="Un graphique principal avec événements annotés."
+          />
+          <Feature
+            icon={<Sparkles size={14} strokeWidth={2.25} />}
+            title="Trois choses aujourd'hui"
+            desc="Vos actions du matin, mises au premier plan."
+          />
+          <Feature
+            icon={<ShieldCheck size={14} strokeWidth={2.25} />}
+            title="LPD conforme"
+            desc="LLM souverain Infomaniak. Données en Suisse."
+          />
+        </motion.div>
+      </aside>
 
       <style>{`
         @media (max-width: 820px) {
-          .forge-login { grid-template-columns: 1fr !important; }
-          .forge-login > aside { min-height: 320px; }
+          .aperture-login { grid-template-columns: 1fr !important; }
+          .aperture-aside { display: none !important; }
         }
       `}</style>
     </div>
   );
 }
 
-function BrandMark() {
-  return (
-    <div style={{ display: "inline-flex", alignItems: "center", gap: "0.65rem" }}>
-      <div
-        style={{
-          width: 38,
-          height: 38,
-          background: "var(--accent)",
-          color: "#FFFFFF",
-          borderRadius: "9px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          fontSize: "0.88rem",
-          fontWeight: 700,
-          letterSpacing: "-0.02em",
-          boxShadow:
-            "0 1px 2px rgba(59,91,126,0.12), inset 0 1px 0 rgba(255,255,255,0.16)",
-        }}
-      >
-        CMA
-      </div>
-      <div style={{ display: "flex", flexDirection: "column", lineHeight: 1.15 }}>
-        <span
-          style={{
-            fontSize: "0.95rem",
-            fontWeight: 600,
-            color: "var(--text)",
-            letterSpacing: "-0.01em",
-          }}
-        >
-          Cabinet Müller &amp; Associés
-        </span>
-        <span style={{ fontSize: "0.78rem", color: "var(--text-3)" }}>
-          Orkestra Cockpit — BFSI
-        </span>
-      </div>
-    </div>
-  );
-}
-
-function Feature({ icon, text }: { icon: React.ReactNode; text: string }) {
+function Feature({
+  icon,
+  title,
+  desc,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  desc: string;
+}) {
   return (
     <div
       style={{
         display: "flex",
+        gap: "0.85rem",
         alignItems: "flex-start",
-        gap: "0.65rem",
-        fontSize: "0.86rem",
-        color: "var(--text-2)",
-        lineHeight: 1.5,
+        background: "rgba(255,255,255,0.07)",
+        border: "1px solid rgba(255,255,255,0.12)",
+        borderRadius: "10px",
+        padding: "0.85rem 1rem",
       }}
     >
       <span
         style={{
-          display: "inline-flex",
+          flexShrink: 0,
+          width: 28,
+          height: 28,
+          background: "rgba(255,255,255,0.14)",
+          borderRadius: "7px",
+          display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          width: 22,
-          height: 22,
-          borderRadius: "6px",
-          background: "var(--accent-tint)",
-          color: "var(--accent)",
-          flexShrink: 0,
-          marginTop: "1px",
+          color: "#FFFFFF",
         }}
       >
         {icon}
       </span>
-      <span>{text}</span>
+      <div>
+        <div
+          style={{
+            fontSize: "0.86rem",
+            fontWeight: 700,
+            marginBottom: "0.15rem",
+            letterSpacing: "-0.01em",
+          }}
+        >
+          {title}
+        </div>
+        <div
+          style={{
+            fontSize: "0.78rem",
+            color: "rgba(255,255,255,0.68)",
+            lineHeight: 1.5,
+          }}
+        >
+          {desc}
+        </div>
+      </div>
     </div>
   );
 }
@@ -403,15 +434,16 @@ function Field({
   placeholder: string;
 }) {
   return (
-    <div style={{ marginBottom: "1.1rem" }}>
+    <div style={{ marginBottom: "1rem" }}>
       <label
         htmlFor={id}
         style={{
           display: "block",
           fontSize: "0.82rem",
-          fontWeight: 500,
-          color: "var(--text-2)",
+          fontWeight: 600,
+          color: "var(--text)",
           marginBottom: "0.4rem",
+          letterSpacing: "-0.005em",
         }}
       >
         {label}
@@ -424,11 +456,11 @@ function Field({
         placeholder={placeholder}
         style={{
           width: "100%",
-          padding: "0.65rem 0.85rem",
+          padding: "0.7rem 0.9rem",
           background: "var(--surface)",
           border: "1px solid var(--border)",
           borderRadius: "10px",
-          fontFamily: "var(--font-sans)",
+          fontFamily: "inherit",
           fontSize: "0.92rem",
           color: "var(--text)",
           outline: "none",
