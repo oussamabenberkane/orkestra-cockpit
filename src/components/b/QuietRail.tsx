@@ -12,49 +12,38 @@ import {
   Globe,
   MessageSquare,
   AlertTriangle,
-  Sparkles,
   Settings,
   HelpCircle,
-  ChevronRight,
   type LucideIcon,
 } from "lucide-react";
 
-type Tone = "neutral" | "warn" | "danger";
+type Tone = "neutral" | "warn" | "danger" | "success";
 
 type NavItem = {
   Icon: LucideIcon;
   label: string;
   badge?: string;
   badgeTone?: Tone;
-  subs?: string[];
 };
 
 type NavSection = { title: string; items: NavItem[] };
 
 const sections: NavSection[] = [
   {
-    title: "Espace",
+    title: "Menu",
     items: [
-      {
-        Icon: Home,
-        label: "Accueil",
-        subs: ["Aujourd'hui", "Cette semaine", "Mois", "Trimestre"],
-      },
-      {
-        Icon: BarChart3,
-        label: "Rapports",
-        subs: ["Mensuel", "Direction", "Personnalisé"],
-      },
+      { Icon: Home, label: "Accueil" },
+      { Icon: BarChart3, label: "Rapports" },
     ],
   },
   {
     title: "Métier",
     items: [
-      { Icon: Target, label: "Prospection", badge: "12", badgeTone: "neutral" },
+      { Icon: Target, label: "Prospection", badge: "12", badgeTone: "success" },
       { Icon: FolderArchive, label: "Portefeuille" },
       { Icon: Flame, label: "Sinistres", badge: "3", badgeTone: "danger" },
       { Icon: Wallet, label: "Finance", badge: "2", badgeTone: "warn" },
-      { Icon: Globe, label: "Vue d'ensemble" },
+      { Icon: Globe, label: "Vue 360°" },
     ],
   },
   {
@@ -62,17 +51,10 @@ const sections: NavSection[] = [
     items: [
       { Icon: MessageSquare, label: "Chat IA", badge: "3", badgeTone: "warn" },
       { Icon: AlertTriangle, label: "Alertes", badge: "5", badgeTone: "danger" },
-      {
-        Icon: Sparkles,
-        label: "Agents",
-        badge: "3",
-        badgeTone: "neutral",
-        subs: ["Inbox", "Historique", "Configuration"],
-      },
     ],
   },
   {
-    title: "Administration",
+    title: "Admin",
     items: [
       { Icon: Settings, label: "Paramètres" },
       { Icon: HelpCircle, label: "Support" },
@@ -80,8 +62,8 @@ const sections: NavSection[] = [
   },
 ];
 
-const ACTIVE_SECTION = "Métier";
-const ACTIVE_ITEM = "Prospection";
+const ACTIVE_SECTION = "Menu";
+const ACTIVE_ITEM = "Accueil";
 
 function badgeTones(tone?: Tone) {
   if (tone === "danger")
@@ -96,6 +78,12 @@ function badgeTones(tone?: Tone) {
       bg: "var(--warn-tint)",
       border: "var(--warn-tint)",
     };
+  if (tone === "success")
+    return {
+      color: "var(--success)",
+      bg: "var(--success-tint)",
+      border: "var(--success-tint)",
+    };
   return {
     color: "var(--text-3)",
     bg: "var(--surface-2)",
@@ -106,7 +94,7 @@ function badgeTones(tone?: Tone) {
 function itemPalette(label: string) {
   if (
     label === "Prospection" ||
-    label === "Vue d'ensemble" ||
+    label === "Vue 360°" ||
     label === "Accueil" ||
     label === "Rapports"
   )
@@ -116,7 +104,6 @@ function itemPalette(label: string) {
     return { c: "var(--danger)", bg: "var(--danger-tint)" };
   if (label === "Finance" || label === "Chat IA")
     return { c: "var(--warn)", bg: "var(--warn-tint)" };
-  if (label === "Agents") return { c: "var(--purple)", bg: "var(--purple-tint)" };
   return { c: "var(--text-3)", bg: "var(--surface-2)" };
 }
 
@@ -208,7 +195,7 @@ export function QuietRail() {
                     top: "100%",
                     left: 0,
                     paddingTop: 6,
-                    width: 296,
+                    width: 280,
                     zIndex: 31,
                   }}
                 >
@@ -273,116 +260,55 @@ function PanelCard({ section }: { section: NavSection }) {
 function PanelItem({ item, active }: { item: NavItem; active: boolean }) {
   const pal = itemPalette(item.label);
   return (
-    <div>
-      <div
-        role="link"
-        tabIndex={0}
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "0.6rem",
-          padding: "0.45rem 0.6rem",
-          borderRadius: "8px",
-          cursor: "pointer",
-          background: active ? "var(--surface-2)" : "transparent",
-          transition: "background 0.15s",
-        }}
-        onMouseEnter={(e) => {
-          if (!active) e.currentTarget.style.background = "var(--surface-2)";
-        }}
-        onMouseLeave={(e) => {
-          if (!active) e.currentTarget.style.background = "transparent";
-        }}
-      >
-        <span
-          style={{
-            width: 26,
-            height: 26,
-            background: pal.bg,
-            color: pal.c,
-            borderRadius: "6px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            flexShrink: 0,
-          }}
-        >
-          <item.Icon size={14} strokeWidth={2.25} />
-        </span>
-        <span
-          style={{
-            fontSize: "0.84rem",
-            fontWeight: active ? 600 : 500,
-            color: active ? "var(--text)" : "var(--text-2)",
-            flex: 1,
-            whiteSpace: "nowrap",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-          }}
-        >
-          {item.label}
-        </span>
-        {item.badge && <Badge value={item.badge} tone={item.badgeTone} />}
-      </div>
-      {item.subs && <SubsRegion subs={item.subs} />}
-    </div>
-  );
-}
-
-function SubsRegion({ subs }: { subs: string[] }) {
-  return (
     <div
+      role="link"
+      tabIndex={0}
       style={{
-        margin: "0.2rem 0.3rem 0.45rem 1.55rem",
-        padding: "0.35rem 0.4rem 0.4rem",
-        background: "var(--surface-2)",
+        display: "flex",
+        alignItems: "center",
+        gap: "0.6rem",
+        padding: "0.45rem 0.6rem",
         borderRadius: "8px",
-        border: "1px solid var(--border)",
+        cursor: "pointer",
+        background: active ? "var(--surface-2)" : "transparent",
+        transition: "background 0.15s",
+      }}
+      onMouseEnter={(e) => {
+        if (!active) e.currentTarget.style.background = "var(--surface-2)";
+      }}
+      onMouseLeave={(e) => {
+        if (!active) e.currentTarget.style.background = "transparent";
       }}
     >
-      <div
+      <span
         style={{
-          padding: "0.15rem 0.45rem 0.3rem",
-          fontFamily: "var(--font-mono)",
-          fontSize: "0.55rem",
-          fontWeight: 600,
-          letterSpacing: "0.12em",
-          textTransform: "uppercase",
-          color: "var(--text-4)",
+          width: 26,
+          height: 26,
+          background: pal.bg,
+          color: pal.c,
+          borderRadius: "6px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          flexShrink: 0,
         }}
       >
-        Sous-sections
-      </div>
-      {subs.map((s) => (
-        <div
-          key={s}
-          role="link"
-          tabIndex={0}
-          style={{
-            fontSize: "0.78rem",
-            fontWeight: 500,
-            color: "var(--text-3)",
-            padding: "0.3rem 0.45rem",
-            borderRadius: "5px",
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            gap: "0.4rem",
-            transition: "background 0.15s, color 0.15s",
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = "var(--surface-3)";
-            e.currentTarget.style.color = "var(--text-2)";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = "transparent";
-            e.currentTarget.style.color = "var(--text-3)";
-          }}
-        >
-          <ChevronRight size={10} strokeWidth={2.25} color="var(--text-4)" />
-          {s}
-        </div>
-      ))}
+        <item.Icon size={14} strokeWidth={2.25} />
+      </span>
+      <span
+        style={{
+          fontSize: "0.84rem",
+          fontWeight: active ? 600 : 500,
+          color: active ? "var(--text)" : "var(--text-2)",
+          flex: 1,
+          whiteSpace: "nowrap",
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+        }}
+      >
+        {item.label}
+      </span>
+      {item.badge && <Badge value={item.badge} tone={item.badgeTone} />}
     </div>
   );
 }
