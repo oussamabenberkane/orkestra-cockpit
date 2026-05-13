@@ -5,9 +5,11 @@ import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Search, Bell, ChevronDown, LogOut, Settings,
-  TrendingUp, ArrowUpRight, ArrowRight, Check, X, Circle,
+  TrendingUp, TrendingDown, Minus, ArrowUpRight, ArrowRight, Check, X, Circle,
   Target, FolderArchive, Flame, Wallet, Globe, Sparkles,
   Mail, AlertCircle, FileText, Calendar, CheckCircle2,
+  Percent, Users,
+  type LucideIcon,
 } from "lucide-react";
 import type { ModalKey } from "@/lib/types";
 import ApertureModal from "@/components/b/ApertureModal";
@@ -26,7 +28,21 @@ const heroEvents: { i: number; label: string; sub: string }[] = [
   { i: 9, label: "−1 800 CHF", sub: "Impayé Rossi SA détecté · mars" },
 ];
 
-const satellites = [
+type Satellite = {
+  label: string;
+  value: string;
+  unit: string;
+  trend: string;
+  spark: number[];
+  combined: boolean;
+  breakdown: { src: string; val: string }[];
+  Icon: LucideIcon;
+  target: string;
+  sparkTarget: number;
+  modalKey: ModalKey;
+};
+
+const satellites: Satellite[] = [
   {
     label: "Marge nette",
     value: "68",
@@ -39,6 +55,10 @@ const satellites = [
       { src: "Charges Odoo", val: "27.2 K" },
       { src: "⊕ Marge", val: "68 %" },
     ],
+    Icon: Percent,
+    target: "Obj. 70 %",
+    sparkTarget: 70,
+    modalKey: "finance",
   },
   {
     label: "Cash-flow",
@@ -52,6 +72,10 @@ const satellites = [
       { src: "Sortant", val: "−27.2 K" },
       { src: "⊕ Net", val: "+18.4 K" },
     ],
+    Icon: Wallet,
+    target: "Obj. +20 K",
+    sparkTarget: 20,
+    modalKey: "finance",
   },
   {
     label: "Rétention",
@@ -65,8 +89,30 @@ const satellites = [
       { src: "Pertes 12m", val: "−4" },
       { src: "Solde", val: "+8" },
     ],
+    Icon: Users,
+    target: "Obj. 90 %",
+    sparkTarget: 90,
+    modalKey: "portefeuille",
   },
 ];
+
+function trendDirection(trend: string): "up" | "down" | "flat" {
+  const t = trend.trim();
+  if (t.startsWith("+")) return "up";
+  if (t.startsWith("-") || t.startsWith("−")) return "down";
+  return "flat";
+}
+
+const trendIconByDir: Record<"up" | "down" | "flat", LucideIcon> = {
+  up: TrendingUp,
+  down: TrendingDown,
+  flat: Minus,
+};
+const trendColorByDir: Record<"up" | "down" | "flat", string> = {
+  up: "var(--success)",
+  down: "var(--danger)",
+  flat: "var(--text-3)",
+};
 
 const trois = [
   {
@@ -268,7 +314,7 @@ export default function DashboardPageB() {
               }}
             >
               {satellites.map((s) => (
-                <SatelliteKPI key={s.label} kpi={s} />
+                <SatelliteKPI key={s.label} kpi={s} onOpen={open} />
               ))}
             </div>
           </div>
@@ -979,14 +1025,104 @@ function PeriodToggle({
   );
 }
 
+function SatelliteSparkline({
+  data,
+  target,
+  width = 280,
+  height = 44,
+  idSeed,
+}: {
+  data: number[];
+  target?: number;
+  width?: number;
+  height?: number;
+  idSeed: string;
+}) {
+  if (data.length === 0) return null;
+
+  const lo = Math.min(...data, target ?? Infinity);
+  const hi = Math.max(...data, target ?? -Infinity);
+  const range = hi - lo || 1;
+  const stepX = width / Math.max(1, data.length - 1);
+  const y = (v: number) => height - ((v - lo) / range) * height;
+
+  const pts = data.map((v, i) => [i * stepX, y(v)] as const);
+  const linePath = pts
+    .map(([x, py], i) => `${i === 0 ? "M" : "L"} ${x.toFixed(2)} ${py.toFixed(2)}`)
+    .join(" ");
+  const areaPath = `${linePath} L ${width.toFixed(2)} ${height} L 0 ${height} Z`;
+  const last = pts[pts.length - 1];
+  const targetY = target !== undefined ? y(target) : null;
+  const gradId = `sat-grad-${idSeed}`;
+
+  return (
+    <svg
+      width={width}
+      height={height}
+      viewBox={`0 0 ${width} ${height}`}
+      preserveAspectRatio="none"
+      style={{ display: "block", width: "100%", height: `${height}px`, overflow: "visible" }}
+      aria-hidden
+    >
+      <defs>
+        <linearGradient id={gradId} x1="0" x2="0" y1="0" y2="1">
+          <stop offset="0%" stopColor="var(--accent)" stopOpacity="0.22" />
+          <stop offset="100%" stopColor="var(--accent)" stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      <path d={areaPath} fill={`url(#${gradId})`} stroke="none" />
+      {targetY !== null && (
+        <line
+          x1={0}
+          x2={width}
+          y1={targetY}
+          y2={targetY}
+          stroke="var(--accent)"
+          strokeOpacity="0.35"
+          strokeWidth="1"
+          strokeDasharray="3 3"
+          vectorEffect="non-scaling-stroke"
+        />
+      )}
+      <path
+        d={linePath}
+        fill="none"
+        stroke="var(--accent)"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        vectorEffect="non-scaling-stroke"
+      />
+      <circle
+        cx={last[0]}
+        cy={last[1]}
+        r="3"
+        fill="var(--accent)"
+        stroke="var(--surface)"
+        strokeWidth="1.5"
+      />
+    </svg>
+  );
+}
+
 function SatelliteKPI({
   kpi,
+  onOpen,
 }: {
-  kpi: typeof satellites[number];
+  kpi: Satellite;
+  onOpen: (k: ModalKey) => void;
 }) {
+  const dir = trendDirection(kpi.trend);
+  const TrendIcon = trendIconByDir[dir];
+  const trendColor = trendColorByDir[dir];
+  const MetricIcon = kpi.Icon;
+
   return (
-    <div
+    <button
+      type="button"
+      onClick={() => onOpen(kpi.modalKey)}
       className="aperture-sat"
+      aria-label={`${kpi.label} — ouvrir le détail`}
       style={{
         background: "var(--surface)",
         border: "1px solid var(--border)",
@@ -996,12 +1132,32 @@ function SatelliteKPI({
           "0 1px 2px rgba(15,23,42,0.04), 0 2px 8px -4px rgba(15,23,42,0.05)",
         display: "flex",
         flexDirection: "column",
-        gap: "0.4rem",
+        gap: "0.35rem",
         position: "relative",
         overflow: "hidden",
         transition: "border-color 0.2s, box-shadow 0.2s",
+        cursor: "pointer",
+        textAlign: "left",
+        fontFamily: "inherit",
+        color: "inherit",
+        width: "100%",
       }}
     >
+      <span
+        className="aperture-sat-arrow"
+        aria-hidden="true"
+        style={{
+          position: "absolute",
+          top: "0.7rem",
+          right: "0.8rem",
+          display: "inline-flex",
+          color: "var(--text-4)",
+          transition: "color 0.2s ease, transform 0.2s ease",
+        }}
+      >
+        <ArrowUpRight size={14} strokeWidth={2.25} />
+      </span>
+
       <div
         style={{
           fontSize: "0.74rem",
@@ -1009,9 +1165,11 @@ function SatelliteKPI({
           color: "var(--text-3)",
           display: "flex",
           alignItems: "center",
-          gap: "0.3rem",
+          gap: "0.35rem",
+          paddingRight: "1.4rem",
         }}
       >
+        <MetricIcon size={13} strokeWidth={2.25} color="var(--text-3)" />
         {kpi.label}
         {kpi.combined && (
           <span
@@ -1057,19 +1215,30 @@ function SatelliteKPI({
             gap: "0.2rem",
             fontSize: "0.7rem",
             fontWeight: 600,
-            color: "var(--success)",
+            color: trendColor,
           }}
         >
-          <TrendingUp size={10} strokeWidth={2.5} />
+          <TrendIcon size={10} strokeWidth={2.5} />
           {kpi.trend}
         </span>
       </div>
 
       <div
         style={{
+          fontSize: "0.66rem",
+          color: "var(--text-3)",
+          letterSpacing: "0.005em",
+          fontVariantNumeric: "tabular-nums",
+        }}
+      >
+        {kpi.target}
+      </div>
+
+      <div
+        style={{
           marginTop: "auto",
           position: "relative",
-          height: 56,
+          height: 52,
         }}
       >
         <div
@@ -1082,12 +1251,10 @@ function SatelliteKPI({
             transition: "opacity 0.2s ease",
           }}
         >
-          <Sparkline
+          <SatelliteSparkline
             data={kpi.spark}
-            width={180}
-            height={20}
-            stroke="var(--accent)"
-            strokeWidth={1.4}
+            target={kpi.sparkTarget}
+            idSeed={kpi.label.replace(/\s+/g, "-")}
           />
         </div>
         <div
@@ -1137,13 +1304,22 @@ function SatelliteKPI({
           border-color: var(--border-strong);
           box-shadow: 0 1px 2px rgba(15,23,42,0.04), 0 8px 24px -10px rgba(15,23,42,0.10);
         }
+        .aperture-sat:focus-visible {
+          outline: 2px solid var(--accent);
+          outline-offset: 2px;
+        }
+        .aperture-sat:hover .aperture-sat-arrow,
+        .aperture-sat:focus-within .aperture-sat-arrow {
+          color: var(--accent);
+          transform: translate(2px, -2px);
+        }
         .aperture-sat-break { opacity: 0; }
         .aperture-sat:hover .aperture-sat-spark,
         .aperture-sat:focus-within .aperture-sat-spark { opacity: 0; }
         .aperture-sat:hover .aperture-sat-break,
         .aperture-sat:focus-within .aperture-sat-break { opacity: 1; }
       `}</style>
-    </div>
+    </button>
   );
 }
 
