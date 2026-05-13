@@ -58,20 +58,30 @@ const notifications: Notification[] = [
   },
 ];
 
-export function NotificationsContent({ onClose }: { onClose?: () => void }) {
+export function NotificationsContent({
+  onClose,
+  bare = false,
+}: {
+  onClose?: () => void;
+  bare?: boolean;
+}) {
   void onClose;
   return (
     <div
-      style={{
-        background: "var(--surface)",
-        border: "1px solid var(--border)",
-        borderRadius: "12px",
-        boxShadow:
-          "0 24px 60px -16px rgba(15,23,42,0.18), 0 8px 20px -8px rgba(15,23,42,0.08)",
-        overflow: "hidden",
-        width: "360px",
-        maxWidth: "calc(100vw - 2rem)",
-      }}
+      style={
+        bare
+          ? { width: "100%" }
+          : {
+              background: "var(--surface)",
+              border: "1px solid var(--border)",
+              borderRadius: "12px",
+              boxShadow:
+                "0 24px 60px -16px rgba(15,23,42,0.18), 0 8px 20px -8px rgba(15,23,42,0.08)",
+              overflow: "hidden",
+              width: "360px",
+              maxWidth: "calc(100vw - 2rem)",
+            }
+      }
     >
       <div
         style={{

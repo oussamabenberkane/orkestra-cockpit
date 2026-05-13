@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Search, Bell, ChevronDown, LogOut, Settings,
+  Search,
   TrendingUp, TrendingDown, Minus, ArrowUpRight, ArrowRight, Check, X, Circle,
   Target, FolderArchive, Flame, Wallet, Globe, Sparkles,
   Mail, AlertCircle, FileText, Calendar, CheckCircle2,
@@ -13,11 +13,9 @@ import {
 } from "lucide-react";
 import type { ModalKey } from "@/lib/types";
 import ApertureModal from "@/components/b/ApertureModal";
-import { ExpandingNav, type NavTab } from "@/components/b/ExpandingNav";
+import { QuietRail } from "@/components/b/QuietRail";
+import { FloatingDock } from "@/components/b/FloatingDock";
 import { Sparkline } from "@/components/shared/Sparkline";
-import { Popover } from "@/components/shared/Popover";
-import { NotificationsContent } from "@/components/shared/NotificationsContent";
-import { UserMenuContent } from "@/components/shared/UserMenuContent";
 import { CommandPalette } from "@/components/shared/CommandPalette";
 
 const heroData = [62, 64, 70, 68, 72, 78, 80, 82, 86, 88, 92, 92];
@@ -203,28 +201,6 @@ const tiles: TileEntry[] = [
   },
 ];
 
-const navTabs: NavTab[] = [
-  {
-    label: "Vue d'ensemble",
-    active: true,
-    subSections: ["Aujourd'hui", "Cette semaine", "Mois", "Trimestre"],
-  },
-  {
-    label: "Domaines",
-    subSections: ["Prospection", "Portefeuille", "Sinistres", "Finance", "Vue 360°", "Agents IA"],
-  },
-  {
-    label: "Agents",
-    subSections: ["Inbox", "Historique", "Configuration"],
-  },
-  {
-    label: "Rapports",
-    subSections: ["Mensuel", "Direction", "Personnalisé"],
-  },
-  { label: "Équipe" },
-  { label: "Paramètres" },
-];
-
 export default function DashboardPageB() {
   const router = useRouter();
   const [modalKey, setModalKey] = useState<ModalKey | null>(null);
@@ -236,10 +212,7 @@ export default function DashboardPageB() {
 
   return (
     <div style={{ minHeight: "100vh", background: "var(--bg)", color: "var(--text)" }}>
-      <TopBar
-        onLogout={onLogout}
-        onOpenPalette={() => setPaletteOpen(true)}
-      />
+      <TopBar onOpenPalette={() => setPaletteOpen(true)} />
 
       <main
         style={{
@@ -355,6 +328,8 @@ export default function DashboardPageB() {
 
       <ApertureModal open={modalKey !== null} modalKey={modalKey} onClose={close} />
 
+      <FloatingDock onLogout={onLogout} />
+
       <CommandPalette
         open={paletteOpen}
         onClose={() => setPaletteOpen(false)}
@@ -378,10 +353,8 @@ export default function DashboardPageB() {
 }
 
 function TopBar({
-  onLogout,
   onOpenPalette,
 }: {
-  onLogout: () => void;
   onOpenPalette: () => void;
 }) {
   return (
@@ -488,160 +461,42 @@ function TopBar({
             }}
           />
 
-          <ExpandingNav tabs={navTabs} />
+          <QuietRail />
         </div>
 
-        <div style={{ display: "flex", alignItems: "center", gap: "0.45rem", flexShrink: 0 }}>
-          <button
-            onClick={onOpenPalette}
-            className="aperture-search"
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "0.5rem",
-              background: "var(--surface-2)",
-              border: "1px solid var(--border)",
-              borderRadius: "8px",
-              padding: "0.4rem 0.7rem 0.4rem 0.7rem",
-              color: "var(--text-3)",
-              fontSize: "0.8rem",
-              cursor: "pointer",
-              minWidth: "200px",
-              fontFamily: "inherit",
-              transition: "background 0.18s, border-color 0.18s, color 0.18s",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = "var(--surface)";
-              e.currentTarget.style.borderColor = "var(--border-strong)";
-              e.currentTarget.style.color = "var(--text-2)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = "var(--surface-2)";
-              e.currentTarget.style.borderColor = "var(--border)";
-              e.currentTarget.style.color = "var(--text-3)";
-            }}
-          >
-            <Search size={13} strokeWidth={2} />
-            <span style={{ flex: 1, textAlign: "left" }}>Rechercher…</span>
-          </button>
-
-          <Popover
-            placement="bottom-end"
-            trigger={({ open: o, toggle }) => (
-              <button
-                onClick={toggle}
-                aria-label="Notifications"
-                aria-expanded={o}
-                style={{
-                  position: "relative",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  width: 32,
-                  height: 32,
-                  background: o ? "var(--surface-2)" : "transparent",
-                  border: `1px solid ${o ? "var(--border)" : "transparent"}`,
-                  borderRadius: "8px",
-                  color: "var(--text-2)",
-                  cursor: "pointer",
-                  transition: "background 0.15s, border-color 0.15s",
-                }}
-                onMouseEnter={(e) => {
-                  if (!o) {
-                    e.currentTarget.style.background = "var(--surface-2)";
-                    e.currentTarget.style.borderColor = "var(--border)";
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!o) {
-                    e.currentTarget.style.background = "transparent";
-                    e.currentTarget.style.borderColor = "transparent";
-                  }
-                }}
-              >
-                <Bell size={15} strokeWidth={2} />
-                <span
-                  style={{
-                    position: "absolute",
-                    top: 4,
-                    right: 4,
-                    minWidth: 14,
-                    height: 14,
-                    padding: "0 3px",
-                    borderRadius: "7px",
-                    background: "var(--danger)",
-                    color: "#FFFFFF",
-                    fontSize: "0.58rem",
-                    fontWeight: 700,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    border: "1.5px solid var(--surface)",
-                  }}
-                >
-                  3
-                </span>
-              </button>
-            )}
-          >
-            {(close) => <NotificationsContent onClose={close} />}
-          </Popover>
-
-          <Popover
-            placement="bottom-end"
-            trigger={({ open: o, toggle }) => (
-              <button
-                onClick={toggle}
-                aria-label="Menu utilisateur"
-                aria-expanded={o}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "0.35rem",
-                  background: o ? "var(--surface-2)" : "transparent",
-                  border: `1px solid ${o ? "var(--border)" : "transparent"}`,
-                  borderRadius: "100px",
-                  padding: "0.2rem 0.35rem 0.2rem 0.3rem",
-                  cursor: "pointer",
-                  fontFamily: "inherit",
-                  transition: "background 0.15s, border-color 0.15s",
-                }}
-                onMouseEnter={(e) => {
-                  if (!o) {
-                    e.currentTarget.style.background = "var(--surface-2)";
-                    e.currentTarget.style.borderColor = "var(--border)";
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!o) {
-                    e.currentTarget.style.background = "transparent";
-                    e.currentTarget.style.borderColor = "transparent";
-                  }
-                }}
-              >
-                <span
-                  style={{
-                    width: 28,
-                    height: 28,
-                    background: "var(--text)",
-                    color: "#FFFFFF",
-                    borderRadius: "50%",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontSize: "0.66rem",
-                    fontWeight: 700,
-                  }}
-                >
-                  TM
-                </span>
-                <ChevronDown size={12} strokeWidth={2} color="var(--text-3)" />
-              </button>
-            )}
-          >
-            <UserMenuContent onLogout={onLogout} />
-          </Popover>
-        </div>
+        <button
+          onClick={onOpenPalette}
+          className="aperture-search"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "0.5rem",
+            background: "var(--surface-2)",
+            border: "1px solid var(--border)",
+            borderRadius: "8px",
+            padding: "0.4rem 0.7rem 0.4rem 0.7rem",
+            color: "var(--text-3)",
+            fontSize: "0.8rem",
+            cursor: "pointer",
+            minWidth: "240px",
+            fontFamily: "inherit",
+            flexShrink: 0,
+            transition: "background 0.18s, border-color 0.18s, color 0.18s",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = "var(--surface)";
+            e.currentTarget.style.borderColor = "var(--border-strong)";
+            e.currentTarget.style.color = "var(--text-2)";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = "var(--surface-2)";
+            e.currentTarget.style.borderColor = "var(--border)";
+            e.currentTarget.style.color = "var(--text-3)";
+          }}
+        >
+          <Search size={13} strokeWidth={2} />
+          <span style={{ flex: 1, textAlign: "left" }}>Rechercher…</span>
+        </button>
       </div>
     </header>
   );

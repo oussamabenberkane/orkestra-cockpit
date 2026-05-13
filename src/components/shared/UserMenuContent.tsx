@@ -4,9 +4,10 @@ import { User, Settings, HelpCircle, Moon, LogOut, ChevronRight } from "lucide-r
 
 interface UserMenuContentProps {
   onLogout: () => void;
+  bare?: boolean;
 }
 
-export function UserMenuContent({ onLogout }: UserMenuContentProps) {
+export function UserMenuContent({ onLogout, bare = false }: UserMenuContentProps) {
   const items: Array<{
     Icon: typeof User;
     label: string;
@@ -22,15 +23,19 @@ export function UserMenuContent({ onLogout }: UserMenuContentProps) {
 
   return (
     <div
-      style={{
-        background: "var(--surface)",
-        border: "1px solid var(--border)",
-        borderRadius: "12px",
-        boxShadow:
-          "0 24px 60px -16px rgba(15,23,42,0.18), 0 8px 20px -8px rgba(15,23,42,0.08)",
-        overflow: "hidden",
-        width: "260px",
-      }}
+      style={
+        bare
+          ? { width: "100%" }
+          : {
+              background: "var(--surface)",
+              border: "1px solid var(--border)",
+              borderRadius: "12px",
+              boxShadow:
+                "0 24px 60px -16px rgba(15,23,42,0.18), 0 8px 20px -8px rgba(15,23,42,0.08)",
+              overflow: "hidden",
+              width: "260px",
+            }
+      }
     >
       <div
         style={{
