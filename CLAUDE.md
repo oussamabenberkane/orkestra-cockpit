@@ -42,6 +42,24 @@ This is a single-page BFSI cockpit demo for "Cabinet Müller & Associés SA" (Fr
 
 **Dialogs** wrap `@base-ui/react`'s `Dialog` primitive in [src/components/ui/dialog.tsx](src/components/ui/dialog.tsx). `DashboardModal` is a single dialog driven by `modalKey` — opening a tile sets the key; closing sets it to `null`. Do not create per-tile dialogs.
 
+## Commit Convention
+
+Single-line format only: `<type>: <short imperative description>`
+
+**Allowed types:** `feat` · `fix` · `refactor` · `chore` · `docs` · `test`
+
+**Rules:**
+- Imperative mood, capitalised: "Add", "Fix", "Update" — not "Added" or "Fixes"
+- No body, no trailers, no `Co-Authored-By`, no AI attribution
+- One logical change per commit
+
+```
+feat: Add KPI sparkline to dashboard header
+fix: Correct modal close behaviour on Escape key
+refactor: Extract brand tokens to globals.css
+chore: Move demo CSV files to data/
+```
+
 ## Conventions worth knowing
 
 - Components that own state or use hooks must start with `"use client"`. The root `/dashboard` page is a client component because it owns modal state — keep new stateful additions inside child client components rather than promoting the page if you can avoid it.
