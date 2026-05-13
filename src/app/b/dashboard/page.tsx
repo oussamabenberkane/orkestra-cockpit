@@ -1065,60 +1065,83 @@ function SatelliteKPI({
         </span>
       </div>
 
-      <div style={{ marginTop: "auto" }}>
-        <Sparkline
-          data={kpi.spark}
-          width={180}
-          height={18}
-          stroke="var(--accent)"
-          strokeWidth={1.4}
-        />
-      </div>
-
-      <div className="aperture-sat-reveal">
-        {kpi.breakdown.map((b) => (
-          <div
-            key={b.src}
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              fontSize: "0.7rem",
-              color: "var(--text-3)",
-              padding: "0.18rem 0",
-              borderTop: "1px solid var(--border)",
-            }}
-          >
-            <span>{b.src}</span>
-            <span
+      <div
+        style={{
+          marginTop: "auto",
+          position: "relative",
+          height: 56,
+        }}
+      >
+        <div
+          className="aperture-sat-spark"
+          style={{
+            position: "absolute",
+            inset: 0,
+            display: "flex",
+            alignItems: "center",
+            transition: "opacity 0.2s ease",
+          }}
+        >
+          <Sparkline
+            data={kpi.spark}
+            width={180}
+            height={20}
+            stroke="var(--accent)"
+            strokeWidth={1.4}
+          />
+        </div>
+        <div
+          className="aperture-sat-break"
+          style={{
+            position: "absolute",
+            inset: 0,
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "center",
+            transition: "opacity 0.2s ease",
+          }}
+          aria-hidden="true"
+        >
+          {kpi.breakdown.map((b, idx) => (
+            <div
+              key={b.src}
               style={{
-                color: "var(--text-2)",
-                fontVariantNumeric: "tabular-nums",
-                fontFamily: "var(--font-mono)",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                fontSize: "0.68rem",
+                color: "var(--text-3)",
+                padding: "0.14rem 0",
+                borderTop: idx === 0 ? "none" : "1px solid var(--border)",
               }}
             >
-              {b.val}
-            </span>
-          </div>
-        ))}
+              <span>{b.src}</span>
+              <span
+                style={{
+                  color: "var(--text-2)",
+                  fontVariantNumeric: "tabular-nums",
+                  fontFamily: "var(--font-mono)",
+                  fontWeight: 600,
+                }}
+              >
+                {b.val}
+              </span>
+            </div>
+          ))}
+        </div>
       </div>
 
       <style>{`
-        .aperture-sat:hover {
+        .aperture-sat:hover,
+        .aperture-sat:focus-within {
           border-color: var(--border-strong);
           box-shadow: 0 1px 2px rgba(15,23,42,0.04), 0 8px 24px -10px rgba(15,23,42,0.10);
         }
-        .aperture-sat-reveal {
-          max-height: 0;
-          overflow: hidden;
-          opacity: 0;
-          margin-top: 0;
-          transition: max-height 0.3s ease, opacity 0.22s ease, margin-top 0.3s ease;
-        }
-        .aperture-sat:hover .aperture-sat-reveal {
-          max-height: 200px;
-          opacity: 1;
-          margin-top: 0.3rem;
-        }
+        .aperture-sat-break { opacity: 0; }
+        .aperture-sat:hover .aperture-sat-spark,
+        .aperture-sat:focus-within .aperture-sat-spark { opacity: 0; }
+        .aperture-sat:hover .aperture-sat-break,
+        .aperture-sat:focus-within .aperture-sat-break { opacity: 1; }
       `}</style>
     </div>
   );
