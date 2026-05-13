@@ -445,6 +445,56 @@ function SourceBadge({ dot, label }: { dot: string; label: string }) {
   );
 }
 
+function monotoneCubicPath(pts: ReadonlyArray<readonly [number, number]>): string {
+  const n = pts.length;
+  if (n === 0) return "";
+  if (n === 1) return `M ${pts[0][0].toFixed(2)} ${pts[0][1].toFixed(2)}`;
+  if (n === 2)
+    return `M ${pts[0][0].toFixed(2)} ${pts[0][1].toFixed(2)} L ${pts[1][0].toFixed(2)} ${pts[1][1].toFixed(2)}`;
+
+  // Fritsch-Carlson monotone cubic interpolation
+  const dx: number[] = [];
+  const dy: number[] = [];
+  const slope: number[] = [];
+  for (let i = 0; i < n - 1; i++) {
+    const dxi = pts[i + 1][0] - pts[i][0];
+    const dyi = pts[i + 1][1] - pts[i][1];
+    dx.push(dxi);
+    dy.push(dyi);
+    slope.push(dyi / dxi);
+  }
+  const m: number[] = new Array(n);
+  m[0] = slope[0];
+  m[n - 1] = slope[n - 2];
+  for (let i = 1; i < n - 1; i++) {
+    m[i] = slope[i - 1] * slope[i] <= 0 ? 0 : (slope[i - 1] + slope[i]) / 2;
+  }
+  for (let i = 0; i < n - 1; i++) {
+    if (slope[i] === 0) {
+      m[i] = 0;
+      m[i + 1] = 0;
+    } else {
+      const a = m[i] / slope[i];
+      const b = m[i + 1] / slope[i];
+      const h = Math.hypot(a, b);
+      if (h > 3) {
+        const t = 3 / h;
+        m[i] = t * a * slope[i];
+        m[i + 1] = t * b * slope[i];
+      }
+    }
+  }
+  let d = `M ${pts[0][0].toFixed(2)} ${pts[0][1].toFixed(2)}`;
+  for (let i = 0; i < n - 1; i++) {
+    const c1x = pts[i][0] + dx[i] / 3;
+    const c1y = pts[i][1] + (m[i] * dx[i]) / 3;
+    const c2x = pts[i + 1][0] - dx[i] / 3;
+    const c2y = pts[i + 1][1] - (m[i + 1] * dx[i]) / 3;
+    d += ` C ${c1x.toFixed(2)} ${c1y.toFixed(2)}, ${c2x.toFixed(2)} ${c2y.toFixed(2)}, ${pts[i + 1][0].toFixed(2)} ${pts[i + 1][1].toFixed(2)}`;
+  }
+  return d;
+}
+
 function HeroPanel({
   period,
   onPeriodChange,
@@ -467,8 +517,9 @@ function HeroPanel({
     const y = padY + (1 - (v - min) / range) * (h - padY * 2);
     return [x, y] as const;
   });
-  const line = pts.map(([x, y], i) => `${i === 0 ? "M" : "L"} ${x.toFixed(1)} ${y.toFixed(1)}`).join(" ");
-  const area = `${line} L ${pts[pts.length - 1][0].toFixed(1)} ${h - padY / 2} L ${pts[0][0].toFixed(1)} ${h - padY / 2} Z`;
+  const line = monotoneCubicPath(pts);
+  const baselineY = h - padY / 2;
+  const area = `${line} L ${pts[pts.length - 1][0].toFixed(2)} ${baselineY} L ${pts[0][0].toFixed(2)} ${baselineY} Z`;
 
   const [nowX, nowY] = pts[pts.length - 1];
 
@@ -567,7 +618,9 @@ function HeroPanel({
         >
           <defs>
             <linearGradient id="aperture-grad" x1="0" x2="0" y1="0" y2="1">
-              <stop offset="0%" stopColor="#1E40AF" stopOpacity="0.22" />
+              <stop offset="0%" stopColor="#1E40AF" stopOpacity="0.26" />
+              <stop offset="38%" stopColor="#1E40AF" stopOpacity="0.12" />
+              <stop offset="75%" stopColor="#1E40AF" stopOpacity="0.03" />
               <stop offset="100%" stopColor="#1E40AF" stopOpacity="0" />
             </linearGradient>
           </defs>
@@ -580,10 +633,26 @@ function HeroPanel({
               y2={padY + p * (h - padY * 2)}
               stroke="#E2E8F0"
               strokeWidth="1"
-              strokeDasharray="2 4"
+              strokeDasharray="1 5"
+              strokeLinecap="round"
+              vectorEffect="non-scaling-stroke"
+              opacity="0.9"
             />
           ))}
           <path d={area} fill="url(#aperture-grad)" />
+          {/* Now indicator (vertical dashed line) */}
+          <line
+            x1={nowX}
+            x2={nowX}
+            y1={padY}
+            y2={baselineY}
+            stroke="#1E40AF"
+            strokeWidth="1"
+            strokeDasharray="2 5"
+            strokeLinecap="round"
+            vectorEffect="non-scaling-stroke"
+            opacity="0.32"
+          />
           <motion.path
             d={line}
             fill="none"
@@ -591,84 +660,133 @@ function HeroPanel({
             strokeWidth="2"
             strokeLinecap="round"
             strokeLinejoin="round"
+            vectorEffect="non-scaling-stroke"
             initial={{ pathLength: 0 }}
             animate={{ pathLength: 1 }}
             transition={{ duration: 1.4, ease: [0.22, 1, 0.36, 1] }}
           />
-          {/* Now indicator */}
-          <line
-            x1={nowX}
-            x2={nowX}
-            y1={padY}
-            y2={h - padY / 2}
-            stroke="#1E40AF"
-            strokeWidth="1.2"
-            strokeDasharray="3 3"
-            opacity="0.45"
-          />
-          <motion.circle
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: 1.1, duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-            cx={nowX}
-            cy={nowY}
-            r="4"
-            fill="#FFFFFF"
-            stroke="#1E40AF"
-            strokeWidth="2"
-          />
+        </svg>
+
+        {/* Markers — rendered as HTML overlays so they stay perfectly circular
+            regardless of SVG preserveAspectRatio="none" stretching. */}
+        <div style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
           {heroEvents.map((ev) => {
             const [x, y] = pts[ev.i];
             const isHovered = hoveredEvent === ev.i;
             return (
-              <g key={ev.i}>
-                <circle
-                  cx={x}
-                  cy={y}
-                  r={isHovered ? 7 : 5}
-                  fill="#FFFFFF"
-                  stroke="#1E40AF"
-                  strokeWidth="2"
-                  style={{ cursor: "pointer", transition: "r 0.18s" }}
+              <div
+                key={ev.i}
+                style={{
+                  position: "absolute",
+                  left: `${(x / w) * 100}%`,
+                  top: `${(y / h) * 100}%`,
+                  transform: "translate(-50%, -50%)",
+                  pointerEvents: "auto",
+                }}
+              >
+                <button
+                  type="button"
                   onMouseEnter={() => setHoveredEvent(ev.i)}
                   onMouseLeave={() => setHoveredEvent(null)}
-                />
-                <circle
-                  cx={x}
-                  cy={y}
-                  r="2"
-                  fill="#1E40AF"
-                  style={{ pointerEvents: "none" }}
-                />
-              </g>
+                  onFocus={() => setHoveredEvent(ev.i)}
+                  onBlur={() => setHoveredEvent(null)}
+                  aria-label={ev.label}
+                  style={{
+                    position: "relative",
+                    display: "block",
+                    width: 12,
+                    height: 12,
+                    padding: 0,
+                    borderRadius: "50%",
+                    background: "#FFFFFF",
+                    border: "1.75px solid #1E40AF",
+                    cursor: "pointer",
+                    fontFamily: "inherit",
+                    transition:
+                      "transform 0.18s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.18s ease",
+                    transform: isHovered ? "scale(1.18)" : "scale(1)",
+                    boxShadow: isHovered
+                      ? "0 0 0 5px rgba(30, 64, 175, 0.12), 0 2px 6px rgba(30, 64, 175, 0.18)"
+                      : "0 1px 2px rgba(15, 23, 42, 0.08)",
+                  }}
+                >
+                  <span
+                    aria-hidden
+                    style={{
+                      position: "absolute",
+                      inset: "32%",
+                      borderRadius: "50%",
+                      background: "#1E40AF",
+                    }}
+                  />
+                </button>
+              </div>
             );
           })}
-        </svg>
 
-        {/* "Maintenant" label anchored to last point */}
+          {/* "Now" marker on the latest point */}
+          <div
+            style={{
+              position: "absolute",
+              left: `${(nowX / w) * 100}%`,
+              top: `${(nowY / h) * 100}%`,
+              transform: "translate(-50%, -50%)",
+            }}
+          >
+            <motion.div
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 1.1, duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+              style={{
+                width: 12,
+                height: 12,
+                borderRadius: "50%",
+                background: "#FFFFFF",
+                border: "1.75px solid #1E40AF",
+                boxShadow:
+                  "0 0 0 4px rgba(30, 64, 175, 0.08), 0 1px 2px rgba(15, 23, 42, 0.08)",
+              }}
+            />
+          </div>
+        </div>
+
+        {/* "Aujourd'hui" label anchored above the dashed line */}
         <div
           style={{
             position: "absolute",
             left: `${(nowX / w) * 100}%`,
             top: `${(padY / h) * 100}%`,
-            transform: "translate(-50%, -120%)",
+            transform: "translate(-50%, calc(-100% - 0.35rem))",
             pointerEvents: "none",
           }}
         >
           <span
             style={{
-              display: "inline-block",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "0.3rem",
               fontFamily: "var(--font-mono)",
-              fontSize: "0.6rem",
+              fontSize: "0.58rem",
               fontWeight: 600,
               color: "var(--accent)",
               background: "var(--accent-tint)",
-              padding: "0.15rem 0.4rem",
-              borderRadius: "4px",
-              letterSpacing: "0.02em",
+              padding: "0.15rem 0.45rem",
+              borderRadius: "100px",
+              letterSpacing: "0.04em",
+              textTransform: "uppercase",
               whiteSpace: "nowrap",
+              border: "1px solid rgba(30, 64, 175, 0.12)",
             }}
           >
+            <span
+              aria-hidden
+              style={{
+                width: 4,
+                height: 4,
+                borderRadius: "50%",
+                background: "var(--accent)",
+              }}
+            />
             Aujourd&apos;hui
           </span>
         </div>
