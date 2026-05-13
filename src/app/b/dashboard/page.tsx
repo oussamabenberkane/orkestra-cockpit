@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import type { ModalKey } from "@/lib/types";
 import ApertureModal from "@/components/b/ApertureModal";
+import { BrandCluster } from "@/components/b/BrandCluster";
 import { QuietRail } from "@/components/b/QuietRail";
 import { FloatingDock } from "@/components/b/FloatingDock";
 import { Sparkline } from "@/components/shared/Sparkline";
@@ -373,96 +374,16 @@ function TopBar({
           maxWidth: "1240px",
           margin: "0 auto",
           padding: "0 clamp(1.25rem, 3vw, 2.5rem)",
-          display: "flex",
+          display: "grid",
+          gridTemplateColumns: "auto 1fr auto",
           alignItems: "center",
-          justifyContent: "space-between",
-          gap: "1rem",
+          gap: "2rem",
           height: "100%",
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: "1rem", flex: 1, minWidth: 0, height: "100%" }}>
-          <a
-            href="#"
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "0.5rem",
-              textDecoration: "none",
-              flexShrink: 0,
-            }}
-          >
-            <svg viewBox="0 0 60 70" fill="none" style={{ width: 28, height: 28 }} aria-hidden="true">
-              <polygon
-                points="30,2 58,17.5 58,52.5 30,68 2,52.5 2,17.5"
-                fill="none"
-                stroke="var(--accent)"
-                strokeWidth="3"
-              />
-              <polygon
-                points="30,12 48,22.5 48,47.5 30,58 12,47.5 12,22.5"
-                fill="var(--accent)"
-                opacity="0.5"
-              />
-              <polygon
-                points="30,22 38,27 38,43 30,48 22,43 22,27"
-                fill="var(--accent)"
-              />
-            </svg>
-            <div style={{ display: "flex", flexDirection: "column", lineHeight: 1.05 }}>
-              <span
-                style={{
-                  fontSize: "0.72rem",
-                  fontWeight: 700,
-                  color: "var(--accent)",
-                  letterSpacing: "0.12em",
-                  textTransform: "uppercase",
-                }}
-              >
-                Malyz
-              </span>
-              <span
-                style={{
-                  fontSize: "0.56rem",
-                  fontWeight: 500,
-                  color: "var(--text-3)",
-                  letterSpacing: "0.06em",
-                  textTransform: "uppercase",
-                }}
-              >
-                Consulting Sàrl
-              </span>
-            </div>
-            <span
-              style={{
-                width: 1,
-                height: 22,
-                background: "var(--border-strong)",
-                margin: "0 0.5rem",
-              }}
-            />
-            <span
-              style={{
-                fontSize: "0.95rem",
-                fontWeight: 700,
-                color: "var(--text)",
-                letterSpacing: "-0.015em",
-              }}
-            >
-              Ork<span style={{ color: "var(--accent)" }}>estra</span>
-            </span>
-          </a>
+        <BrandCluster />
 
-          <div
-            style={{
-              width: 1,
-              height: 24,
-              background: "var(--border-strong)",
-              flexShrink: 0,
-            }}
-          />
-
-          <QuietRail />
-        </div>
+        <QuietRail />
 
         <button
           onClick={onOpenPalette}
@@ -474,11 +395,11 @@ function TopBar({
             background: "var(--surface-2)",
             border: "1px solid var(--border)",
             borderRadius: "8px",
-            padding: "0.4rem 0.7rem 0.4rem 0.7rem",
+            padding: "0.42rem 0.8rem",
             color: "var(--text-3)",
-            fontSize: "0.8rem",
+            fontSize: "0.82rem",
             cursor: "pointer",
-            minWidth: "240px",
+            width: "300px",
             fontFamily: "inherit",
             flexShrink: 0,
             transition: "background 0.18s, border-color 0.18s, color 0.18s",

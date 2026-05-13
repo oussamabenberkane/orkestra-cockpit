@@ -151,11 +151,11 @@ export function QuietRail() {
       className="qr-root"
       onMouseLeave={() => setHovered(null)}
       style={{
-        flex: 1,
         minWidth: 0,
         height: "100%",
         display: "flex",
         alignItems: "center",
+        justifyContent: "center",
         gap: "0.2rem",
       }}
     >
