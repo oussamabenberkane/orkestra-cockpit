@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import {
   Home, BarChart3, Target, FolderArchive, Flame, Wallet, Globe,
   Sparkles, MessageSquare, AlertTriangle, Settings, HelpCircle,
-  ChevronDown, ChevronLeft, ChevronRight, Search, Bell,
+  ChevronDown, ChevronLeft, Search, Bell, Pin,
 } from "lucide-react";
 import { Popover } from "@/components/shared/Popover";
 import { NotificationsContent } from "@/components/shared/NotificationsContent";
@@ -90,7 +90,6 @@ function TooltipBubble({ label, x, y }: TooltipState) {
         transition: "opacity 0.15s ease, transform 0.17s ease",
       }}
     >
-      {/* arrow */}
       <div style={{
         width: 0, height: 0,
         borderTop: "6px solid transparent",
@@ -98,7 +97,6 @@ function TooltipBubble({ label, x, y }: TooltipState) {
         borderRight: "6px solid #111113",
         flexShrink: 0,
       }} />
-      {/* label */}
       <div style={{
         background: "#111113",
         color: "#F2F2F7",
@@ -166,7 +164,6 @@ function NavItem({
       }}
     >
       {collapsed ? (
-        // Uniform icon container — same size as toggle / bell / user
         <span style={{
           width: ICON_BTN,
           height: ICON_BTN,
@@ -234,7 +231,21 @@ export function PlinthSidebar({
 }: PlinthSidebarProps) {
   const [tooltip, setTooltip] = useState<TooltipState | null>(null);
   const [mounted, setMounted] = useState(false);
+  const [hovered, setHovered] = useState(false);
+  const leaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => setMounted(true), []);
+  useEffect(() => () => { if (leaveTimer.current) clearTimeout(leaveTimer.current); }, []);
+
+  const isOpen = !collapsed || hovered;
+
+  const handleMouseEnter = useCallback(() => {
+    if (leaveTimer.current) clearTimeout(leaveTimer.current);
+    setHovered(true);
+  }, []);
+
+  const handleMouseLeave = useCallback(() => {
+    leaveTimer.current = setTimeout(() => setHovered(false), 300);
+  }, []);
 
   const showTip = useCallback((label: string, el: HTMLElement) => {
     const rect = el.getBoundingClientRect();
@@ -246,8 +257,10 @@ export function PlinthSidebar({
     <aside
       className="plinth-sidebar"
       data-collapsed={collapsed ? "true" : "false"}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
       style={{
-        width: collapsed ? COLLAPSED_W : EXPANDED_W,
+        width: isOpen ? EXPANDED_W : COLLAPSED_W,
         flexShrink: 0,
         background: "var(--surface-2)",
         borderRight: "1px solid var(--border)",
@@ -257,28 +270,48 @@ export function PlinthSidebar({
         position: "sticky",
         top: 0,
         overflow: "hidden",
-        transition: "width 0.32s cubic-bezier(0.22, 1, 0.36, 1)",
+        transition: "width 0.36s cubic-bezier(0.22, 1, 0.36, 1)",
       }}
     >
-      {/* ── Logo ─────────────────────────────────────────────────── */}
+      {/* ── Header: logo + brand text + toggle ───────────────────── */}
       <div style={{
         display: "flex",
         alignItems: "center",
-        gap: "0.5rem",
-        padding: "0.75rem 1rem 0",
-        maxHeight: collapsed ? 0 : 56,
-        opacity: collapsed ? 0 : 1,
-        overflow: "hidden",
-        pointerEvents: collapsed ? "none" : "auto",
-        transition: "max-height 0.32s cubic-bezier(0.22,1,0.36,1), opacity 0.20s ease, padding 0.28s ease",
+        height: 52,
+        padding: "0 0.55rem",
+        gap: "0.45rem",
         flexShrink: 0,
+        justifyContent: isOpen ? "flex-start" : "center",
       }}>
-        <svg viewBox="0 0 60 70" fill="none" style={{ width: 22, height: 22, flexShrink: 0 }}>
-          <polygon points="30,2 58,17.5 58,52.5 30,68 2,52.5 2,17.5" fill="none" stroke="var(--accent)" strokeWidth="4" />
-          <polygon points="30,12 48,22.5 48,47.5 30,58 12,47.5 12,22.5" fill="var(--accent)" opacity="0.4" />
-          <polygon points="30,22 38,27 38,43 30,48 22,43 22,27" fill="var(--accent)" />
-        </svg>
-        <div style={{ lineHeight: 1 }}>
+        {/* Logo mark — always visible */}
+        <div style={{
+          width: ICON_BTN,
+          height: ICON_BTN,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          flexShrink: 0,
+        }}>
+          <svg viewBox="0 0 60 70" fill="none" style={{ width: 22, height: 22 }}>
+            <polygon points="30,2 58,17.5 58,52.5 30,68 2,52.5 2,17.5" fill="none" stroke="var(--accent)" strokeWidth="4" />
+            <polygon points="30,12 48,22.5 48,47.5 30,58 12,47.5 12,22.5" fill="var(--accent)" opacity="0.4" />
+            <polygon points="30,22 38,27 38,43 30,48 22,43 22,27" fill="var(--accent)" />
+          </svg>
+        </div>
+
+        {/* Brand text — slides in when open */}
+        <div style={{
+          flex: 1,
+          minWidth: 0,
+          overflow: "hidden",
+          maxWidth: isOpen ? "160px" : "0px",
+          opacity: isOpen ? 1 : 0,
+          transform: `translateX(${isOpen ? 0 : -6}px)`,
+          transition: "max-width 0.34s cubic-bezier(0.22,1,0.36,1), opacity 0.22s ease, transform 0.28s cubic-bezier(0.22,1,0.36,1)",
+          pointerEvents: isOpen ? "auto" : "none",
+          lineHeight: 1,
+          whiteSpace: "nowrap",
+        }}>
           <div style={{ fontSize: "0.7rem", fontWeight: 800, color: "var(--accent)", letterSpacing: "1.8px", textTransform: "uppercase" }}>
             Malyz
           </div>
@@ -286,102 +319,81 @@ export function PlinthSidebar({
             Consulting Sàrl
           </div>
         </div>
-      </div>
 
-      {/* ── Workspace + toggle ────────────────────────────────────── */}
-      <div style={{
-        padding: "0.6rem 0.55rem 0.55rem",
-        display: "flex",
-        alignItems: "center",
-        gap: collapsed ? 0 : "0.4rem",
-        flexShrink: 0,
-        justifyContent: collapsed ? "center" : "flex-start",
-      }}>
-        <button
-          className="plinth-workspace"
-          style={{
-            flex: collapsed ? "0 0 0%" : 1,
-            minWidth: 0,
-            overflow: "hidden",
-            opacity: collapsed ? 0 : 1,
-            pointerEvents: collapsed ? "none" : "auto",
-            display: "flex",
-            alignItems: "center",
-            gap: "0.55rem",
-            padding: collapsed ? 0 : "0.35rem 0.45rem",
-            background: "var(--surface)",
-            border: "none",
-            borderRadius: "10px",
-            cursor: "pointer",
-            fontFamily: "inherit",
-            boxShadow: "var(--tier-1)",
-            transition: "transform 0.22s ease, flex 0.32s cubic-bezier(0.22,1,0.36,1), opacity 0.20s ease, padding 0.28s ease",
-          }}
-          onMouseEnter={(e) => (e.currentTarget.style.transform = "translateY(-1px)")}
-          onMouseLeave={(e) => (e.currentTarget.style.transform = "translateY(0)")}
-        >
-          <span style={{
-            width: 26, height: 26,
-            background: "linear-gradient(to bottom, var(--accent), var(--accent-2))",
-            color: "#FFFFFF",
-            borderRadius: "7px",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            fontSize: "0.64rem", fontWeight: 700, flexShrink: 0,
-            boxShadow: "inset 0 1px 0 rgba(255,255,255,0.3), 0 0 0 1px rgba(68,65,200,0.2), 0 2px 6px -2px rgba(88,86,214,0.4)",
-          }}>
-            CMA
-          </span>
-          <div className="plinth-workspace-label" style={{ flex: 1, minWidth: 0, textAlign: "left", lineHeight: 1.15, whiteSpace: "nowrap", overflow: "hidden" }}>
-            <div style={{ fontSize: "0.84rem", fontWeight: 600, color: "var(--text)", letterSpacing: "-0.005em", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-              Cabinet Müller
-            </div>
-            <div style={{ fontSize: "0.66rem", color: "var(--text-3)" }}>5 courtiers</div>
-          </div>
-          <ChevronDown size={13} strokeWidth={2} color="var(--text-3)" style={{ flexShrink: 0 }} />
-        </button>
-
-        {/* Toggle */}
+        {/* Toggle — fades in when open, crossfades between Pin and ChevronLeft */}
         <button
           onClick={() => { hideTip(); onToggle(); }}
           onMouseEnter={(e) => {
             e.currentTarget.style.background = "var(--surface)";
             e.currentTarget.style.color = "var(--text)";
-            if (collapsed) showTip("Déplier", e.currentTarget);
+            if (collapsed) showTip("Épingler", e.currentTarget);
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.background = collapsed ? "transparent" : "var(--surface)";
+            e.currentTarget.style.background = "transparent";
             e.currentTarget.style.color = "var(--text-3)";
             hideTip();
           }}
-          aria-label={collapsed ? "Déplier le panneau" : "Replier le panneau"}
+          aria-label={collapsed ? "Épingler le panneau" : "Replier le panneau"}
           style={{
+            position: "relative",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             width: ICON_BTN,
             height: ICON_BTN,
             flexShrink: 0,
-            background: collapsed ? "transparent" : "var(--surface)",
+            background: "transparent",
             border: "none",
             borderRadius: "8px",
             color: "var(--text-3)",
             cursor: "pointer",
-            boxShadow: collapsed ? "none" : "var(--tier-1)",
-            transition: "background 0.18s ease, color 0.18s, box-shadow 0.18s",
+            overflow: "hidden",
+            maxWidth: isOpen ? `${ICON_BTN}px` : "0px",
+            opacity: isOpen ? 1 : 0,
+            transition: "max-width 0.34s cubic-bezier(0.22,1,0.36,1), opacity 0.22s ease, background 0.16s, color 0.16s",
+            pointerEvents: isOpen ? "auto" : "none",
           }}
         >
-          {collapsed ? <ChevronRight size={18} strokeWidth={2} /> : <ChevronLeft size={17} strokeWidth={2.25} />}
+          {/* Pin — visible when hover-open (not yet pinned) */}
+          <span style={{
+            position: "absolute",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            opacity: collapsed ? 1 : 0,
+            transform: collapsed
+              ? "rotate(45deg) scale(1)"
+              : "rotate(90deg) scale(0.6)",
+            transition: "opacity 0.2s ease, transform 0.26s cubic-bezier(0.34, 1.56, 0.64, 1)",
+          }}>
+            <Pin size={15} strokeWidth={2} />
+          </span>
+
+          {/* ChevronLeft — visible when pinned open */}
+          <span style={{
+            position: "absolute",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            opacity: collapsed ? 0 : 1,
+            transform: collapsed
+              ? "translateX(6px) scale(0.7)"
+              : "translateX(0) scale(1)",
+            transition: "opacity 0.2s ease, transform 0.26s cubic-bezier(0.34, 1.56, 0.64, 1)",
+          }}>
+            <ChevronLeft size={17} strokeWidth={2.25} />
+          </span>
         </button>
       </div>
 
       {/* ── Search ───────────────────────────────────────────────── */}
-      <div style={{ padding: "0 0.55rem 0.6rem", flexShrink: 0 }}>
+      <div style={{ padding: "0 0.55rem 0.65rem", flexShrink: 0 }}>
         <button
           onClick={() => { hideTip(); onOpenPalette(); }}
           onMouseEnter={(e) => {
             e.currentTarget.style.transform = "translateY(-1px)";
             e.currentTarget.style.color = "var(--text-2)";
-            if (collapsed) showTip("Rechercher", e.currentTarget);
+            if (!isOpen) showTip("Rechercher", e.currentTarget);
           }}
           onMouseLeave={(e) => {
             e.currentTarget.style.transform = "translateY(0)";
@@ -393,10 +405,10 @@ export function PlinthSidebar({
             width: "100%",
             display: "flex",
             alignItems: "center",
-            justifyContent: collapsed ? "center" : "flex-start",
+            justifyContent: isOpen ? "flex-start" : "center",
             gap: "0.55rem",
-            padding: collapsed ? "0" : "0.5rem 0.65rem",
-            height: collapsed ? ICON_BTN : "auto",
+            padding: isOpen ? "0.5rem 0.65rem" : "0",
+            height: isOpen ? "auto" : ICON_BTN,
             background: "var(--surface)",
             border: "none",
             borderRadius: "10px",
@@ -408,8 +420,8 @@ export function PlinthSidebar({
             transition: "transform 0.22s ease, color 0.18s",
           }}
         >
-          <Search size={collapsed ? 20 : 14} strokeWidth={2} style={{ flexShrink: 0 }} />
-          {!collapsed && (
+          <Search size={isOpen ? 14 : 20} strokeWidth={2} style={{ flexShrink: 0 }} />
+          {isOpen && (
             <span style={{ flex: 1, textAlign: "left", whiteSpace: "nowrap", overflow: "hidden" }}>
               Rechercher…
             </span>
@@ -418,29 +430,29 @@ export function PlinthSidebar({
       </div>
 
       {/* ── Nav ──────────────────────────────────────────────────── */}
-      <nav style={{ flex: 1, overflowY: "auto", overflowX: "hidden", padding: "0.25rem 0.55rem 0.6rem" }}>
+      <nav style={{ flex: 1, overflowY: "auto", overflowX: "hidden", padding: "0 0.55rem 0.6rem" }}>
         {sections.map((section) => (
-          <div key={section.title} style={{ marginTop: "0.85rem" }}>
+          <div key={section.title} style={{ marginTop: "0.8rem" }}>
             <div
               className="plinth-section-title"
               style={{
-                padding: "0 0.55rem 0.35rem",
+                padding: "0 0.55rem 0.3rem",
                 fontSize: "0.62rem",
                 fontWeight: 700,
                 color: "var(--text-4)",
                 textTransform: "uppercase",
                 letterSpacing: "0.1em",
-                opacity: collapsed ? 0 : 1,
-                height: collapsed ? "0.4rem" : "auto",
+                opacity: isOpen ? 1 : 0,
+                maxHeight: isOpen ? "2rem" : "0.35rem",
                 overflow: "hidden",
-                transition: "opacity 0.18s, height 0.22s",
+                transition: "opacity 0.2s ease, max-height 0.3s cubic-bezier(0.22,1,0.36,1)",
                 whiteSpace: "nowrap",
               }}
             >
               {section.title}
             </div>
             {section.items.map((item) => (
-              <NavItem key={item.label} item={item} collapsed={collapsed} showTip={showTip} hideTip={hideTip} />
+              <NavItem key={item.label} item={item} collapsed={!isOpen} showTip={showTip} hideTip={hideTip} />
             ))}
           </div>
         ))}
@@ -451,10 +463,11 @@ export function PlinthSidebar({
         padding: "0.55rem 0.55rem 0.75rem",
         borderTop: "1px solid var(--border)",
         display: "flex",
-        flexDirection: collapsed ? "column" : "row",
+        flexDirection: isOpen ? "row" : "column",
         alignItems: "center",
         gap: "0.4rem",
         flexShrink: 0,
+        transition: "flex-direction 0s",
       }}>
         <Popover
           placement="right-end"
@@ -466,7 +479,7 @@ export function PlinthSidebar({
               onMouseEnter={(e) => {
                 if (!open) {
                   e.currentTarget.style.transform = "translateY(-1px)";
-                  if (collapsed) showTip("Notifications · 3", e.currentTarget);
+                  if (!isOpen) showTip("Notifications · 3", e.currentTarget);
                 }
               }}
               onMouseLeave={(e) => {
@@ -525,8 +538,8 @@ export function PlinthSidebar({
               onClick={() => { hideTip(); toggle(); }}
               onMouseEnter={(e) => {
                 if (!open) {
-                  if (!collapsed) e.currentTarget.style.transform = "translateY(-1px)";
-                  if (collapsed) showTip("Thomas", e.currentTarget);
+                  if (isOpen) e.currentTarget.style.transform = "translateY(-1px)";
+                  if (!isOpen) showTip("Thomas", e.currentTarget);
                 }
               }}
               onMouseLeave={(e) => {
@@ -536,15 +549,15 @@ export function PlinthSidebar({
               aria-label="Menu utilisateur"
               aria-expanded={open}
               style={{
-                flex: collapsed ? "0 0 auto" : 1,
+                flex: isOpen ? 1 : "0 0 auto",
                 minWidth: 0,
-                width: collapsed ? ICON_BTN : "auto",
-                height: collapsed ? ICON_BTN : "auto",
+                width: isOpen ? "auto" : ICON_BTN,
+                height: isOpen ? "auto" : ICON_BTN,
                 display: "flex",
                 alignItems: "center",
                 gap: "0.5rem",
-                padding: collapsed ? "0" : "0.3rem 0.5rem",
-                justifyContent: collapsed ? "center" : "flex-start",
+                padding: isOpen ? "0.3rem 0.5rem" : "0",
+                justifyContent: isOpen ? "flex-start" : "center",
                 background: open ? "var(--surface-3)" : "var(--surface)",
                 border: "none",
                 borderRadius: "9px",
@@ -565,21 +578,31 @@ export function PlinthSidebar({
               }}>
                 TM
               </span>
-              {!collapsed && (
-                <>
-                  <span style={{
-                    flex: 1, minWidth: 0,
-                    textAlign: "left",
-                    fontSize: "0.78rem", fontWeight: 600,
-                    color: "var(--text)",
-                    letterSpacing: "-0.005em",
-                    whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
-                  }}>
-                    Thomas
-                  </span>
-                  <ChevronDown size={12} strokeWidth={2} color="var(--text-3)" style={{ flexShrink: 0 }} />
-                </>
-              )}
+              {/* Name + chevron fade in when open */}
+              <span style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "0.3rem",
+                flex: 1,
+                minWidth: 0,
+                overflow: "hidden",
+                maxWidth: isOpen ? "140px" : "0px",
+                opacity: isOpen ? 1 : 0,
+                transition: "max-width 0.34s cubic-bezier(0.22,1,0.36,1), opacity 0.22s ease",
+                pointerEvents: isOpen ? "auto" : "none",
+              }}>
+                <span style={{
+                  flex: 1, minWidth: 0,
+                  textAlign: "left",
+                  fontSize: "0.78rem", fontWeight: 600,
+                  color: "var(--text)",
+                  letterSpacing: "-0.005em",
+                  whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
+                }}>
+                  Thomas
+                </span>
+                <ChevronDown size={12} strokeWidth={2} color="var(--text-3)" style={{ flexShrink: 0 }} />
+              </span>
             </button>
           )}
         >
