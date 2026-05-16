@@ -49,7 +49,7 @@ const sections: { title: string; items: NavItemData[] }[] = [
   {
     title: "Intelligence",
     items: [
-      { Icon: MessageSquare, label: "Chat IA", badge: "3", badgeTone: "warn" },
+      { Icon: MessageSquare, label: "Chat IA", badge: "3", badgeTone: "warn", href: "/agent-test" },
       { Icon: AlertTriangle, label: "Alertes", badge: "5", badgeTone: "danger" },
       { Icon: Sparkles, label: "Agents", badge: "3", badgeTone: "neutral" },
     ],
