@@ -24,6 +24,7 @@ type NavItemData = {
   active?: boolean;
   badge?: string;
   badgeTone?: "neutral" | "warn" | "danger";
+  href?: string;
 };
 
 const sections: { title: string; items: NavItemData[] }[] = [
