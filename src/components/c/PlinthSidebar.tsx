@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
+import Link from "next/link";
 import {
   Home, BarChart3, Target, FolderArchive, Flame, Wallet, Globe,
   Sparkles, MessageSquare, AlertTriangle, Settings, HelpCircle,
@@ -24,6 +25,7 @@ type NavItemData = {
   active?: boolean;
   badge?: string;
   badgeTone?: "neutral" | "warn" | "danger";
+  href?: string;
 };
 
 const sections: { title: string; items: NavItemData[] }[] = [
@@ -47,7 +49,7 @@ const sections: { title: string; items: NavItemData[] }[] = [
   {
     title: "Intelligence",
     items: [
-      { Icon: MessageSquare, label: "Chat IA", badge: "3", badgeTone: "warn" },
+      { Icon: MessageSquare, label: "Chat IA", badge: "3", badgeTone: "warn", href: "/agent-test" },
       { Icon: AlertTriangle, label: "Alertes", badge: "5", badgeTone: "danger" },
       { Icon: Sparkles, label: "Agents", badge: "3", badgeTone: "neutral" },
     ],
@@ -130,8 +132,14 @@ function NavItem({
     : item.badgeTone === "warn"  ? "var(--warn)"
     : "var(--text-3)";
 
+  const Tag = item.href ? Link : "button";
+  const tagProps = item.href
+    ? { href: item.href }
+    : { type: "button" as const };
+
   return (
-    <button
+    <Tag
+      {...(tagProps as any)}
       className="plinth-nav-item"
       style={{
         position: "relative",
@@ -150,15 +158,16 @@ function NavItem({
         color: item.active ? "var(--text)" : "var(--text-2)",
         cursor: "pointer",
         textAlign: "left",
+        textDecoration: "none",
         boxShadow: item.active && !collapsed ? "var(--tier-1)" : "none",
         transition: "background 0.18s, color 0.18s",
         margin: "1px 0",
       }}
-      onMouseEnter={(e) => {
+      onMouseEnter={(e: React.MouseEvent<HTMLElement>) => {
         if (!item.active || collapsed) e.currentTarget.style.background = collapsed ? "transparent" : "var(--surface)";
         if (collapsed) showTip(item.label + (item.badge ? ` · ${item.badge}` : ""), e.currentTarget);
       }}
-      onMouseLeave={(e) => {
+      onMouseLeave={(e: React.MouseEvent<HTMLElement>) => {
         if (!item.active || collapsed) e.currentTarget.style.background = "transparent";
         hideTip();
       }}
@@ -221,7 +230,7 @@ function NavItem({
           )}
         </>
       )}
-    </button>
+    </Tag>
   );
 }
 
