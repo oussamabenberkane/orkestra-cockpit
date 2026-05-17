@@ -20,9 +20,11 @@ const MODEL_ID = process.env.AGENT_MODEL ?? "mistral-large-latest";
 // complex SQL self-correction ever bumps against it.
 const AGENT_TIMEOUT_MS = 45_000;
 
-// Transient errors (provider 5xx, network blips) are retried by the AI SDK.
-// Default is already 2 — set explicitly so the intent is visible.
-const AGENT_MAX_RETRIES = 2;
+// Transient errors (provider 5xx, network blips, "service tier capacity
+// exceeded" bursts) are retried by the AI SDK with exponential backoff.
+// Bumped from 2 → 4 so a heavy multi-step KPI question (~5-7 Mistral calls)
+// can ride out a short rate-limit window instead of failing the whole run.
+const AGENT_MAX_RETRIES = 4;
 
 // Combine the optional caller signal (the HTTP request signal) with an
 // internal timeout so every LLM call is bounded even if the client never
