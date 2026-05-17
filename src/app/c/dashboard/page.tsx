@@ -14,6 +14,8 @@ import { PlinthSidebar } from "@/components/c/PlinthSidebar";
 import { Sparkline } from "@/components/shared/Sparkline";
 import { CountUp, formatThousands } from "@/components/shared/CountUp";
 import { CommandPalette } from "@/components/shared/CommandPalette";
+import ChatDock from "@/components/c/ChatDock";
+import { ChatDockProvider, useChatDock } from "@/components/c/ChatDockContext";
 
 const SIDEBAR_STORAGE_KEY = "plinth.sidebar.collapsed";
 
@@ -179,6 +181,7 @@ export default function DashboardPageC() {
   const onLogout = () => router.push("/");
 
   return (
+    <ChatDockProvider>
     <div
       style={{
         minHeight: "100vh",
@@ -319,8 +322,25 @@ export default function DashboardPageC() {
           .plinth-kpis { grid-template-columns: 1fr !important; }
           .plinth-tiles { grid-template-columns: 1fr !important; }
         }
+        .plinth-kpi .kpi-ask,
+        .plinth-tile .tile-ask {
+          opacity: 0.55;
+          transition: opacity 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+        }
+        .plinth-kpi:hover .kpi-ask,
+        .plinth-tile:hover .tile-ask,
+        .kpi-ask:hover,
+        .tile-ask:hover,
+        .kpi-ask:focus-visible,
+        .tile-ask:focus-visible {
+          opacity: 1;
+          box-shadow: inset 0 0 0 1px rgba(88,86,214,0.38);
+        }
       `}</style>
+
+      <ChatDock />
     </div>
+    </ChatDockProvider>
   );
 }
 
@@ -353,6 +373,7 @@ function KPICard({
   kpi: typeof kpis[number];
   delay: number;
 }) {
+  const { openDock } = useChatDock();
   return (
     <div
       className="plinth-kpi"
@@ -373,26 +394,41 @@ function KPICard({
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
+          gap: "0.5rem",
         }}
       >
         <span style={{ fontSize: "0.78rem", fontWeight: 500, color: "var(--text-3)" }}>
           {kpi.label}
         </span>
-        {kpi.combined && (
-          <span
-            style={{
-              fontSize: "0.58rem",
-              fontWeight: 700,
-              color: "var(--accent)",
-              background: "var(--accent-tint)",
-              padding: "0.1rem 0.4rem",
-              borderRadius: "4px",
-              letterSpacing: "0.06em",
-            }}
-          >
-            ⊕ COMBINÉ
-          </span>
-        )}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "0.4rem",
+            flexShrink: 0,
+          }}
+        >
+          {kpi.combined && (
+            <span
+              style={{
+                fontSize: "0.58rem",
+                fontWeight: 700,
+                color: "var(--accent)",
+                background: "var(--accent-tint)",
+                padding: "0.1rem 0.4rem",
+                borderRadius: "4px",
+                letterSpacing: "0.06em",
+              }}
+            >
+              ⊕ COMBINÉ
+            </span>
+          )}
+          <AskButton
+            className="kpi-ask"
+            label={`Demander à l'IA : ${kpi.label}`}
+            onClick={() => openDock(kpiSeed(kpi.label))}
+          />
+        </div>
       </div>
 
       <div style={{ display: "flex", alignItems: "baseline", gap: "0.3rem" }}>
@@ -506,6 +542,7 @@ function TileCard({
   onOpen: (k: ModalKey) => void;
 }) {
   const { Icon } = tile;
+  const { openDock } = useChatDock();
   const alertColor =
     tile.alertTone === "warn"
       ? "var(--warn)"
@@ -515,13 +552,25 @@ function TileCard({
       ? "var(--danger)"
       : "var(--text-3)";
 
+  const handleOpen = () => onOpen(tile.modalKey);
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.target !== e.currentTarget) return;
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      handleOpen();
+    }
+  };
+
   return (
-    <motion.button
+    <motion.div
+      className="plinth-tile"
+      role="button"
+      tabIndex={0}
       whileTap={{ scale: 0.99 }}
-      onClick={() => onOpen(tile.modalKey)}
+      onClick={handleOpen}
+      onKeyDown={handleKeyDown}
       style={{
         background: "var(--surface)",
-        border: "none",
         borderRadius: "14px",
         padding: "1.05rem 1.1rem 0.95rem",
         textAlign: "left",
@@ -585,7 +634,21 @@ function TileCard({
             {tile.title}
           </span>
         </div>
-        <ArrowUpRight size={14} strokeWidth={2.25} color="var(--text-4)" />
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "0.4rem",
+            flexShrink: 0,
+          }}
+        >
+          <AskButton
+            className="tile-ask"
+            label={`Demander à l'IA : ${tile.title}`}
+            onClick={() => openDock(tileSeed(tile.modalKey))}
+          />
+          <ArrowUpRight size={14} strokeWidth={2.25} color="var(--text-4)" />
+        </div>
       </div>
 
       <div style={{ display: "flex", alignItems: "flex-end", gap: "0.7rem" }}>
@@ -671,7 +734,7 @@ function TileCard({
           {tile.sources.join(" · ")}
         </span>
       </div>
-    </motion.button>
+    </motion.div>
   );
 }
 
@@ -934,6 +997,85 @@ function AgentRow({
       </div>
     </motion.div>
   );
+}
+
+function AskButton({
+  className,
+  label,
+  onClick,
+}: {
+  className: string;
+  label: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      className={className}
+      aria-label={label}
+      title={label}
+      onClick={(e) => {
+        e.stopPropagation();
+        onClick();
+      }}
+      onPointerDown={(e) => e.stopPropagation()}
+      onKeyDown={(e) => e.stopPropagation()}
+      style={{
+        flexShrink: 0,
+        width: 28,
+        height: 28,
+        padding: 0,
+        borderRadius: 8,
+        border: "none",
+        cursor: "pointer",
+        background: "var(--accent-tint)",
+        color: "var(--accent)",
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        boxShadow: "inset 0 0 0 1px rgba(88,86,214,0.18)",
+        fontFamily: "inherit",
+      }}
+    >
+      <Sparkles size={13} strokeWidth={2.25} />
+    </button>
+  );
+}
+
+function kpiSeed(label: string): string {
+  switch (label) {
+    case "CA mensuel":
+      return "Pourquoi le CA mensuel est-il à 92 400 CHF ce mois ? Détaille la composition par compagnie partenaire.";
+    case "Marge nette":
+      return "D'où vient la marge nette de 68 % ? Quels postes contribuent le plus ?";
+    case "Cash-flow":
+      return "Décompose le cash-flow net de +18 K CHF : encaissements vs sorties principales.";
+    case "Rétention":
+      return "Pourquoi la rétention est à 87 % ? Quels contrats ont été résiliés récemment et chez quelles compagnies ?";
+    default:
+      return `Donne-moi une analyse rapide du KPI « ${label} ».`;
+  }
+}
+
+function tileSeed(modalKey: ModalKey): string {
+  switch (modalKey) {
+    case "prospection":
+      return "État du pipeline de prospection : prospects actifs par statut, taux de conversion, et valeur potentielle totale.";
+    case "portefeuille":
+      return "Liste les contrats arrivant à renouvellement dans les 30 prochains jours, par client et par compagnie.";
+    case "sinistres":
+      return "Liste les sinistres ouverts avec leur ancienneté en jours, le client concerné et le montant estimé.";
+    case "finance":
+      return "Résumé financier du mois : commissions encaissées, cash-flow net, et liste des impayés en cours.";
+    case "vue360":
+      return "Vue d'ensemble du cabinet : KPI consolidés (CA, marge, sinistralité, rétention) et points d'attention principaux.";
+    case "agents":
+      return "Quelles actions sont préparées par les agents IA et nécessitent une validation cette semaine ?";
+    case "rapport":
+      return "Synthèse mensuelle pour la direction : CA, sinistres, prospection, renouvellements.";
+    default:
+      return "Donne-moi un aperçu de cette section.";
+  }
 }
 
 function Footer() {
