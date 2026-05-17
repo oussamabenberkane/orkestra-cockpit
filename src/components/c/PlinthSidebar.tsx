@@ -43,7 +43,7 @@ const sections: { title: string; items: NavItemData[] }[] = [
       { Icon: FolderArchive, label: "Portefeuille" },
       { Icon: Flame, label: "Sinistres", badge: "3", badgeTone: "danger" },
       { Icon: Wallet, label: "Finance", badge: "2", badgeTone: "warn" },
-      { Icon: Globe, label: "Vue d'ensemble" },
+      { Icon: Globe, label: "Vue d'ensemble", href: "/c/rapports" },
     ],
   },
   {

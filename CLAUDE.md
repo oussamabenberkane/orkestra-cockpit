@@ -44,20 +44,68 @@ This is a single-page BFSI cockpit demo for "Cabinet Müller & Associés SA" (Fr
 
 ## Commit Convention
 
-Single-line format only: `<type>: <short imperative description>`
+This project follows a **strict, concise commit message format**.
 
-**Allowed types:** `feat` · `fix` · `refactor` · `chore` · `docs` · `test`
+### Format
 
-**Rules:**
+```
+<type>: <short imperative description>
+```
+
+- Single line only — no body unless the change is genuinely complex or the decision needs context
 - Imperative mood, capitalised: "Add", "Fix", "Update" — not "Added" or "Fixes"
-- No body, no trailers, no `Co-Authored-By`, no AI attribution
 - One logical change per commit
+
+❗ **Never add:**
+- `Co-Authored-By` or any trailer/footer
+- AI / bot attribution (Claude, ChatGPT, etc.)
+- Sign-offs or explanatory paragraphs
+
+> Commits must reflect **human ownership**.
+
+### Allowed Types
+
+| Type       | When to use                                       |
+| ---------- | ------------------------------------------------- |
+| `feat`     | New features or user-facing functionality         |
+| `fix`      | Bug fixes                                         |
+| `refactor` | Code changes that don't add features or fix bugs  |
+| `chore`    | Maintenance tasks (deps, configs, tooling)        |
+| `docs`     | Documentation-only changes                        |
+| `test`     | Adding or updating tests                          |
+
+### Valid Examples
 
 ```
 feat: Add KPI sparkline to dashboard header
 fix: Correct modal close behaviour on Escape key
 refactor: Extract brand tokens to globals.css
 chore: Move demo CSV files to data/
+docs: Update CLAUDE.md with commit conventions
+```
+
+### Invalid Examples
+
+❌ Too verbose
+```
+feat: Add KPI sparkline component with animated SVG path to dashboard header
+```
+
+❌ Past tense
+```
+fix: Fixed modal close behaviour on Escape key
+```
+
+❌ Missing type
+```
+Add KPI sparkline to dashboard header
+```
+
+❌ AI attribution trailer
+```
+feat: Add KPI sparkline to dashboard header
+
+Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
 ```
 
 ## Conventions worth knowing
