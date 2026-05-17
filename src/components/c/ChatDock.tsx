@@ -65,10 +65,12 @@ export default function ChatDock() {
 
       // Build the wire payload from the *previous* messages + this user turn.
       // We mirror /agent-test: keep history compact, only role + content.
-      const wireMessages = [...messages, userMsg].map(({ role, content }) => ({
-        role,
-        content,
-      }));
+      // Drop empty assistant placeholders left behind by a prior failed/aborted
+      // stream — Mistral rejects assistant turns with neither content nor
+      // tool_calls.
+      const wireMessages = [...messages, userMsg]
+        .filter((m) => m.role === "user" || m.content.trim().length > 0)
+        .map(({ role, content }) => ({ role, content }));
 
       setMessages((prev) => [...prev, userMsg, assistantMsg]);
       setInput("");
@@ -109,6 +111,15 @@ export default function ChatDock() {
             );
           }
           // After the sentinel we ignore the JSON trailer — "answer only" mode.
+        }
+
+        // Server-side failure (provider 5xx, capacity exceeded, etc.) closes
+        // the stream silently with HTTP 200 and no body. Surface it to the
+        // user instead of leaving an empty assistant bubble.
+        if (acc.trim().length === 0) {
+          throw new Error(
+            "Le service IA n'a pas répondu. Réessaie dans un instant.",
+          );
         }
       } catch (err) {
         if ((err as Error).name === "AbortError") return;
