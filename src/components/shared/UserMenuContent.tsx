@@ -20,30 +20,237 @@ export function UserMenuContent({ onLogout, bare = false, onClose }: UserMenuCon
     Icon: typeof User;
     label: string;
     onClick?: () => void;
-    danger?: boolean;
     sub?: string;
   }> = [
     { Icon: User, label: "Mon profil", sub: "Préférences personnelles" },
-    { Icon: Settings, label: "Paramètres", sub: "Workspace, sources, agents", onClick: () => nav("/parametres") },
+    { Icon: Settings, label: "Paramètres", sub: "Workspace, agents", onClick: () => nav("/parametres") },
     { Icon: Moon, label: "Apparence", sub: "Auto · clair · sombre" },
     { Icon: HelpCircle, label: "Aide & support", sub: "Documentation, contact", onClick: () => nav("/support") },
   ];
 
+  if (bare) {
+    return (
+      <div
+        style={{
+          width: "100%",
+          height: "100%",
+          minHeight: 0,
+          display: "flex",
+          flexDirection: "column",
+        }}
+      >
+        <div
+          style={{
+            padding: "0.55rem 0.6rem",
+            borderBottom: "1px solid var(--border)",
+            display: "flex",
+            alignItems: "center",
+            gap: "0.55rem",
+            flexShrink: 0,
+          }}
+        >
+          <div
+            style={{
+              width: 28,
+              height: 28,
+              borderRadius: "50%",
+              background: "var(--text)",
+              color: "var(--surface)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: "0.68rem",
+              fontWeight: 700,
+              flexShrink: 0,
+            }}
+          >
+            TM
+          </div>
+          <div style={{ minWidth: 0, lineHeight: 1.25 }}>
+            <div
+              style={{
+                fontSize: "0.78rem",
+                fontWeight: 600,
+                color: "var(--text)",
+                letterSpacing: "-0.005em",
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+              }}
+            >
+              Thomas Müller
+            </div>
+            <div
+              style={{
+                fontSize: "0.64rem",
+                color: "var(--text-3)",
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+              }}
+            >
+              thomas@muller.ch
+            </div>
+          </div>
+        </div>
+
+        <div
+          style={{
+            flex: 1,
+            minHeight: 0,
+            overflowY: "auto",
+            padding: "0.25rem",
+          }}
+        >
+          {items.map((item) => {
+            const I = item.Icon;
+            return (
+              <button
+                key={item.label}
+                onClick={item.onClick}
+                style={{
+                  width: "100%",
+                  display: "grid",
+                  gridTemplateColumns: "auto 1fr auto",
+                  gap: "0.5rem",
+                  alignItems: "center",
+                  padding: "0.4rem 0.45rem",
+                  border: "none",
+                  background: "transparent",
+                  borderRadius: "7px",
+                  cursor: "pointer",
+                  fontFamily: "inherit",
+                  color: "inherit",
+                  textAlign: "left",
+                  transition: "background 0.12s",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = "var(--surface-2)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = "transparent";
+                }}
+              >
+                <span
+                  style={{
+                    width: 20,
+                    height: 20,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    color: "var(--text-3)",
+                  }}
+                >
+                  <I size={12} strokeWidth={2} />
+                </span>
+                <div style={{ minWidth: 0, lineHeight: 1.2 }}>
+                  <div
+                    style={{
+                      fontSize: "0.76rem",
+                      fontWeight: 500,
+                      color: "var(--text)",
+                      letterSpacing: "-0.005em",
+                      whiteSpace: "nowrap",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                    }}
+                  >
+                    {item.label}
+                  </div>
+                  {item.sub && (
+                    <div
+                      style={{
+                        fontSize: "0.62rem",
+                        color: "var(--text-4)",
+                        marginTop: "0.05rem",
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                      }}
+                    >
+                      {item.sub}
+                    </div>
+                  )}
+                </div>
+                {item.onClick ? (
+                  <ChevronRight size={10} strokeWidth={2} color="var(--text-4)" />
+                ) : (
+                  <span
+                    style={{
+                      fontSize: "0.52rem",
+                      fontWeight: 600,
+                      color: "var(--text-4)",
+                      background: "var(--surface-2)",
+                      border: "1px solid var(--border)",
+                      padding: "0.08rem 0.3rem",
+                      borderRadius: "100px",
+                      letterSpacing: "0.04em",
+                      textTransform: "uppercase",
+                    }}
+                  >
+                    Bientôt
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+
+        <div
+          style={{
+            padding: "0.3rem",
+            borderTop: "1px solid var(--border)",
+            background: "var(--surface-2)",
+            flexShrink: 0,
+          }}
+        >
+          <button
+            onClick={onLogout}
+            style={{
+              width: "100%",
+              display: "flex",
+              alignItems: "center",
+              gap: "0.55rem",
+              padding: "0.4rem 0.5rem",
+              border: "none",
+              background: "transparent",
+              borderRadius: "7px",
+              cursor: "pointer",
+              fontFamily: "inherit",
+              color: "var(--text-2)",
+              fontSize: "0.76rem",
+              fontWeight: 500,
+              transition: "background 0.12s, color 0.12s",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = "var(--danger-tint)";
+              e.currentTarget.style.color = "var(--danger)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = "transparent";
+              e.currentTarget.style.color = "var(--text-2)";
+            }}
+          >
+            <LogOut size={12} strokeWidth={2} />
+            Déconnexion
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  /* Non-bare: full-chrome floating card (not currently used by the sidebar). */
   return (
     <div
-      style={
-        bare
-          ? { width: "100%" }
-          : {
-              background: "var(--surface)",
-              border: "1px solid var(--border)",
-              borderRadius: "12px",
-              boxShadow:
-                "0 24px 60px -16px rgba(15,23,42,0.18), 0 8px 20px -8px rgba(15,23,42,0.08)",
-              overflow: "hidden",
-              width: "260px",
-            }
-      }
+      style={{
+        background: "var(--surface)",
+        border: "1px solid var(--border)",
+        borderRadius: "12px",
+        boxShadow:
+          "0 24px 60px -16px rgba(15,23,42,0.18), 0 8px 20px -8px rgba(15,23,42,0.08)",
+        overflow: "hidden",
+        width: "260px",
+      }}
     >
       <div
         style={{
@@ -117,13 +324,6 @@ export function UserMenuContent({ onLogout, bare = false, onClose }: UserMenuCon
                 fontFamily: "inherit",
                 color: "inherit",
                 textAlign: "left",
-                transition: "background 0.12s",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = "var(--surface-2)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = "transparent";
               }}
             >
               <span
@@ -144,7 +344,6 @@ export function UserMenuContent({ onLogout, bare = false, onClose }: UserMenuCon
                     fontSize: "0.82rem",
                     fontWeight: 500,
                     color: "var(--text)",
-                    letterSpacing: "-0.005em",
                   }}
                 >
                   {item.label}
@@ -208,15 +407,6 @@ export function UserMenuContent({ onLogout, bare = false, onClose }: UserMenuCon
             color: "var(--text-2)",
             fontSize: "0.82rem",
             fontWeight: 500,
-            transition: "background 0.12s, color 0.12s",
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = "var(--danger-tint)";
-            e.currentTarget.style.color = "var(--danger)";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = "transparent";
-            e.currentTarget.style.color = "var(--text-2)";
           }}
         >
           <LogOut size={13} strokeWidth={2} />

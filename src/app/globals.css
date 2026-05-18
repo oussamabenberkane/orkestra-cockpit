@@ -229,8 +229,13 @@
   .dashboard-kpis  { grid-template-columns: repeat(2, 1fr); }
 }
 
+/* Mobile: sidebar becomes a slide-over drawer (handled by Sidebar.tsx).
+   Reserve top space for the floating hamburger trigger so it doesn't
+   overlap page headers. */
 @media (max-width: 720px) {
-  .app-sidebar { display: none !important; }
+  .app-sidebar ~ main {
+    padding-top: 3.75rem;
+  }
 }
 
 @media (max-width: 600px) {

@@ -4,14 +4,14 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { motion, AnimatePresence, LayoutGroup } from "framer-motion";
 import {
-  Home, BarChart3, Target, FolderArchive, Flame, Wallet, Globe,
+  Home, Target, FolderArchive, Flame, Wallet, Globe,
   Sparkles, MessageSquare, AlertTriangle, Settings, HelpCircle,
-  ChevronDown, ChevronLeft, Search, Bell, Pin,
+  ChevronLeft, ChevronRight, Search, Bell, Menu,
   type LucideIcon,
 } from "lucide-react";
 import type { ModalKey } from "@/lib/types";
-import { Popover } from "@/components/shared/Popover";
 import { NotificationsContent } from "@/components/shared/NotificationsContent";
 import { UserMenuContent } from "@/components/shared/UserMenuContent";
 
@@ -32,6 +32,8 @@ type NavItemData = {
   badge?: string;
   badgeTone?: "neutral" | "warn" | "danger";
 };
+
+type PopupTab = "profile" | "notif";
 
 const sections: { title: string; items: NavItemData[] }[] = [
   {
@@ -70,6 +72,12 @@ const sections: { title: string; items: NavItemData[] }[] = [
 const EXPANDED_W = 248;
 const COLLAPSED_W = 64;
 const ICON_BTN = 36;
+const BREAKPOINT_MOBILE = 720;
+const NOTIF_COUNT = 3;
+/* Popup geometry — same in both tabs so they are visually identical. */
+const POPUP_INSET = 8;
+const POPUP_HEIGHT = 380;
+const POPUP_TABBAR_H = 40;
 
 interface TooltipState { label: string; x: number; y: number }
 
@@ -120,7 +128,7 @@ function TooltipBubble({ label, x, y }: TooltipState) {
 }
 
 function NavItem({
-  item, collapsed, active, showTip, hideTip, onOpenModal,
+  item, collapsed, active, showTip, hideTip, onOpenModal, onNavigate,
 }: {
   item: NavItemData;
   collapsed: boolean;
@@ -128,6 +136,7 @@ function NavItem({
   showTip: (label: string, el: HTMLElement) => void;
   hideTip: () => void;
   onOpenModal?: (key: ModalKey) => void;
+  onNavigate?: () => void;
 }) {
   const { Icon } = item;
   const badgeColor =
@@ -142,6 +151,9 @@ function NavItem({
     if (isModalTrigger && onOpenModal && item.modalKey) {
       e.preventDefault();
       onOpenModal(item.modalKey);
+      onNavigate?.();
+    } else if (isLink) {
+      onNavigate?.();
     }
   };
 
@@ -273,6 +285,7 @@ function NavItem({
       <Link
         href={item.href!}
         style={commonStyle}
+        onClick={handleClick}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
       >
@@ -306,26 +319,68 @@ export function Sidebar({
   const pathname = usePathname() ?? "";
   const [tooltip, setTooltip] = useState<TooltipState | null>(null);
   const [mounted, setMounted] = useState(false);
-  const [hovered, setHovered] = useState(false);
-  const leaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const [isMobile, setIsMobile] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+
+  const [popupOpen, setPopupOpen] = useState(false);
+  const [popupTab, setPopupTab] = useState<PopupTab>("profile");
+
+  const sidebarRef = useRef<HTMLElement>(null);
+  const popupRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => setMounted(true), []);
-  useEffect(() => () => { if (leaveTimer.current) clearTimeout(leaveTimer.current); }, []);
 
-  const isOpen = !collapsed || hovered;
+  // Responsive: mobile detection
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const mq = window.matchMedia(`(max-width: ${BREAKPOINT_MOBILE}px)`);
+    const update = () => setIsMobile(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
 
-  const handleMouseEnter = useCallback(() => {
-    if (leaveTimer.current) clearTimeout(leaveTimer.current);
-    setHovered(true);
-  }, []);
-  const handleMouseLeave = useCallback(() => {
-    leaveTimer.current = setTimeout(() => setHovered(false), 300);
-  }, []);
+  // Close drawer + popup on route change
+  useEffect(() => {
+    setDrawerOpen(false);
+    setPopupOpen(false);
+  }, [pathname]);
+
+  // Close popup if sidebar gets collapsed (popup lives inside it and would clip)
+  useEffect(() => {
+    if (collapsed && !isMobile) setPopupOpen(false);
+  }, [collapsed, isMobile]);
+
+  // Outside click + Escape for popup
+  useEffect(() => {
+    if (!popupOpen) return;
+    const onMouseDown = (e: MouseEvent) => {
+      const t = e.target as Node;
+      if (popupRef.current?.contains(t)) return;
+      const triggerEl = (t as HTMLElement).closest?.("[data-popup-trigger]");
+      if (triggerEl) return;
+      setPopupOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setPopupOpen(false);
+    };
+    document.addEventListener("mousedown", onMouseDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onMouseDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [popupOpen]);
+
+  /** Desktop: open iff not collapsed. Mobile: open iff drawer is open. */
+  const isOpen = isMobile ? drawerOpen : !collapsed;
 
   const showTip = useCallback((label: string, el: HTMLElement) => {
+    if (isMobile) return;
     const rect = el.getBoundingClientRect();
     setTooltip({ label, x: rect.right + 10, y: rect.top + rect.height / 2 });
-  }, []);
+  }, [isMobile]);
   const hideTip = useCallback(() => setTooltip(null), []);
 
   const isItemActive = useCallback(
@@ -339,354 +394,536 @@ export function Sidebar({
     [pathname],
   );
 
-  return (
-    <aside
-      className="app-sidebar"
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
-      style={{
-        width: isOpen ? EXPANDED_W : COLLAPSED_W,
-        flexShrink: 0,
-        background: "var(--surface-2)",
-        borderRight: "1px solid var(--border)",
-        display: "flex",
-        flexDirection: "column",
+  /** Trigger logic: same tab twice closes; different tab switches; collapsed expands first. */
+  const handlePopupTrigger = (tab: PopupTab) => {
+    hideTip();
+    if (popupOpen && popupTab === tab) {
+      setPopupOpen(false);
+      return;
+    }
+    if (!isMobile && collapsed) {
+      onToggle();
+    }
+    setPopupTab(tab);
+    setPopupOpen(true);
+  };
+
+  const closePopup = useCallback(() => setPopupOpen(false), []);
+
+  /** Toggle: closes popup first to avoid leaving an orphan panel inside a collapsing sidebar. */
+  const handleSidebarToggle = () => {
+    hideTip();
+    setPopupOpen(false);
+    if (isMobile) {
+      setDrawerOpen(false);
+    } else {
+      onToggle();
+    }
+  };
+
+  const sidebarPosition: React.CSSProperties = isMobile
+    ? {
+        position: "fixed",
+        top: 0,
+        left: 0,
+        bottom: 0,
         height: "100vh",
+        transform: drawerOpen ? "translateX(0)" : `translateX(-${EXPANDED_W + 4}px)`,
+        transition: "transform 0.34s cubic-bezier(0.22, 1, 0.36, 1)",
+        zIndex: 50,
+        boxShadow: drawerOpen ? "0 24px 60px -16px rgba(15,23,42,0.32)" : "none",
+      }
+    : {
         position: "sticky",
         top: 0,
-        overflow: "hidden",
+        height: "100vh",
         transition: "width 0.36s cubic-bezier(0.22, 1, 0.36, 1)",
         zIndex: 20,
-      }}
-    >
-      {/* Header: logo + brand text + toggle */}
-      <div style={{
-        display: "flex",
-        alignItems: "center",
-        height: 52,
-        padding: "0 0.55rem",
-        gap: "0.45rem",
-        flexShrink: 0,
-        justifyContent: isOpen ? "flex-start" : "center",
-      }}>
-        <div style={{
-          width: ICON_BTN, height: ICON_BTN,
-          display: "flex", alignItems: "center", justifyContent: "center",
-          flexShrink: 0,
-        }}>
-          <svg viewBox="0 0 60 70" fill="none" style={{ width: 22, height: 22 }}>
-            <polygon points="30,2 58,17.5 58,52.5 30,68 2,52.5 2,17.5"
-              fill="none" stroke="var(--accent)" strokeWidth="4" />
-            <polygon points="30,12 48,22.5 48,47.5 30,58 12,47.5 12,22.5"
-              fill="var(--accent)" opacity="0.4" />
-            <polygon points="30,22 38,27 38,43 30,48 22,43 22,27"
-              fill="var(--accent)" />
-          </svg>
-        </div>
+      };
 
-        <div style={{
-          flex: 1, minWidth: 0,
-          overflow: "hidden",
-          maxWidth: isOpen ? "160px" : "0px",
-          opacity: isOpen ? 1 : 0,
-          transform: `translateX(${isOpen ? 0 : -6}px)`,
-          transition: "max-width 0.34s cubic-bezier(0.22,1,0.36,1), opacity 0.22s ease, transform 0.28s cubic-bezier(0.22,1,0.36,1)",
-          pointerEvents: isOpen ? "auto" : "none",
-          lineHeight: 1, whiteSpace: "nowrap",
-        }}>
-          <div style={{
-            fontSize: "0.7rem", fontWeight: 800,
-            color: "var(--accent)", letterSpacing: "1.8px",
-            textTransform: "uppercase",
-          }}>Malyz</div>
-          <div style={{
-            fontSize: "0.52rem", color: "var(--text-4)",
-            letterSpacing: "0.6px", textTransform: "uppercase",
-            marginTop: "2px",
-          }}>Consulting Sàrl</div>
-        </div>
-
+  return (
+    <>
+      {/* Mobile hamburger */}
+      {isMobile && !drawerOpen && (
         <button
-          onClick={() => { hideTip(); onToggle(); }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = "var(--surface)";
-            e.currentTarget.style.color = "var(--text)";
-            if (collapsed) showTip("Épingler", e.currentTarget);
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = "transparent";
-            e.currentTarget.style.color = "var(--text-3)";
-            hideTip();
-          }}
-          aria-label={collapsed ? "Épingler le panneau" : "Replier le panneau"}
+          type="button"
+          onClick={() => setDrawerOpen(true)}
+          aria-label="Ouvrir le menu"
           style={{
-            position: "relative",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            width: ICON_BTN, height: ICON_BTN,
-            flexShrink: 0,
-            background: "transparent",
-            border: "none", borderRadius: "8px",
-            color: "var(--text-3)",
-            cursor: "pointer",
-            overflow: "hidden",
-            maxWidth: isOpen ? `${ICON_BTN}px` : "0px",
-            opacity: isOpen ? 1 : 0,
-            transition: "max-width 0.34s cubic-bezier(0.22,1,0.36,1), opacity 0.22s ease, background 0.16s, color 0.16s",
-            pointerEvents: isOpen ? "auto" : "none",
-          }}
-        >
-          <span style={{
-            position: "absolute",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            opacity: collapsed ? 1 : 0,
-            transform: collapsed ? "rotate(45deg) scale(1)" : "rotate(90deg) scale(0.6)",
-            transition: "opacity 0.2s ease, transform 0.26s cubic-bezier(0.34, 1.56, 0.64, 1)",
-          }}>
-            <Pin size={15} strokeWidth={2} />
-          </span>
-          <span style={{
-            position: "absolute",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            opacity: collapsed ? 0 : 1,
-            transform: collapsed ? "translateX(6px) scale(0.7)" : "translateX(0) scale(1)",
-            transition: "opacity 0.2s ease, transform 0.26s cubic-bezier(0.34, 1.56, 0.64, 1)",
-          }}>
-            <ChevronLeft size={17} strokeWidth={2.25} />
-          </span>
-        </button>
-      </div>
-
-      {/* Search */}
-      <div style={{ padding: "0 0.55rem 0.65rem", flexShrink: 0 }}>
-        <button
-          onClick={() => { hideTip(); onOpenPalette(); }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.transform = "translateY(-1px)";
-            e.currentTarget.style.color = "var(--text-2)";
-            if (!isOpen) showTip("Rechercher", e.currentTarget);
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.transform = "translateY(0)";
-            e.currentTarget.style.color = "var(--text-3)";
-            hideTip();
-          }}
-          style={{
-            width: "100%",
-            display: "flex", alignItems: "center",
-            justifyContent: isOpen ? "flex-start" : "center",
-            gap: "0.55rem",
-            padding: isOpen ? "0.5rem 0.65rem" : "0",
-            height: isOpen ? "auto" : ICON_BTN,
+            position: "fixed",
+            top: "0.75rem",
+            left: "0.75rem",
+            zIndex: 45,
+            width: 40,
+            height: 40,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
             background: "var(--surface)",
-            border: "none", borderRadius: "10px",
-            color: "var(--text-3)",
-            fontSize: "0.84rem",
-            fontFamily: "inherit",
-            cursor: "pointer",
+            border: "1px solid var(--border)",
+            borderRadius: 10,
             boxShadow: "var(--tier-1)",
-            transition: "transform 0.22s ease, color 0.18s",
+            cursor: "pointer",
+            color: "var(--text)",
           }}
         >
-          <Search size={isOpen ? 14 : 19} strokeWidth={2} style={{ flexShrink: 0 }} />
-          {isOpen && (
-            <span style={{
-              flex: 1, textAlign: "left",
-              whiteSpace: "nowrap", overflow: "hidden",
-            }}>Rechercher…</span>
-          )}
-          {isOpen && (
-            <span style={{
-              fontFamily: "var(--font-mono)",
-              fontSize: "0.65rem",
-              color: "var(--text-4)",
-              background: "var(--surface-2)",
-              border: "1px solid var(--border)",
-              padding: "0.05rem 0.35rem",
-              borderRadius: "5px",
-              flexShrink: 0,
-            }}>⌘K</span>
-          )}
+          <Menu size={18} strokeWidth={2.25} />
         </button>
-      </div>
+      )}
 
-      {/* Nav */}
-      <nav style={{
-        flex: 1,
-        overflowY: "auto", overflowX: "hidden",
-        padding: "0 0.55rem 0.6rem",
-      }}>
-        {sections.map((section) => (
-          <div key={section.title} style={{ marginTop: "0.8rem" }}>
-            <div style={{
-              padding: "0 0.55rem 0.3rem",
-              fontSize: "0.62rem", fontWeight: 700,
-              color: "var(--text-4)",
-              textTransform: "uppercase",
-              letterSpacing: "0.1em",
-              opacity: isOpen ? 1 : 0,
-              maxHeight: isOpen ? "2rem" : "0.35rem",
-              overflow: "hidden",
-              transition: "opacity 0.2s ease, max-height 0.3s cubic-bezier(0.22,1,0.36,1)",
-              whiteSpace: "nowrap",
-            }}>
-              {section.title}
-            </div>
-            {section.items.map((item) => (
-              <NavItem
-                key={item.label}
-                item={item}
-                collapsed={!isOpen}
-                active={isItemActive(item)}
-                showTip={showTip}
-                hideTip={hideTip}
-                onOpenModal={onOpenModal}
-              />
-            ))}
-          </div>
-        ))}
-      </nav>
-
-      {/* Bottom: bell + user */}
-      <div style={{
-        padding: "0.55rem 0.55rem 0.75rem",
-        borderTop: "1px solid var(--border)",
-        display: "flex",
-        flexDirection: isOpen ? "row" : "column",
-        alignItems: "center",
-        gap: "0.4rem",
-        flexShrink: 0,
-      }}>
-        <Popover
-          placement="right-end"
-          offset={12}
-          portal
-          trigger={({ open, toggle }) => (
-            <button
-              onClick={() => { hideTip(); toggle(); }}
-              onMouseEnter={(e) => {
-                if (!open) {
-                  e.currentTarget.style.transform = "translateY(-1px)";
-                  if (!isOpen) showTip("Alertes · 3", e.currentTarget);
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (!open) e.currentTarget.style.transform = "translateY(0)";
-                hideTip();
-              }}
-              aria-label="Alertes"
-              aria-expanded={open}
+      {/* Mobile backdrop */}
+      {mounted && createPortal(
+        <AnimatePresence>
+          {isMobile && drawerOpen && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.18 }}
+              onClick={() => setDrawerOpen(false)}
               style={{
-                position: "relative",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                width: ICON_BTN, height: ICON_BTN,
-                flexShrink: 0,
-                background: open ? "var(--surface-3)" : "var(--surface)",
-                border: "none", borderRadius: "9px",
-                color: "var(--text-2)",
-                cursor: "pointer",
-                boxShadow: "var(--tier-1)",
-                transition: "transform 0.22s ease, background 0.18s",
+                position: "fixed",
+                inset: 0,
+                background: "rgba(15,23,42,0.42)",
+                zIndex: 40,
               }}
-            >
-              <Bell size={16} strokeWidth={2.25} />
-              <span style={{
-                position: "absolute", top: 3, right: 3,
-                minWidth: 14, height: 14,
-                padding: "0 3px",
-                borderRadius: "7px",
-                background: "var(--danger)",
-                color: "#FFFFFF",
-                fontSize: "0.58rem", fontWeight: 700,
-                fontVariantNumeric: "tabular-nums",
-                lineHeight: 1,
-                display: "flex", alignItems: "center", justifyContent: "center",
-                border: "1.5px solid var(--surface)",
-              }}>3</span>
-            </button>
+            />
           )}
-        >
-          {(close) => <NotificationsContent onClose={close} />}
-        </Popover>
+        </AnimatePresence>,
+        document.body,
+      )}
 
-        <Popover
-          placement="right-end"
-          offset={12}
-          portal
-          trigger={({ open, toggle }) => (
-            <button
-              onClick={() => { hideTip(); toggle(); }}
-              onMouseEnter={(e) => {
-                if (!open) {
-                  if (isOpen) e.currentTarget.style.transform = "translateY(-1px)";
-                  if (!isOpen) showTip("Thomas", e.currentTarget);
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (!open) e.currentTarget.style.transform = "translateY(0)";
-                hideTip();
-              }}
-              aria-label="Menu utilisateur"
-              aria-expanded={open}
-              style={{
-                flex: isOpen ? 1 : "0 0 auto",
-                minWidth: 0,
-                width: isOpen ? "auto" : ICON_BTN,
-                height: isOpen ? "auto" : ICON_BTN,
-                display: "flex", alignItems: "center",
-                gap: "0.5rem",
-                padding: isOpen ? "0.3rem 0.5rem" : "0",
-                justifyContent: isOpen ? "flex-start" : "center",
-                background: open ? "var(--surface-3)" : "var(--surface)",
-                border: "none", borderRadius: "9px",
-                cursor: "pointer",
-                fontFamily: "inherit",
-                boxShadow: "var(--tier-1)",
-                transition: "transform 0.22s ease, background 0.18s",
-              }}
-            >
-              <span style={{
-                width: 26, height: 26,
-                background: "var(--accent)",
-                color: "#FFFFFF",
-                borderRadius: "50%",
+      <aside
+        ref={sidebarRef}
+        className="app-sidebar"
+        style={{
+          width: isMobile ? EXPANDED_W : (collapsed ? COLLAPSED_W : EXPANDED_W),
+          flexShrink: 0,
+          background: "var(--surface-2)",
+          borderRight: "1px solid var(--border)",
+          display: "flex",
+          flexDirection: "column",
+          overflow: "hidden",
+          ...sidebarPosition,
+        }}
+      >
+        {/* Header */}
+        <div style={{
+          display: "flex",
+          alignItems: "center",
+          height: 52,
+          padding: "0 0.55rem",
+          gap: "0.45rem",
+          flexShrink: 0,
+          justifyContent: isOpen ? "space-between" : "center",
+        }}>
+          {isOpen && (
+            <>
+              <div style={{
+                width: ICON_BTN, height: ICON_BTN,
                 display: "flex", alignItems: "center", justifyContent: "center",
-                fontFamily: "var(--font-mono)",
-                fontSize: "0.7rem", fontWeight: 700,
-                letterSpacing: "0.02em",
                 flexShrink: 0,
-                boxShadow: "inset 0 1px 0 rgba(255,255,255,0.22), 0 1px 2px rgba(0,0,0,0.1)",
-              }}>TM</span>
-              <span style={{
-                display: "flex", alignItems: "center",
-                gap: "0.3rem",
+              }}>
+                <svg viewBox="0 0 60 70" fill="none" style={{ width: 22, height: 22 }}>
+                  <polygon points="30,2 58,17.5 58,52.5 30,68 2,52.5 2,17.5"
+                    fill="none" stroke="var(--accent)" strokeWidth="4" />
+                  <polygon points="30,12 48,22.5 48,47.5 30,58 12,47.5 12,22.5"
+                    fill="var(--accent)" opacity="0.4" />
+                  <polygon points="30,22 38,27 38,43 30,48 22,43 22,27"
+                    fill="var(--accent)" />
+                </svg>
+              </div>
+
+              <div style={{
                 flex: 1, minWidth: 0,
                 overflow: "hidden",
-                maxWidth: isOpen ? "140px" : "0px",
-                opacity: isOpen ? 1 : 0,
-                transition: "max-width 0.34s cubic-bezier(0.22,1,0.36,1), opacity 0.22s ease",
-                pointerEvents: isOpen ? "auto" : "none",
+                lineHeight: 1,
+                whiteSpace: "nowrap",
               }}>
-                <span style={{
-                  flex: 1, minWidth: 0,
-                  textAlign: "left",
-                  fontSize: "0.78rem", fontWeight: 600,
-                  color: "var(--text)",
-                  letterSpacing: "-0.005em",
-                  whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
-                }}>Thomas</span>
-                <ChevronDown size={12} strokeWidth={2} color="var(--text-3)" style={{ flexShrink: 0 }} />
-              </span>
-            </button>
+                <div style={{
+                  fontSize: "0.7rem", fontWeight: 800,
+                  color: "var(--accent)", letterSpacing: "1.8px",
+                  textTransform: "uppercase",
+                }}>Malyz</div>
+                <div style={{
+                  fontSize: "0.52rem", color: "var(--text-4)",
+                  letterSpacing: "0.6px", textTransform: "uppercase",
+                  marginTop: "2px",
+                }}>Consulting Sàrl</div>
+              </div>
+            </>
           )}
+
+          {/* Toggle — always visible */}
+          <button
+            onClick={handleSidebarToggle}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = "var(--surface)";
+              e.currentTarget.style.color = "var(--text)";
+              if (!isMobile && collapsed) showTip("Déployer le panneau", e.currentTarget);
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = "transparent";
+              e.currentTarget.style.color = "var(--text-3)";
+              hideTip();
+            }}
+            aria-label={
+              isMobile ? "Fermer le menu"
+              : collapsed ? "Déployer le panneau"
+              : "Replier le panneau"
+            }
+            style={{
+              display: "flex", alignItems: "center", justifyContent: "center",
+              width: ICON_BTN, height: ICON_BTN,
+              flexShrink: 0,
+              background: "transparent",
+              border: "none",
+              borderRadius: "8px",
+              color: "var(--text-3)",
+              cursor: "pointer",
+              transition: "background 0.16s, color 0.16s",
+            }}
+          >
+            {!isMobile && collapsed ? (
+              <ChevronRight size={17} strokeWidth={2.25} />
+            ) : (
+              <ChevronLeft size={17} strokeWidth={2.25} />
+            )}
+          </button>
+        </div>
+
+        {/* Search */}
+        <div style={{ padding: "0 0.55rem 0.65rem", flexShrink: 0 }}>
+          <button
+            onClick={() => { hideTip(); onOpenPalette(); }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = "translateY(-1px)";
+              e.currentTarget.style.color = "var(--text-2)";
+              if (!isOpen) showTip("Rechercher", e.currentTarget);
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = "translateY(0)";
+              e.currentTarget.style.color = "var(--text-3)";
+              hideTip();
+            }}
+            style={{
+              width: "100%",
+              display: "flex", alignItems: "center",
+              justifyContent: isOpen ? "flex-start" : "center",
+              gap: "0.55rem",
+              padding: isOpen ? "0.5rem 0.65rem" : "0",
+              height: isOpen ? "auto" : ICON_BTN,
+              background: "var(--surface)",
+              border: "none", borderRadius: "10px",
+              color: "var(--text-3)",
+              fontSize: "0.84rem",
+              fontFamily: "inherit",
+              cursor: "pointer",
+              boxShadow: "var(--tier-1)",
+              transition: "transform 0.22s ease, color 0.18s",
+            }}
+          >
+            <Search size={isOpen ? 14 : 19} strokeWidth={2} style={{ flexShrink: 0 }} />
+            {isOpen && (
+              <span style={{
+                flex: 1, textAlign: "left",
+                whiteSpace: "nowrap", overflow: "hidden",
+              }}>Rechercher…</span>
+            )}
+          </button>
+        </div>
+
+        {/* Nav */}
+        <nav style={{
+          flex: 1,
+          overflowY: "auto", overflowX: "hidden",
+          padding: "0 0.55rem 0.6rem",
+        }}>
+          {sections.map((section) => (
+            <div key={section.title} style={{ marginTop: "0.8rem" }}>
+              <div style={{
+                padding: "0 0.55rem 0.3rem",
+                fontSize: "0.62rem", fontWeight: 700,
+                color: "var(--text-4)",
+                textTransform: "uppercase",
+                letterSpacing: "0.1em",
+                opacity: isOpen ? 1 : 0,
+                maxHeight: isOpen ? "2rem" : "0.35rem",
+                overflow: "hidden",
+                transition: "opacity 0.2s ease, max-height 0.3s cubic-bezier(0.22,1,0.36,1)",
+                whiteSpace: "nowrap",
+              }}>
+                {section.title}
+              </div>
+              {section.items.map((item) => (
+                <NavItem
+                  key={item.label}
+                  item={item}
+                  collapsed={!isOpen}
+                  active={isItemActive(item)}
+                  showTip={showTip}
+                  hideTip={hideTip}
+                  onOpenModal={onOpenModal}
+                  onNavigate={isMobile ? () => setDrawerOpen(false) : undefined}
+                />
+              ))}
+            </div>
+          ))}
+        </nav>
+
+        {/* Bottom: bell + avatar (compact, right-aligned when expanded) */}
+        <div
+          style={{
+            padding: "0.55rem 0.55rem 0.75rem",
+            borderTop: "1px solid var(--border)",
+            display: "flex",
+            flexDirection: isOpen ? "row" : "column",
+            alignItems: "center",
+            justifyContent: isOpen ? "flex-end" : "center",
+            gap: "0.4rem",
+            flexShrink: 0,
+          }}
         >
-          {(close) => <UserMenuContent onLogout={onLogout} onClose={close} />}
-        </Popover>
-      </div>
+          <button
+            type="button"
+            data-popup-trigger="notif"
+            onClick={() => handlePopupTrigger("notif")}
+            onMouseEnter={(e) => {
+              if (popupOpen && popupTab === "notif") return;
+              e.currentTarget.style.transform = "translateY(-1px)";
+              if (!isOpen) showTip(`Alertes · ${NOTIF_COUNT}`, e.currentTarget);
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = "translateY(0)";
+              hideTip();
+            }}
+            aria-label="Alertes"
+            aria-expanded={popupOpen && popupTab === "notif"}
+            style={{
+              position: "relative",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              width: ICON_BTN, height: ICON_BTN,
+              flexShrink: 0,
+              background: popupOpen && popupTab === "notif" ? "var(--surface-3)" : "var(--surface)",
+              border: "none", borderRadius: "9px",
+              color: "var(--text-2)",
+              cursor: "pointer",
+              boxShadow: "var(--tier-1)",
+              transition: "transform 0.22s ease, background 0.18s",
+            }}
+          >
+            <Bell size={16} strokeWidth={2.25} />
+            <span style={{
+              position: "absolute", top: 3, right: 3,
+              minWidth: 14, height: 14,
+              padding: "0 3px",
+              borderRadius: "7px",
+              background: "var(--danger)",
+              color: "#FFFFFF",
+              fontSize: "0.58rem", fontWeight: 700,
+              fontVariantNumeric: "tabular-nums",
+              lineHeight: 1,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              border: "1.5px solid var(--surface)",
+            }}>{NOTIF_COUNT}</span>
+          </button>
+
+          <button
+            type="button"
+            data-popup-trigger="profile"
+            onClick={() => handlePopupTrigger("profile")}
+            onMouseEnter={(e) => {
+              if (popupOpen && popupTab === "profile") return;
+              e.currentTarget.style.transform = "translateY(-1px)";
+              if (!isOpen) showTip("Thomas", e.currentTarget);
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = "translateY(0)";
+              hideTip();
+            }}
+            aria-label="Profil"
+            aria-expanded={popupOpen && popupTab === "profile"}
+            style={{
+              display: "flex", alignItems: "center", justifyContent: "center",
+              width: ICON_BTN, height: ICON_BTN,
+              flexShrink: 0,
+              background: popupOpen && popupTab === "profile" ? "var(--surface-3)" : "var(--surface)",
+              border: "none", borderRadius: "9px",
+              cursor: "pointer",
+              fontFamily: "inherit",
+              boxShadow: "var(--tier-1)",
+              transition: "transform 0.22s ease, background 0.18s",
+              padding: 0,
+            }}
+          >
+            <span style={{
+              width: 26, height: 26,
+              background: "var(--accent)",
+              color: "#FFFFFF",
+              borderRadius: "50%",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontFamily: "var(--font-mono)",
+              fontSize: "0.7rem", fontWeight: 700,
+              letterSpacing: "0.02em",
+              boxShadow: "inset 0 1px 0 rgba(255,255,255,0.22), 0 1px 2px rgba(0,0,0,0.1)",
+            }}>TM</span>
+          </button>
+        </div>
+
+        {/* Unified tabbed popup — anchored inside the sidebar */}
+        <AnimatePresence>
+          {popupOpen && isOpen && (
+            <motion.div
+              ref={popupRef}
+              initial={{ opacity: 0, y: 12, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 8, scale: 0.98 }}
+              transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+              style={{
+                position: "absolute",
+                left: POPUP_INSET,
+                right: POPUP_INSET,
+                bottom: 64,
+                height: POPUP_HEIGHT,
+                background: "var(--surface)",
+                border: "1px solid var(--border)",
+                borderRadius: 12,
+                boxShadow:
+                  "0 20px 50px -16px rgba(15,23,42,0.28), 0 6px 16px -8px rgba(15,23,42,0.12)",
+                overflow: "hidden",
+                display: "flex",
+                flexDirection: "column",
+                zIndex: 30,
+                transformOrigin: "bottom right",
+              }}
+            >
+              <LayoutGroup id="sidebar-popup-tabs">
+                <div style={{
+                  display: "grid",
+                  gridTemplateColumns: "1fr 1fr",
+                  padding: "0.25rem 0.3rem",
+                  gap: "0.18rem",
+                  borderBottom: "1px solid var(--border)",
+                  height: POPUP_TABBAR_H,
+                  flexShrink: 0,
+                }}>
+                  {(["profile", "notif"] as PopupTab[]).map((t) => {
+                    const active = popupTab === t;
+                    const label = t === "profile" ? "Profil" : "Alertes";
+                    return (
+                      <button
+                        key={t}
+                        type="button"
+                        onClick={() => setPopupTab(t)}
+                        style={{
+                          position: "relative",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          gap: "0.4rem",
+                          height: "100%",
+                          background: "transparent",
+                          border: "none",
+                          borderRadius: 7,
+                          fontFamily: "inherit",
+                          fontSize: "0.74rem",
+                          fontWeight: active ? 600 : 500,
+                          color: active ? "var(--text)" : "var(--text-3)",
+                          cursor: "pointer",
+                          transition: "color 0.18s",
+                        }}
+                        onMouseEnter={(e) => {
+                          if (!active) e.currentTarget.style.color = "var(--text-2)";
+                        }}
+                        onMouseLeave={(e) => {
+                          if (!active) e.currentTarget.style.color = "var(--text-3)";
+                        }}
+                      >
+                        {active && (
+                          <motion.span
+                            layoutId="popup-active-tab"
+                            style={{
+                              position: "absolute",
+                              inset: 0,
+                              background: "var(--surface-2)",
+                              borderRadius: 7,
+                              zIndex: 0,
+                            }}
+                            transition={{ duration: 0.26, ease: [0.22, 1, 0.36, 1] }}
+                          />
+                        )}
+                        <span style={{
+                          position: "relative", zIndex: 1,
+                          display: "inline-flex", alignItems: "center",
+                          gap: "0.4rem",
+                        }}>
+                          {t === "profile" ? (
+                            <span style={{
+                              width: 16, height: 16,
+                              borderRadius: "100px",
+                              background: "var(--accent)",
+                              color: "#FFFFFF",
+                              display: "flex",
+                              alignItems: "center", justifyContent: "center",
+                              fontFamily: "var(--font-mono)",
+                              fontSize: "0.5rem", fontWeight: 700,
+                              letterSpacing: "0.02em",
+                              flexShrink: 0,
+                            }}>TM</span>
+                          ) : (
+                            <span style={{ position: "relative", display: "inline-flex" }}>
+                              <Bell size={13} strokeWidth={2.25} />
+                              <span aria-hidden style={{
+                                position: "absolute",
+                                top: -4, right: -5,
+                                minWidth: 11, height: 11,
+                                padding: "0 2px",
+                                borderRadius: "6px",
+                                background: "var(--danger)",
+                                color: "#FFFFFF",
+                                fontSize: "0.48rem", fontWeight: 700,
+                                lineHeight: 1,
+                                display: "flex",
+                                alignItems: "center", justifyContent: "center",
+                                border: "1.5px solid var(--surface)",
+                              }}>{NOTIF_COUNT}</span>
+                            </span>
+                          )}
+                          {label}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </LayoutGroup>
+
+              <motion.div
+                key={popupTab}
+                initial={{ opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+                style={{
+                  flex: 1,
+                  minHeight: 0,
+                  display: "flex",
+                  flexDirection: "column",
+                }}
+              >
+                {popupTab === "profile" ? (
+                  <UserMenuContent onLogout={onLogout} onClose={closePopup} bare />
+                ) : (
+                  <NotificationsContent onClose={closePopup} bare />
+                )}
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </aside>
 
       {mounted && tooltip && createPortal(
         <TooltipBubble label={tooltip.label} x={tooltip.x} y={tooltip.y} />,
         document.body,
       )}
-    </aside>
+    </>
   );
 }
