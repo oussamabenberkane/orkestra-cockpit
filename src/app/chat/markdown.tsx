@@ -577,11 +577,11 @@ function renderBlock(b: Block, key: number): React.ReactNode {
       return (
         <div
           key={key}
+          className="md-table-wrap"
           style={{
             margin: "0.7rem 0",
             border: "1px solid #E2E8F0",
             borderRadius: 8,
-            overflow: "auto",
             background: "#FFFFFF",
           }}
         >
@@ -663,12 +663,52 @@ export function Markdown({ source }: { source: string }) {
   const blocks = React.useMemo(() => parseBlocks(source), [source]);
   return (
     <div
+      className="md-root"
       style={{
         fontSize: "0.92rem",
         color: "#1E293B",
-        wordBreak: "break-word",
+        maxWidth: "100%",
+        minWidth: 0,
       }}
     >
+      <style>{`
+        .md-root { min-width: 0; }
+        /* Scoped wrap: only block-level text containers wrap long words.
+         * Tables, code, and inline chips keep natural word boundaries so
+         * narrow chat bubbles don't break content character-by-character. */
+        .md-root p,
+        .md-root li,
+        .md-root blockquote,
+        .md-root h1,
+        .md-root h2,
+        .md-root h3 {
+          overflow-wrap: break-word;
+          word-break: normal;
+        }
+        .md-root img,
+        .md-root svg,
+        .md-root video { max-width: 100%; height: auto; }
+        .md-root pre { max-width: 100%; overflow-x: auto; overflow-y: hidden; }
+        .md-root pre code { white-space: pre; }
+        /* Tables: wrapper scrolls horizontally; cells keep natural sizing
+         * (no aggressive break that produces 1-char-wide columns). */
+        .md-root .md-table-wrap {
+          max-width: 100%;
+          overflow-x: auto;
+          -webkit-overflow-scrolling: touch;
+        }
+        .md-root .md-table-wrap table { width: max-content; min-width: 100%; }
+        .md-root .md-table-wrap td,
+        .md-root .md-table-wrap th {
+          word-break: normal;
+          overflow-wrap: normal;
+          white-space: normal;
+        }
+        .md-root a {
+          overflow-wrap: anywhere;
+          word-break: break-all;
+        }
+      `}</style>
       {blocks.map((b, i) => renderBlock(b, i))}
     </div>
   );

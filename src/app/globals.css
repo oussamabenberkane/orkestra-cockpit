@@ -204,43 +204,144 @@
   animation: blink 2s infinite;
 }
 
-/* ── Dashboard responsive helpers (Aperture-style grid) ─── */
+/* Safety net: no element should ever cause horizontal page scroll on mobile.
+ * Belt-and-suspenders for any responsive miss that would otherwise spill
+ * the layout sideways and cause modals to render off-center. */
+html, body {
+  overflow-x: clip;
+  max-width: 100vw;
+}
+
+/* ── Dashboard responsive helpers ────────────────────────────
+ * Breakpoints used throughout the dashboard:
+ *   320  → smallest mobile (default styles)
+ *   480  → large mobile
+ *   640  → small tablet (single-col → 2-col reflow)
+ *   768  → tablet
+ *   1024 → small desktop (stacked-hero → side-by-side reflow)
+ *   1280 → standard desktop
+ *   1536 → large desktop
+ * Container queries unavailable; using viewport media queries. */
+
 .dashboard-hero {
   display: grid;
   grid-template-columns: 1.55fr 1fr;
-  gap: 0.85rem;
+  gap: clamp(0.6rem, 1.5vw, 0.85rem);
 }
 
 .dashboard-tiles {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 0.85rem;
+  gap: clamp(0.6rem, 1.5vw, 0.85rem);
 }
 
 .dashboard-kpis {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 0.85rem;
+  gap: clamp(0.6rem, 1.5vw, 0.85rem);
 }
 
-@media (max-width: 1100px) {
+/* Tablet / small desktop: hero stacks, tiles drop to 2-col */
+@media (max-width: 1024px) {
   .dashboard-hero  { grid-template-columns: 1fr; }
   .dashboard-tiles { grid-template-columns: repeat(2, 1fr); }
   .dashboard-kpis  { grid-template-columns: repeat(2, 1fr); }
 }
 
+/* Small tablet → mobile: tiles drop to 1-col */
+@media (max-width: 640px) {
+  .dashboard-tiles { grid-template-columns: 1fr; }
+  .dashboard-kpis  { grid-template-columns: 1fr; }
+}
+
 /* Mobile: sidebar becomes a slide-over drawer (handled by Sidebar.tsx).
-   Reserve top space for the floating hamburger trigger so it doesn't
-   overlap page headers — 40px button + 0.75rem top + 1.25rem breathing.
-   !important is required because page <main> elements set padding via inline
-   shorthand, which outranks external CSS selectors. */
+   Reserve top space for the floating hamburger trigger. !important required
+   because page <main> elements set padding via inline shorthand. */
 @media (max-width: 720px) {
   .app-main {
     padding-top: 4.5rem !important;
   }
 }
 
-@media (max-width: 600px) {
-  .dashboard-tiles { grid-template-columns: 1fr; }
-  .dashboard-kpis  { grid-template-columns: 1fr; }
+/* Touch devices: disable hover-only reveals so essential content stays
+   visible. Used by SatelliteKPI which hides its breakdown behind hover. */
+@media (hover: none) {
+  .satellite-kpi-spark { opacity: 1 !important; }
+  .satellite-kpi-break { opacity: 0 !important; }
+}
+
+/* Touch targets: enforce ≥44px minimum on mobile per Apple HIG / WCAG.
+   Applies to all interactive elements within the dashboard. */
+@media (max-width: 720px) {
+  .tap-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  /* Period toggle and similar small buttons: bump to 40px on touch */
+  .hero-period-btn {
+    min-height: 40px;
+    padding-left: 0.95rem;
+    padding-right: 0.95rem;
+  }
+}
+
+/* Hero chart month labels: hide every-other (dimmed) label on narrow
+   viewports to avoid crowding. */
+@media (max-width: 480px) {
+  .hero-month-labels span:nth-child(2n) {
+    display: none;
+  }
+}
+
+/* TroisChoses row: stack icon+sentence on top, action buttons below on
+   narrow viewports so CTAs aren't squished against the text. */
+@media (max-width: 480px) {
+  .trois-row {
+    grid-template-columns: auto 1fr !important;
+    row-gap: 0.55rem !important;
+  }
+  .trois-row-actions {
+    grid-column: 1 / -1;
+    justify-content: flex-end;
+  }
+}
+
+/* DashboardModal data rows: stack the source pill onto its own row at
+   narrow widths so pill + label + value don't fight for the same line. */
+@media (max-width: 480px) {
+  .dm-row.dm-row--with-pill {
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    grid-template-rows: auto auto;
+    row-gap: 0.35rem;
+  }
+  .dm-row.dm-row--with-pill .dm-row-pill {
+    grid-column: 1 / -1;
+    grid-row: 1;
+  }
+  .dm-row.dm-row--with-pill .dm-row-label {
+    grid-column: 1;
+    grid-row: 2;
+  }
+  .dm-row.dm-row--with-pill .dm-row-value {
+    grid-column: 2;
+    grid-row: 2;
+  }
+}
+
+/* Bump tap targets for touch on key dashboard buttons */
+@media (hover: none) {
+  .trois-row-actions button {
+    min-height: 44px !important;
+  }
+  .trois-row-actions button[aria-label="Marquer comme fait"] {
+    min-width: 44px !important;
+  }
+  .dm-primary,
+  .dm-secondary {
+    min-height: 44px !important;
+  }
+  .dm-close {
+    min-width: 32px;
+    min-height: 32px;
+  }
 }

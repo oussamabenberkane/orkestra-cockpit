@@ -103,7 +103,7 @@ export function SatelliteKPI({
       style={{
         background: "var(--surface)",
         borderRadius: "12px",
-        padding: "0.9rem 1rem",
+        padding: "clamp(0.75rem, 2vw, 1rem) clamp(0.85rem, 2.2vw, 1.05rem)",
         boxShadow: "var(--tier-1)",
         display: "flex",
         flexDirection: "column",
@@ -116,6 +116,7 @@ export function SatelliteKPI({
         fontFamily: "inherit",
         color: "inherit",
         width: "100%",
+        minHeight: 132,
         border: "none",
       }}
     >
@@ -134,14 +135,20 @@ export function SatelliteKPI({
       </span>
 
       <div style={{
-        fontSize: "0.74rem", fontWeight: 500,
+        fontSize: "clamp(0.7rem, 1.6vw, 0.74rem)",
+        fontWeight: 500,
         color: "var(--text-3)",
         display: "flex", alignItems: "center",
         gap: "0.35rem",
         paddingRight: "1.4rem",
+        minWidth: 0,
       }}>
-        <MetricIcon size={13} strokeWidth={2.25} color="var(--text-3)" />
-        {kpi.label}
+        <MetricIcon size={13} strokeWidth={2.25} color="var(--text-3)" style={{ flexShrink: 0 }} />
+        <span style={{
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+          whiteSpace: "nowrap",
+        }}>{kpi.label}</span>
         {kpi.combined && (
           <span style={{
             fontSize: "0.55rem", fontWeight: 700,
@@ -150,28 +157,39 @@ export function SatelliteKPI({
             padding: "0.05rem 0.3rem",
             borderRadius: "3px",
             letterSpacing: "0.04em",
+            flexShrink: 0,
           }}>⊕</span>
         )}
       </div>
 
-      <div style={{ display: "flex", alignItems: "baseline", gap: "0.3rem" }}>
+      <div style={{
+        display: "flex", alignItems: "baseline",
+        gap: "0.3rem", flexWrap: "wrap",
+        rowGap: "0.2rem",
+      }}>
         <span style={{
           fontFamily: "var(--font-mono)",
-          fontSize: "1.5rem", fontWeight: 600,
+          fontSize: "clamp(1.25rem, 3.6vw, 1.5rem)",
+          fontWeight: 600,
           letterSpacing: "-0.025em",
           color: "var(--text)",
           lineHeight: 1,
           fontVariantNumeric: "tabular-nums",
         }}>{kpi.value}</span>
         {kpi.unit && (
-          <span style={{ fontSize: "0.78rem", color: "var(--text-3)" }}>{kpi.unit}</span>
+          <span style={{
+            fontSize: "clamp(0.7rem, 1.7vw, 0.78rem)",
+            color: "var(--text-3)",
+          }}>{kpi.unit}</span>
         )}
         <span style={{ flex: 1 }} />
         <span style={{
           display: "inline-flex", alignItems: "center",
           gap: "0.2rem",
-          fontSize: "0.7rem", fontWeight: 600,
+          fontSize: "clamp(0.66rem, 1.6vw, 0.7rem)",
+          fontWeight: 600,
           color: trendColor,
+          flexShrink: 0,
         }}>
           <TrendIcon size={10} strokeWidth={2.5} />
           {kpi.trend}
@@ -179,10 +197,13 @@ export function SatelliteKPI({
       </div>
 
       <div style={{
-        fontSize: "0.66rem",
+        fontSize: "clamp(0.62rem, 1.5vw, 0.66rem)",
         color: "var(--text-3)",
         letterSpacing: "0.005em",
         fontVariantNumeric: "tabular-nums",
+        overflow: "hidden",
+        textOverflow: "ellipsis",
+        whiteSpace: "nowrap",
       }}>{kpi.target}</div>
 
       <div style={{ marginTop: "auto", position: "relative", height: 52 }}>

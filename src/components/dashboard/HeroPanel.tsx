@@ -99,17 +99,19 @@ function PeriodToggle({ value, onChange }: { value: Period; onChange: (p: Period
         <button
           key={o.v}
           onClick={() => onChange(o.v)}
+          className="hero-period-btn"
           style={{
             position: "relative", zIndex: 1,
             background: "transparent",
             color: value === o.v ? "var(--text)" : "var(--text-3)",
             border: "none",
             borderRadius: "6px",
-            padding: "0.3rem 0.7rem",
+            padding: "0.35rem 0.75rem",
             fontFamily: "inherit",
             fontSize: "0.72rem", fontWeight: 600,
             cursor: "pointer",
             transition: "color 0.18s",
+            minHeight: 32,
           }}
         >{o.label}</button>
       ))}
@@ -146,23 +148,31 @@ export function HeroPanel({
     <div style={{
       background: "var(--surface)",
       borderRadius: "14px",
-      padding: "1.1rem 1.25rem 0.85rem",
+      padding: "clamp(0.9rem, 2.4vw, 1.25rem) clamp(0.95rem, 2.6vw, 1.25rem) clamp(0.7rem, 2vw, 0.85rem)",
       boxShadow: "var(--tier-1)",
       display: "flex",
       flexDirection: "column",
-      gap: "0.85rem",
-      minHeight: "340px",
+      gap: "clamp(0.65rem, 1.8vw, 0.85rem)",
+      minHeight: "clamp(280px, 60vw, 340px)",
     }}>
       <div style={{
         display: "flex", justifyContent: "space-between",
         alignItems: "center", gap: "0.5rem",
+        flexWrap: "wrap",
+        rowGap: "0.5rem",
       }}>
         <div style={{
-          fontSize: "0.78rem", fontWeight: 500,
+          fontSize: "clamp(0.72rem, 1.7vw, 0.78rem)",
+          fontWeight: 500,
           color: "var(--text-3)",
           display: "flex", alignItems: "center", gap: "0.4rem",
+          minWidth: 0,
         }}>
-          {title}
+          <span style={{
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+          }}>{title}</span>
           {combinedBadge && (
             <span style={{
               fontSize: "0.58rem", fontWeight: 700,
@@ -171,23 +181,35 @@ export function HeroPanel({
               padding: "0.1rem 0.35rem",
               borderRadius: "4px",
               letterSpacing: "0.06em",
+              flexShrink: 0,
             }}>⊕ COMBINÉ</span>
           )}
         </div>
         <PeriodToggle value={period} onChange={onPeriodChange} />
       </div>
 
-      <div style={{ display: "flex", alignItems: "baseline", gap: "0.85rem" }}>
+      <div style={{
+        display: "flex",
+        alignItems: "baseline",
+        gap: "clamp(0.45rem, 1.6vw, 0.85rem)",
+        flexWrap: "wrap",
+        rowGap: "0.3rem",
+      }}>
         <span style={{
           fontFamily: "var(--font-mono)",
-          fontSize: "2.7rem", fontWeight: 600,
+          fontSize: "clamp(1.7rem, 6vw, 2.7rem)",
+          fontWeight: 600,
           letterSpacing: "-0.035em",
           color: "var(--text)",
           lineHeight: 0.95,
           fontVariantNumeric: "tabular-nums",
         }}>{value}</span>
         {unit && (
-          <span style={{ fontSize: "0.84rem", fontWeight: 500, color: "var(--text-3)" }}>
+          <span style={{
+            fontSize: "clamp(0.74rem, 1.7vw, 0.84rem)",
+            fontWeight: 500,
+            color: "var(--text-3)",
+          }}>
             {unit}
           </span>
         )}
@@ -195,7 +217,8 @@ export function HeroPanel({
           <span style={{
             display: "inline-flex", alignItems: "center",
             gap: "0.25rem",
-            fontSize: "0.72rem", fontWeight: 700,
+            fontSize: "clamp(0.66rem, 1.6vw, 0.72rem)",
+            fontWeight: 700,
             color: "var(--success)",
             background: "var(--success-tint)",
             padding: "0.18rem 0.5rem",
@@ -364,8 +387,9 @@ export function HeroPanel({
               color: "var(--surface)",
               padding: "0.55rem 0.75rem",
               borderRadius: "8px",
-              fontSize: "0.74rem", fontWeight: 500,
-              whiteSpace: "nowrap",
+              fontSize: "clamp(0.68rem, 1.7vw, 0.74rem)",
+              fontWeight: 500,
+              maxWidth: "min(240px, 70vw)",
               pointerEvents: "none",
               boxShadow: "0 8px 20px -6px rgba(0,0,0,0.32)",
               zIndex: 5,
@@ -384,16 +408,20 @@ export function HeroPanel({
         })()}
       </div>
 
-      <div style={{
+      <div className="hero-month-labels" style={{
         display: "flex",
         justifyContent: "space-between",
         fontFamily: "var(--font-mono)",
-        fontSize: "0.66rem",
+        fontSize: "clamp(0.58rem, 1.4vw, 0.66rem)",
         color: "var(--text-4)",
         padding: "0 0.4rem",
       }}>
         {months.map((m, i) => (
-          <span key={`${m}-${i}`} style={{ opacity: i % 2 === 0 ? 1 : 0.55 }}>
+          <span
+            key={`${m}-${i}`}
+            data-month-index={i}
+            style={{ opacity: i % 2 === 0 ? 1 : 0.55 }}
+          >
             {m}
           </span>
         ))}

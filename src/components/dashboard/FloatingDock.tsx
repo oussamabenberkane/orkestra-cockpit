@@ -30,6 +30,8 @@ const PILL_W = 84;
 const PILL_H = 48;
 const PANEL_W = 420;
 const PANEL_H = 354;
+const PANEL_MARGIN = 16; /* viewport edge margin for the panel */
+const PANEL_BOTTOM_RESERVE = 88; /* leave room above for FloatingDock anchor + safe area */
 
 const dockSpring = {
   type: "spring" as const,
@@ -49,8 +51,26 @@ export function FloatingDock() {
 
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState("");
+  const [panelDims, setPanelDims] = useState({ w: PANEL_W, h: PANEL_H });
   const bodyRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
+
+  // Responsive panel sizing: cap to viewport with margins so the dock never
+  // overflows on small screens (the morph animation needs numeric width/height).
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const update = () => {
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      setPanelDims({
+        w: Math.max(280, Math.min(PANEL_W, vw - PANEL_MARGIN * 2)),
+        h: Math.max(320, Math.min(PANEL_H, vh - PANEL_BOTTOM_RESERVE)),
+      });
+    };
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, []);
 
   // ESC closes the panel — matches the reference dock's behaviour.
   useEffect(() => {
@@ -129,8 +149,8 @@ export function FloatingDock() {
 
       <motion.div
         animate={{
-          width: open ? PANEL_W : PILL_W,
-          height: open ? PANEL_H : PILL_H,
+          width: open ? panelDims.w : PILL_W,
+          height: open ? panelDims.h : PILL_H,
           borderRadius: open ? 14 : 100,
         }}
         transition={dockSpring}

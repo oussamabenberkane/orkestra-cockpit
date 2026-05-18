@@ -98,7 +98,9 @@ export default function DashboardPage() {
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
-            gap: "1rem",
+            gap: "0.75rem",
+            rowGap: "0.4rem",
+            flexWrap: "wrap",
             marginBottom: "0.85rem",
           }}>
             <h1 style={{
@@ -112,7 +114,8 @@ export default function DashboardPage() {
             <span style={{
               display: "inline-flex", alignItems: "center",
               gap: "0.35rem",
-              fontSize: "0.72rem", fontWeight: 600,
+              fontSize: "clamp(0.66rem, 1.6vw, 0.72rem)",
+              fontWeight: 600,
               color: "var(--text-3)",
               whiteSpace: "nowrap",
               flexShrink: 0,
@@ -214,12 +217,14 @@ function SourceBadge({ dot, label }: { dot: string; label: string }) {
     <span style={{
       display: "inline-flex", alignItems: "center",
       gap: "0.3rem",
-      fontSize: "0.74rem", fontWeight: 500,
+      fontSize: "clamp(0.68rem, 1.7vw, 0.74rem)",
+      fontWeight: 500,
       color: "var(--text-2)",
       background: "var(--surface)",
       padding: "0.3rem 0.55rem",
       borderRadius: "100px",
       boxShadow: "var(--tier-1)",
+      whiteSpace: "nowrap",
     }}>
       <Circle size={5} strokeWidth={0} fill={dot} />
       {label}
@@ -231,7 +236,7 @@ function SectionHeader({ title, subtitle }: { title: string; subtitle?: string }
   return (
     <div style={{ marginBottom: "0.85rem" }}>
       <h2 style={{
-        fontSize: "1.1rem",
+        fontSize: "clamp(0.95rem, 2.2vw, 1.1rem)",
         fontWeight: 700,
         color: "var(--text)",
         letterSpacing: "-0.02em",
@@ -239,10 +244,11 @@ function SectionHeader({ title, subtitle }: { title: string; subtitle?: string }
       }}>{title}</h2>
       {subtitle && (
         <p style={{
-          fontSize: "0.84rem",
+          fontSize: "clamp(0.76rem, 1.9vw, 0.84rem)",
           color: "var(--text-3)",
           margin: 0,
           marginTop: "0.15rem",
+          lineHeight: 1.45,
         }}>{subtitle}</p>
       )}
     </div>
@@ -257,8 +263,9 @@ function Footer() {
       borderTop: "1px solid var(--border)",
       display: "flex",
       justifyContent: "space-between",
-      gap: "1rem",
-      fontSize: "0.74rem",
+      gap: "0.85rem",
+      rowGap: "0.5rem",
+      fontSize: "clamp(0.68rem, 1.6vw, 0.74rem)",
       color: "var(--text-3)",
       flexWrap: "wrap",
     }}>

@@ -1,7 +1,48 @@
+/* ─── Dashboard modal — structured content schema ──────────────────────
+ * Each modal declares its body as an array of typed sections. The renderer
+ * dispatches on `kind`, so every section gets a dedicated, responsive
+ * component instead of a string parser inferring the layout. */
+
+/** A single key-value row, optionally tagged by source. */
+export interface KvRow {
+  /** Source pill (e.g. "BrokerStar", "Odoo"). Omit for plain rows. */
+  source?: string;
+  /** Renders the row with the accent treatment for combined-source values. */
+  combined?: boolean;
+  label: string;
+  /** Right-aligned value. Omit for label-only rows. */
+  value?: string;
+}
+
+/** A single action item (numbered or bulleted) — for "agents IA" style lists. */
+export interface ActionItem {
+  /** Optional source tag shown as a small pill before the title. */
+  source?: string;
+  /** Short title for the action. */
+  title: string;
+  /** Optional supporting line below the title. */
+  detail?: string;
+}
+
+/** A status row with a colored dot — for sinistres-style dossier lists. */
+export interface StatusRow {
+  tone: "danger" | "warn" | "good" | "neutral";
+  title: string;
+  detail?: string;
+}
+
+/** A short footnote line (e.g. "Toutes actions loguées — LPD"). */
+export type ModalSection =
+  | { kind: "narrative"; text: string }
+  | { kind: "kv-list"; subtitle?: string; rows: KvRow[] }
+  | { kind: "action-list"; subtitle?: string; items: ActionItem[] }
+  | { kind: "status-list"; subtitle?: string; rows: StatusRow[] }
+  | { kind: "footnote"; text: string };
+
 export interface ModalData {
   title: string;
   body: string;
-  data: string;
+  sections: ModalSection[];
   cta: string;
 }
 

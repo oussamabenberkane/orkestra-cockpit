@@ -30,7 +30,7 @@ export function TroisChoses({ items, onOpen }: TroisChosesProps) {
     <div style={{
       background: "var(--surface)",
       borderRadius: "14px",
-      padding: "1.2rem 1.4rem",
+      padding: "clamp(0.95rem, 2.4vw, 1.2rem) clamp(1rem, 2.8vw, 1.4rem)",
       boxShadow: "var(--tier-1)",
       position: "relative",
       overflow: "hidden",
@@ -58,10 +58,12 @@ export function TroisChoses({ items, onOpen }: TroisChosesProps) {
         )}
       </div>
       <h2 style={{
-        fontSize: "1.05rem", fontWeight: 600,
+        fontSize: "clamp(0.92rem, 2.2vw, 1.05rem)",
+        fontWeight: 600,
         color: "var(--text)",
         margin: 0, marginBottom: "1rem",
         letterSpacing: "-0.015em",
+        lineHeight: 1.35,
       }}>
         Vos priorités du matin, mises au premier plan.
       </h2>
@@ -166,6 +168,7 @@ function TroisRow({
       initial={{ opacity: 1 }}
       exit={{ opacity: 0, height: 0, marginTop: 0, marginBottom: 0 }}
       transition={{ duration: 0.22 }}
+      className="trois-row"
       style={{
         display: "grid",
         gridTemplateColumns: "auto 1fr auto",
@@ -189,12 +192,13 @@ function TroisRow({
         <Icon size={14} strokeWidth={2.25} />
       </span>
       <span style={{
-        fontSize: "0.9rem",
+        fontSize: "clamp(0.82rem, 2vw, 0.9rem)",
         color: "var(--text)",
-        lineHeight: 1.5, fontWeight: 500,
+        lineHeight: 1.45, fontWeight: 500,
         letterSpacing: "-0.005em",
+        minWidth: 0,
       }}>{item.sentence}</span>
-      <div style={{ display: "flex", gap: "0.35rem" }}>
+      <div className="trois-row-actions" style={{ display: "flex", gap: "0.35rem" }}>
         <button
           onClick={() => {
             onOpen?.();
@@ -203,7 +207,8 @@ function TroisRow({
           style={{
             display: "inline-flex", alignItems: "center",
             gap: "0.3rem",
-            padding: "0.45rem 0.85rem",
+            padding: "0.5rem 0.9rem",
+            minHeight: 38,
             background: "var(--accent)",
             color: "#FFFFFF",
             border: "1px solid var(--accent)",
@@ -213,6 +218,7 @@ function TroisRow({
             cursor: "pointer",
             transition: "background 0.15s, transform 0.12s",
             boxShadow: "0 1px 2px rgba(88,86,214,0.22)",
+            whiteSpace: "nowrap",
           }}
           onMouseEnter={(e) => (e.currentTarget.style.background = "var(--accent-2)")}
           onMouseLeave={(e) => (e.currentTarget.style.background = "var(--accent)")}
@@ -227,13 +233,15 @@ function TroisRow({
           aria-label="Marquer comme fait"
           style={{
             display: "inline-flex", alignItems: "center", justifyContent: "center",
-            width: 32,
+            width: 38,
+            minHeight: 38,
             background: "var(--surface)",
             color: "var(--text-3)",
             border: "1px solid var(--border)",
             borderRadius: "8px",
             cursor: "pointer",
             transition: "border-color 0.15s, color 0.15s",
+            flexShrink: 0,
           }}
           onMouseEnter={(e) => {
             e.currentTarget.style.borderColor = "var(--success)";
