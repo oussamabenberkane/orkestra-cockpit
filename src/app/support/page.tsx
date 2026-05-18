@@ -1,3 +1,5 @@
+"use client";
+
 import { LifeBuoy } from "lucide-react";
 import { AppShell } from "@/components/dashboard/AppShell";
 import { MockPagePlaceholder } from "@/components/dashboard/MockPagePlaceholder";

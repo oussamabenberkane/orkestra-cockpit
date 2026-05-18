@@ -1,3 +1,5 @@
+"use client";
+
 import { Settings2 } from "lucide-react";
 import { AppShell } from "@/components/dashboard/AppShell";
 import { MockPagePlaceholder } from "@/components/dashboard/MockPagePlaceholder";
