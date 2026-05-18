@@ -138,4 +138,24 @@ Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
 - Sidebar collapse state is persisted in `localStorage` under the key `orkestra.sidebar.collapsed`. The same key is used by `/dashboard` and `/rapports/[id]` so the user's choice carries across routes.
 - The icon color for a sidebar nav item is set per-item via the `iconColor` field on the `NavItemData` entry in [src/components/dashboard/Sidebar.tsx](src/components/dashboard/Sidebar.tsx). To add a new item, point its `iconColor` at one of the `--nav-*` tokens in `globals.css`.
 - The hex-grid background animation (`hex-grid-bg`) on the login `BrandPanel` is driven by the `hexFloat` keyframes in `globals.css`. Don't recreate them inline.
-- Logout always routes to `/login` (not `/`). Use `router.push("/login")` rather than `router.push("/")`.
+
+## Routing
+
+- **Global route transition.** [src/app/template.tsx](src/app/template.tsx) wraps every page with a ~180ms opacity fade on navigation. `template.tsx` (not `layout.tsx`) is the Next.js convention for remount-on-route-change. Keep it short so it doesn't compound with per-section `initial/animate` choreography.
+- **Active state** in the sidebar is computed from `usePathname()` in [src/components/dashboard/Sidebar.tsx](src/components/dashboard/Sidebar.tsx) via the `isItemActive` helper. New routes that should highlight a nav item need a matching prefix branch added there.
+- **Logout** uses `router.replace("/login")`, never `router.push`. Replace clears the protected page from history so the browser back button can't return to it (matters today as documentation; matters more once real auth lands).
+- **Fullscreen pages without the sidebar shell** (currently only `/chat`) must render `<BackToApp />` from [src/components/shared/BackToApp.tsx](src/components/shared/BackToApp.tsx). It pins a floating "← Cockpit" pill top-left and uses `router.back()` when `window.history.length > 1`, else falls back to `/dashboard` so direct-loads still escape cleanly.
+- **In-shell back navigation** uses `<Link>` (e.g. `/rapports/[id]` → `/rapports`) rather than `router.back()` so the back affordance still works on direct-load / refresh of a detail page.
+- **Scroll restoration** is Next.js default; nothing to wire. Per-page filter state (e.g. `/rapports` chips, dashboard period toggle) is local React state and **does reset** on back-navigation — see edge cases below.
+
+### Edge cases
+
+| # | Behaviour | Where | Mitigation |
+|---|---|---|---|
+| 1 | Opening a tile modal doesn't change the URL. Browser back exits the page entirely instead of closing the modal. | All `<DashboardModal>` triggers | Tracked. Future: encode `ModalKey` as `?modal=…` so back closes and links are shareable. |
+| 2 | `/rapports` filter chips and the dashboard period toggle (`M/T/A`) are local React state — back-navigating from a detail view resets them. | [rapports/page.tsx](src/app/rapports/page.tsx), [dashboard/page.tsx](src/app/dashboard/page.tsx) | Tracked. Future: persist to URL query params. |
+| 3 | There is no auth; any URL (e.g. `/dashboard`) is reachable without going through `/login`. | All protected routes | Tracked. When auth lands, wrap protected routes in a server-side guard that redirects to `/login`. |
+| 4 | Sidebar collapse state in `localStorage` is shared across tabs of the same origin — toggling in tab A immediately affects tab B on next render. | Sidebar | Accepted: matches the user's "global preference" expectation. |
+| 5 | `<BackToApp />` on `/chat` falls back to `/dashboard` when history is empty. A user who deep-links `/chat` from a notification therefore always lands at `/dashboard` rather than the page they intended. | [BackToApp.tsx](src/components/shared/BackToApp.tsx) | Pass an explicit `fallback="/rapports"` (or any other route) at the usage site if a different landing is preferred. |
+| 6 | `router.back()` from `/chat` after navigating in from `/login` returns to `/login`, not `/dashboard`. | `/chat` | Accepted: matches the user's actual back-stack. |
+| 7 | The Plinth-style sidebar hover-peek re-renders every time the user mouses out (300ms grace timer). With many quick mouse-outs this can stutter — only relevant if the sidebar is animated heavily. | Sidebar | Accepted at current usage volume. |

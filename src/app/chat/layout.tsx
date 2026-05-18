@@ -1,3 +1,5 @@
+import { BackToApp } from "@/components/shared/BackToApp";
+
 export default function ChatLayout({
   children,
 }: Readonly<{
@@ -11,6 +13,7 @@ export default function ChatLayout({
         minHeight: "100vh",
       }}
     >
+      <BackToApp />
       {children}
     </div>
   );

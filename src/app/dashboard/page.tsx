@@ -169,7 +169,8 @@ export default function DashboardPage() {
 
   const onOpen  = (k: ModalKey) => setModalKey(k);
   const onClose = () => setModalKey(null);
-  const onLogout = () => router.push("/login");
+  // Use replace so the back button cannot return to the (now logged-out) dashboard.
+  const onLogout = () => router.replace("/login");
 
   return (
     <div

@@ -46,7 +46,7 @@ export default function RapportDetailPage() {
       <Sidebar
         collapsed={collapsed}
         onToggle={toggleSidebar}
-        onLogout={() => router.push("/login")}
+        onLogout={() => router.replace("/login")}
         onOpenPalette={() => {}}
       />
 

@@ -526,7 +526,7 @@ export default function RapportsPage() {
       <Sidebar
         collapsed={collapsed}
         onToggle={toggleSidebar}
-        onLogout={() => router.push("/login")}
+        onLogout={() => router.replace("/login")}
         onOpenPalette={() => setPaletteOpen(true)}
       />
 
@@ -765,7 +765,7 @@ export default function RapportsPage() {
         open={paletteOpen}
         onClose={() => setPaletteOpen(false)}
         onOpenModal={() => {}}
-        onLogout={() => router.push("/login")}
+        onLogout={() => router.replace("/login")}
       />
 
       <ChatDock />
