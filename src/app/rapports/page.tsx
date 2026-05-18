@@ -9,13 +9,13 @@ import {
   Circle, ArrowUpRight, TrendingUp, TrendingDown, Minus,
   ChevronDown, BarChart3, SlidersHorizontal,
 } from "lucide-react";
-import { PlinthSidebar } from "@/components/c/PlinthSidebar";
+import { Sidebar } from "@/components/dashboard/Sidebar";
 import { CommandPalette } from "@/components/shared/CommandPalette";
 import { Sparkline } from "@/components/shared/Sparkline";
-import ChatDock from "@/components/c/ChatDock";
-import { ChatDockProvider } from "@/components/c/ChatDockContext";
+import ChatDock from "@/components/dashboard/ChatDock";
+import { ChatDockProvider } from "@/components/dashboard/ChatDockContext";
 
-const SIDEBAR_KEY = "plinth.sidebar.collapsed";
+const SIDEBAR_KEY = "orkestra.sidebar.collapsed";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -231,7 +231,7 @@ function ReportCard({ report, index }: { report: Report; index: number }) {
       layout
     >
       <Link
-        href={`/c/rapports/${report.id}`}
+        href={`/rapports/${report.id}`}
         style={{
           display: "flex",
           flexDirection: "column",
@@ -523,10 +523,10 @@ export default function RapportsPage() {
         visibility: hydrated ? "visible" : "hidden",
       }}
     >
-      <PlinthSidebar
+      <Sidebar
         collapsed={collapsed}
         onToggle={toggleSidebar}
-        onLogout={() => router.push("/")}
+        onLogout={() => router.push("/login")}
         onOpenPalette={() => setPaletteOpen(true)}
       />
 
@@ -765,7 +765,7 @@ export default function RapportsPage() {
         open={paletteOpen}
         onClose={() => setPaletteOpen(false)}
         onOpenModal={() => {}}
-        onLogout={() => router.push("/")}
+        onLogout={() => router.push("/login")}
       />
 
       <ChatDock />

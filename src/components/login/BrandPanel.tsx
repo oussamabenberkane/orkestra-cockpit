@@ -2,17 +2,19 @@
 
 import { motion } from "framer-motion";
 
+const NAVY = "#1E2761";
+
 export default function BrandPanel() {
   return (
-    <motion.div
+    <motion.aside
       initial={{ x: "-100%", opacity: 0 }}
       animate={{ x: 0, opacity: 1 }}
       transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-      style={{ backgroundColor: "#1E2761" }}
       className="hidden md:flex relative flex-col justify-between p-10 overflow-hidden shrink-0 md:w-[42%]"
+      style={{ backgroundColor: NAVY, color: "#FFFFFF" }}
     >
       {/* Hex grid background */}
-      <div className="hex-grid-bg">
+      <div className="hex-grid-bg" aria-hidden>
         {[
           { top: "10%", left: "15%", size: 120, delay: "0s" },
           { top: "25%", left: "55%", size: 80, delay: "1.5s" },
@@ -44,24 +46,36 @@ export default function BrandPanel() {
         ))}
       </div>
 
-      {/* Top: Logo + Brand */}
-      <div className="relative z-10">
-        <div className="flex items-center gap-3 mb-12">
+      {/* Soft radial gradient overlay for depth */}
+      <div
+        aria-hidden
+        style={{
+          position: "absolute",
+          inset: 0,
+          background:
+            "radial-gradient(60% 50% at 20% 10%, rgba(88,86,214,0.18), transparent 60%), radial-gradient(70% 60% at 90% 90%, rgba(0,0,0,0.20), transparent 60%)",
+          pointerEvents: "none",
+        }}
+      />
+
+      {/* Top: Logo + brand text */}
+      <div style={{ position: "relative", zIndex: 1 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "3rem" }}>
           <svg viewBox="0 0 60 70" fill="none" style={{ width: 48, height: 48 }}>
             <polygon
               points="30,2 58,17.5 58,52.5 30,68 2,52.5 2,17.5"
               fill="none"
-              stroke="#2B3AE8"
+              stroke="#5856D6"
               strokeWidth="3"
             />
             <polygon
               points="30,12 48,22.5 48,47.5 30,58 12,47.5 12,22.5"
-              fill="#2B3AE8"
+              fill="#5856D6"
               opacity="0.5"
             />
             <polygon
               points="30,22 38,27 38,43 30,48 22,43 22,27"
-              fill="#2B3AE8"
+              fill="#5856D6"
             />
           </svg>
           <div>
@@ -69,7 +83,7 @@ export default function BrandPanel() {
               style={{
                 fontSize: "0.8rem",
                 fontWeight: 800,
-                color: "white",
+                color: "#FFFFFF",
                 letterSpacing: "2px",
                 textTransform: "uppercase",
               }}
@@ -92,11 +106,12 @@ export default function BrandPanel() {
         {/* Tagline */}
         <h1
           style={{
-            fontSize: "1.8rem",
-            fontWeight: 800,
-            color: "white",
-            lineHeight: 1.2,
-            letterSpacing: "-0.5px",
+            fontSize: "1.85rem",
+            fontWeight: 700,
+            color: "#FFFFFF",
+            lineHeight: 1.15,
+            letterSpacing: "-0.025em",
+            maxWidth: "16ch",
           }}
         >
           Pilotez votre cabinet avec intelligence
@@ -104,9 +119,10 @@ export default function BrandPanel() {
         <p
           style={{
             marginTop: "1rem",
-            fontSize: "0.9rem",
-            color: "rgba(255,255,255,0.55)",
+            fontSize: "0.92rem",
+            color: "rgba(255,255,255,0.6)",
             lineHeight: 1.6,
+            maxWidth: "36ch",
           }}
         >
           Cockpit unifié BrokerStar + Odoo pour les cabinets BFSI suisses.
@@ -114,47 +130,11 @@ export default function BrandPanel() {
       </div>
 
       {/* Bottom: Pills + compliance */}
-      <div className="relative z-10">
+      <div style={{ position: "relative", zIndex: 1 }}>
         <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", marginBottom: "1.5rem" }}>
-          <span
-            style={{
-              background: "#EFF6FF",
-              color: "#2563EB",
-              border: "1px solid #BFDBFE",
-              borderRadius: "20px",
-              padding: "0.3rem 0.8rem",
-              fontSize: "0.72rem",
-              fontWeight: 600,
-            }}
-          >
-            ● BrokerStar
-          </span>
-          <span
-            style={{
-              background: "#F5F3FF",
-              color: "#7C3AED",
-              border: "1px solid #DDD6FE",
-              borderRadius: "20px",
-              padding: "0.3rem 0.8rem",
-              fontSize: "0.72rem",
-              fontWeight: 600,
-            }}
-          >
-            ● Odoo
-          </span>
-          <span
-            style={{
-              background: "#ECFDF5",
-              color: "#10B981",
-              border: "1px solid #A7F3D0",
-              borderRadius: "20px",
-              padding: "0.3rem 0.8rem",
-              fontSize: "0.72rem",
-              fontWeight: 600,
-            }}
-          >
-            ⊕ Combiné
-          </span>
+          <Pill bg="rgba(0,122,255,0.14)"  fg="#9CCAFF"  bd="rgba(0,122,255,0.30)">● BrokerStar</Pill>
+          <Pill bg="rgba(88,86,214,0.18)"  fg="#C7C5FF"  bd="rgba(88,86,214,0.34)">● Odoo</Pill>
+          <Pill bg="rgba(52,168,83,0.16)"  fg="#A6E3B5"  bd="rgba(52,168,83,0.30)">⊕ Combiné</Pill>
         </div>
         <div
           style={{
@@ -162,13 +142,48 @@ export default function BrandPanel() {
             alignItems: "center",
             gap: "0.5rem",
             fontSize: "0.7rem",
-            color: "rgba(255,255,255,0.35)",
+            color: "rgba(255,255,255,0.4)",
+            letterSpacing: "0.04em",
           }}
         >
-          <span>🇨🇭</span>
-          <span>LPD Art.16 conforme — Infomaniak CH</span>
+          <span style={{
+            display: "inline-flex",
+            alignItems: "center", justifyContent: "center",
+            fontFamily: "var(--font-mono)",
+            fontSize: "0.62rem", fontWeight: 700,
+            color: "rgba(255,255,255,0.7)",
+            background: "rgba(255,255,255,0.06)",
+            border: "1px solid rgba(255,255,255,0.12)",
+            padding: "0.15rem 0.4rem",
+            borderRadius: 4,
+            letterSpacing: "0.08em",
+          }}>CH</span>
+          <span>LPD Art.16 conforme · Infomaniak CH</span>
         </div>
       </div>
-    </motion.div>
+    </motion.aside>
+  );
+}
+
+function Pill({
+  children, bg, fg, bd,
+}: {
+  children: React.ReactNode;
+  bg: string;
+  fg: string;
+  bd: string;
+}) {
+  return (
+    <span style={{
+      background: bg,
+      color: fg,
+      border: `1px solid ${bd}`,
+      borderRadius: "20px",
+      padding: "0.3rem 0.8rem",
+      fontSize: "0.72rem",
+      fontWeight: 600,
+    }}>
+      {children}
+    </span>
   );
 }

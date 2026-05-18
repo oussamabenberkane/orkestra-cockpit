@@ -5,11 +5,11 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { ArrowLeft, BarChart3, Clock, Circle } from "lucide-react";
 import Link from "next/link";
-import { PlinthSidebar } from "@/components/c/PlinthSidebar";
-import ChatDock from "@/components/c/ChatDock";
-import { ChatDockProvider } from "@/components/c/ChatDockContext";
+import { Sidebar } from "@/components/dashboard/Sidebar";
+import ChatDock from "@/components/dashboard/ChatDock";
+import { ChatDockProvider } from "@/components/dashboard/ChatDockContext";
 
-const SIDEBAR_KEY = "plinth.sidebar.collapsed";
+const SIDEBAR_KEY = "orkestra.sidebar.collapsed";
 
 export default function RapportDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -43,10 +43,10 @@ export default function RapportDetailPage() {
       minHeight: "100vh", background: "var(--bg)", color: "var(--text)",
       display: "flex", visibility: hydrated ? "visible" : "hidden",
     }}>
-      <PlinthSidebar
+      <Sidebar
         collapsed={collapsed}
         onToggle={toggleSidebar}
-        onLogout={() => router.push("/")}
+        onLogout={() => router.push("/login")}
         onOpenPalette={() => {}}
       />
 
@@ -61,7 +61,7 @@ export default function RapportDetailPage() {
           transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
         >
           <Link
-            href="/c/rapports"
+            href="/rapports"
             style={{
               display: "inline-flex", alignItems: "center", gap: "0.4rem",
               fontSize: "0.82rem", fontWeight: 500, color: "var(--text-3)",

@@ -13,7 +13,7 @@ import {
 } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, ArrowUp, X, Square } from "lucide-react";
-import { Markdown } from "@/app/agent-test/markdown";
+import { Markdown } from "@/app/chat/markdown";
 import { AGENT_META_SENTINEL } from "@/agent/protocol";
 import { useChatDock } from "./ChatDockContext";
 
@@ -46,28 +46,15 @@ export default function ChatDock() {
       const trimmed = text.trim();
       if (!trimmed) return;
 
-      // Abort any in-flight stream before starting a new one.
       abortRef.current?.abort();
       const controller = new AbortController();
       abortRef.current = controller;
 
-      const userMsg: Message = {
-        id: `u-${Date.now()}`,
-        role: "user",
-        content: trimmed,
-      };
+      const userMsg: Message = { id: `u-${Date.now()}`, role: "user", content: trimmed };
       const assistantMsg: Message = {
-        id: `a-${Date.now()}`,
-        role: "assistant",
-        content: "",
-        streaming: true,
+        id: `a-${Date.now()}`, role: "assistant", content: "", streaming: true,
       };
 
-      // Build the wire payload from the *previous* messages + this user turn.
-      // We mirror /agent-test: keep history compact, only role + content.
-      // Drop empty assistant placeholders left behind by a prior failed/aborted
-      // stream — Mistral rejects assistant turns with neither content nor
-      // tool_calls.
       const wireMessages = [...messages, userMsg]
         .filter((m) => m.role === "user" || m.content.trim().length > 0)
         .map(({ role, content }) => ({ role, content }));
@@ -84,9 +71,7 @@ export default function ChatDock() {
           signal: controller.signal,
         });
 
-        if (!res.ok || !res.body) {
-          throw new Error(`Agent error (${res.status})`);
-        }
+        if (!res.ok || !res.body) throw new Error(`Agent error (${res.status})`);
 
         const reader = res.body.getReader();
         const decoder = new TextDecoder();
@@ -105,37 +90,25 @@ export default function ChatDock() {
             }
             const snapshot = acc;
             setMessages((prev) =>
-              prev.map((m) =>
-                m.id === assistantMsg.id ? { ...m, content: snapshot } : m,
-              ),
+              prev.map((m) => (m.id === assistantMsg.id ? { ...m, content: snapshot } : m)),
             );
           }
-          // After the sentinel we ignore the JSON trailer — "answer only" mode.
         }
 
-        // Server-side failure (provider 5xx, capacity exceeded, etc.) closes
-        // the stream silently with HTTP 200 and no body. Surface it to the
-        // user instead of leaving an empty assistant bubble.
         if (acc.trim().length === 0) {
-          throw new Error(
-            "Le service IA n'a pas répondu. Réessaie dans un instant.",
-          );
+          throw new Error("Le service IA n'a pas répondu. Réessaie dans un instant.");
         }
       } catch (err) {
         if ((err as Error).name === "AbortError") return;
         const msg = err instanceof Error ? err.message : String(err);
         setMessages((prev) =>
           prev.map((m) =>
-            m.id === assistantMsg.id
-              ? { ...m, content: `⚠️ ${msg}`, streaming: false }
-              : m,
+            m.id === assistantMsg.id ? { ...m, content: `⚠️ ${msg}`, streaming: false } : m,
           ),
         );
       } finally {
         setMessages((prev) =>
-          prev.map((m) =>
-            m.id === assistantMsg.id ? { ...m, streaming: false } : m,
-          ),
+          prev.map((m) => (m.id === assistantMsg.id ? { ...m, streaming: false } : m)),
         );
         setStreaming(false);
         abortRef.current = null;
@@ -144,28 +117,23 @@ export default function ChatDock() {
     [messages],
   );
 
-  // Keep a ref to the latest sendMessage so the seed effect doesn't need it
-  // in its dep array (which would re-fire on every message change).
   const sendMessageRef = useRef(sendMessage);
   useLayoutEffect(() => {
     sendMessageRef.current = sendMessage;
   }, [sendMessage]);
 
-  // When a card pushes a seed question while the dock is open, auto-send it.
   useEffect(() => {
     if (!open || !pendingSeed) return;
     const seed = consumeSeed();
     if (seed) void sendMessageRef.current(seed);
   }, [open, pendingSeed, consumeSeed]);
 
-  // Auto-scroll to latest content.
   useEffect(() => {
     if (!open) return;
     const el = bodyRef.current;
     if (el) el.scrollTop = el.scrollHeight;
   }, [open, messages]);
 
-  // Focus the input when the dock opens (unless we're streaming a seed reply).
   useEffect(() => {
     if (open && !streaming) {
       const t = setTimeout(() => inputRef.current?.focus(), 220);
@@ -173,16 +141,12 @@ export default function ChatDock() {
     }
   }, [open, streaming]);
 
-  const stop = () => {
-    abortRef.current?.abort();
-  };
-
+  const stop = () => abortRef.current?.abort();
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     if (streaming) return;
     void sendMessage(input);
   };
-
   const handleKey = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
@@ -191,15 +155,12 @@ export default function ChatDock() {
   };
 
   return (
-    <div
-      style={{
-        position: "fixed",
-        bottom: 24,
-        right: 24,
-        zIndex: 60,
-        fontFamily: "var(--font-sans), system-ui, sans-serif",
-      }}
-    >
+    <div style={{
+      position: "fixed",
+      bottom: 24, right: 24,
+      zIndex: 60,
+      fontFamily: "var(--font-sans), system-ui, sans-serif",
+    }}>
       <AnimatePresence mode="wait" initial={false}>
         {open ? (
           <motion.div
@@ -249,16 +210,14 @@ export default function ChatDock() {
             whileTap={{ scale: 0.96 }}
             aria-label="Ouvrir l'assistant Orkestra"
             style={{
-              width: 56,
-              height: 56,
+              width: 56, height: 56,
               borderRadius: "50%",
               border: "none",
               cursor: "pointer",
               background: "linear-gradient(to bottom, var(--accent), var(--accent-2))",
               color: "#FFFFFF",
               display: "inline-flex",
-              alignItems: "center",
-              justifyContent: "center",
+              alignItems: "center", justifyContent: "center",
               boxShadow:
                 "inset 0 1px 0 rgba(255,255,255,0.25), 0 0 0 1px rgba(68,65,200,0.30), 0 8px 22px -6px rgba(88,86,214,0.55)",
               transition: "box-shadow 0.22s ease",
@@ -273,71 +232,44 @@ export default function ChatDock() {
   );
 }
 
-/* ─── Header ───────────────────────────────────────────────────────── */
-
 function Header({ onClose, streaming }: { onClose: () => void; streaming: boolean }) {
   return (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: "0.7rem",
-        padding: "0.85rem 0.95rem",
-        background:
-          "linear-gradient(to right, var(--accent-tint), transparent 70%), var(--surface)",
-        borderBottom: "1px solid var(--border)",
-      }}
-    >
-      <span
-        style={{
-          width: 32,
-          height: 32,
-          borderRadius: 10,
-          background: "linear-gradient(to bottom, var(--accent), var(--accent-2))",
-          color: "#FFFFFF",
-          display: "inline-flex",
-          alignItems: "center",
-          justifyContent: "center",
-          boxShadow: "inset 0 1px 0 rgba(255,255,255,0.25)",
-          flexShrink: 0,
-        }}
-      >
+    <div style={{
+      display: "flex", alignItems: "center", gap: "0.7rem",
+      padding: "0.85rem 0.95rem",
+      background: "linear-gradient(to right, var(--accent-tint), transparent 70%), var(--surface)",
+      borderBottom: "1px solid var(--border)",
+    }}>
+      <span style={{
+        width: 32, height: 32, borderRadius: 10,
+        background: "linear-gradient(to bottom, var(--accent), var(--accent-2))",
+        color: "#FFFFFF",
+        display: "inline-flex", alignItems: "center", justifyContent: "center",
+        boxShadow: "inset 0 1px 0 rgba(255,255,255,0.25)",
+        flexShrink: 0,
+      }}>
         <Sparkles size={15} strokeWidth={2} />
       </span>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div
-          style={{
-            fontSize: "0.92rem",
-            fontWeight: 600,
-            color: "var(--text)",
-            letterSpacing: "-0.01em",
-            lineHeight: 1.15,
-          }}
-        >
-          Orkestra IA
-        </div>
-        <div
-          style={{
-            fontSize: "0.7rem",
-            color: "var(--text-3)",
-            display: "inline-flex",
-            alignItems: "center",
-            gap: "0.35rem",
-            marginTop: 1,
-          }}
-        >
-          <span
-            style={{
-              width: 6,
-              height: 6,
-              borderRadius: "50%",
-              background: streaming ? "var(--warn)" : "var(--success)",
-              boxShadow: streaming
-                ? "0 0 0 3px rgba(255,159,10,0.18)"
-                : "0 0 0 3px rgba(52,168,83,0.18)",
-              transition: "background 0.2s, box-shadow 0.2s",
-            }}
-          />
+        <div style={{
+          fontSize: "0.92rem", fontWeight: 600,
+          color: "var(--text)",
+          letterSpacing: "-0.01em",
+          lineHeight: 1.15,
+        }}>Orkestra IA</div>
+        <div style={{
+          fontSize: "0.7rem", color: "var(--text-3)",
+          display: "inline-flex", alignItems: "center",
+          gap: "0.35rem", marginTop: 1,
+        }}>
+          <span style={{
+            width: 6, height: 6, borderRadius: "50%",
+            background: streaming ? "var(--warn)" : "var(--success)",
+            boxShadow: streaming
+              ? "0 0 0 3px rgba(255,159,10,0.18)"
+              : "0 0 0 3px rgba(52,168,83,0.18)",
+            transition: "background 0.2s, box-shadow 0.2s",
+          }} />
           {streaming ? "Réflexion en cours…" : "BrokerStar + Odoo"}
         </div>
       </div>
@@ -346,16 +278,11 @@ function Header({ onClose, streaming }: { onClose: () => void; streaming: boolea
         onClick={onClose}
         aria-label="Fermer"
         style={{
-          width: 28,
-          height: 28,
-          borderRadius: 8,
-          border: "none",
-          background: "transparent",
+          width: 28, height: 28, borderRadius: 8,
+          border: "none", background: "transparent",
           color: "var(--text-3)",
           cursor: "pointer",
-          display: "inline-flex",
-          alignItems: "center",
-          justifyContent: "center",
+          display: "inline-flex", alignItems: "center", justifyContent: "center",
           transition: "background 0.15s, color 0.15s",
         }}
         onMouseEnter={(e) => {
@@ -373,31 +300,23 @@ function Header({ onClose, streaming }: { onClose: () => void; streaming: boolea
   );
 }
 
-/* ─── Body ─────────────────────────────────────────────────────────── */
-
 interface BodyProps {
   messages: Message[];
   onPickExample: (q: string) => void;
 }
 
 const Body = forwardRef<HTMLDivElement, BodyProps>(function Body(
-  { messages, onPickExample },
-  ref,
+  { messages, onPickExample }, ref,
 ) {
   return (
-    <div
-      ref={ref}
-      style={{
-        flex: 1,
-        minHeight: 0,
-        overflowY: "auto",
-        padding: "1rem 0.95rem",
-        display: "flex",
-        flexDirection: "column",
-        gap: "0.85rem",
-        background: "var(--surface-2)",
-      }}
-    >
+    <div ref={ref} style={{
+      flex: 1, minHeight: 0,
+      overflowY: "auto",
+      padding: "1rem 0.95rem",
+      display: "flex", flexDirection: "column",
+      gap: "0.85rem",
+      background: "var(--surface-2)",
+    }}>
       {messages.length === 0 ? (
         <EmptyState onPickExample={onPickExample} />
       ) : (
@@ -409,35 +328,25 @@ const Body = forwardRef<HTMLDivElement, BodyProps>(function Body(
 
 function EmptyState({ onPickExample }: { onPickExample: (q: string) => void }) {
   return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        gap: "0.65rem",
-        padding: "0.5rem 0.25rem",
-      }}
-    >
-      <div
-        style={{
-          fontSize: "0.82rem",
-          color: "var(--text-2)",
-          lineHeight: 1.5,
-        }}
-      >
+    <div style={{
+      display: "flex", flexDirection: "column",
+      gap: "0.65rem",
+      padding: "0.5rem 0.25rem",
+    }}>
+      <div style={{
+        fontSize: "0.82rem",
+        color: "var(--text-2)",
+        lineHeight: 1.5,
+      }}>
         Bonjour Thomas. Pose-moi une question sur le cabinet — clients, contrats, sinistres, renouvellements.
       </div>
-      <div
-        style={{
-          fontSize: "0.66rem",
-          fontWeight: 600,
-          color: "var(--text-4)",
-          letterSpacing: "0.06em",
-          textTransform: "uppercase",
-          marginTop: "0.35rem",
-        }}
-      >
-        Exemples
-      </div>
+      <div style={{
+        fontSize: "0.66rem", fontWeight: 600,
+        color: "var(--text-4)",
+        letterSpacing: "0.06em",
+        textTransform: "uppercase",
+        marginTop: "0.35rem",
+      }}>Exemples</div>
       <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem" }}>
         {EXAMPLES.map((q) => (
           <button
@@ -478,20 +387,18 @@ function EmptyState({ onPickExample }: { onPickExample: (q: string) => void }) {
 function Bubble({ message }: { message: Message }) {
   if (message.role === "user") {
     return (
-      <div
-        style={{
-          alignSelf: "flex-end",
-          maxWidth: "85%",
-          background: "var(--accent-tint)",
-          color: "var(--text)",
-          padding: "0.55rem 0.8rem",
-          borderRadius: "14px 14px 4px 14px",
-          fontSize: "0.86rem",
-          lineHeight: 1.45,
-          whiteSpace: "pre-wrap",
-          wordBreak: "break-word",
-        }}
-      >
+      <div style={{
+        alignSelf: "flex-end",
+        maxWidth: "85%",
+        background: "var(--accent-tint)",
+        color: "var(--text)",
+        padding: "0.55rem 0.8rem",
+        borderRadius: "14px 14px 4px 14px",
+        fontSize: "0.86rem",
+        lineHeight: 1.45,
+        whiteSpace: "pre-wrap",
+        wordBreak: "break-word",
+      }}>
         {message.content}
       </div>
     );
@@ -500,30 +407,19 @@ function Bubble({ message }: { message: Message }) {
   const showThinkingDots = message.streaming && message.content.length === 0;
 
   return (
-    <div
-      style={{
-        alignSelf: "flex-start",
-        maxWidth: "100%",
-        width: "100%",
-        display: "flex",
-        gap: "0.55rem",
-      }}
-    >
-      <span
-        style={{
-          width: 22,
-          height: 22,
-          borderRadius: 7,
-          background: "linear-gradient(to bottom, var(--accent), var(--accent-2))",
-          color: "#FFFFFF",
-          display: "inline-flex",
-          alignItems: "center",
-          justifyContent: "center",
-          flexShrink: 0,
-          marginTop: 2,
-          boxShadow: "inset 0 1px 0 rgba(255,255,255,0.25)",
-        }}
-      >
+    <div style={{
+      alignSelf: "flex-start",
+      maxWidth: "100%", width: "100%",
+      display: "flex", gap: "0.55rem",
+    }}>
+      <span style={{
+        width: 22, height: 22, borderRadius: 7,
+        background: "linear-gradient(to bottom, var(--accent), var(--accent-2))",
+        color: "#FFFFFF",
+        display: "inline-flex", alignItems: "center", justifyContent: "center",
+        flexShrink: 0, marginTop: 2,
+        boxShadow: "inset 0 1px 0 rgba(255,255,255,0.25)",
+      }}>
         <Sparkles size={11} strokeWidth={2.25} />
       </span>
       <div style={{ flex: 1, minWidth: 0 }}>
@@ -533,18 +429,13 @@ function Bubble({ message }: { message: Message }) {
           <Markdown source={message.content} />
         )}
         {message.streaming && message.content.length > 0 && (
-          <span
-            aria-hidden
-            style={{
-              display: "inline-block",
-              width: 7,
-              height: 14,
-              marginLeft: 2,
-              verticalAlign: -2,
-              background: "var(--accent)",
-              animation: "orkestra-caret 1s steps(2) infinite",
-            }}
-          />
+          <span aria-hidden style={{
+            display: "inline-block",
+            width: 7, height: 14,
+            marginLeft: 2, verticalAlign: -2,
+            background: "var(--accent)",
+            animation: "orkestra-caret 1s steps(2) infinite",
+          }} />
         )}
       </div>
       <style>{`
@@ -563,31 +454,21 @@ function Bubble({ message }: { message: Message }) {
 
 function ThinkingDots() {
   return (
-    <span
-      style={{
-        display: "inline-flex",
-        gap: 4,
-        alignItems: "center",
-        padding: "0.35rem 0",
-      }}
-    >
+    <span style={{
+      display: "inline-flex",
+      gap: 4, alignItems: "center",
+      padding: "0.35rem 0",
+    }}>
       {[0, 1, 2].map((i) => (
-        <span
-          key={i}
-          style={{
-            width: 6,
-            height: 6,
-            borderRadius: "50%",
-            background: "var(--accent)",
-            animation: `orkestra-dot 1.1s ${i * 0.16}s infinite ease-in-out`,
-          }}
-        />
+        <span key={i} style={{
+          width: 6, height: 6, borderRadius: "50%",
+          background: "var(--accent)",
+          animation: `orkestra-dot 1.1s ${i * 0.16}s infinite ease-in-out`,
+        }} />
       ))}
     </span>
   );
 }
-
-/* ─── Composer ─────────────────────────────────────────────────────── */
 
 interface ComposerProps {
   value: string;
@@ -600,21 +481,14 @@ interface ComposerProps {
 }
 
 function Composer({
-  value,
-  onChange,
-  onSubmit,
-  onKey,
-  streaming,
-  onStop,
-  inputRef,
+  value, onChange, onSubmit, onKey, streaming, onStop, inputRef,
 }: ComposerProps) {
   const canSend = value.trim().length > 0 && !streaming;
   return (
     <form
       onSubmit={onSubmit}
       style={{
-        display: "flex",
-        alignItems: "flex-end",
+        display: "flex", alignItems: "flex-end",
         gap: "0.5rem",
         padding: "0.7rem 0.75rem 0.85rem",
         borderTop: "1px solid var(--border)",
@@ -629,8 +503,7 @@ function Composer({
         rows={1}
         placeholder="Pose une question…"
         style={{
-          flex: 1,
-          resize: "none",
+          flex: 1, resize: "none",
           background: "var(--surface-2)",
           border: "none",
           borderRadius: 10,
@@ -650,16 +523,13 @@ function Composer({
           onClick={onStop}
           aria-label="Arrêter"
           style={{
-            width: 36,
-            height: 36,
+            width: 36, height: 36,
             borderRadius: 10,
             border: "none",
             cursor: "pointer",
             background: "var(--danger)",
             color: "#FFFFFF",
-            display: "inline-flex",
-            alignItems: "center",
-            justifyContent: "center",
+            display: "inline-flex", alignItems: "center", justifyContent: "center",
             flexShrink: 0,
             fontFamily: "inherit",
           }}
@@ -672,8 +542,7 @@ function Composer({
           disabled={!canSend}
           aria-label="Envoyer"
           style={{
-            width: 36,
-            height: 36,
+            width: 36, height: 36,
             borderRadius: 10,
             border: "none",
             cursor: canSend ? "pointer" : "default",
@@ -681,9 +550,7 @@ function Composer({
               ? "linear-gradient(to bottom, var(--accent), var(--accent-2))"
               : "var(--surface-3)",
             color: canSend ? "#FFFFFF" : "var(--text-4)",
-            display: "inline-flex",
-            alignItems: "center",
-            justifyContent: "center",
+            display: "inline-flex", alignItems: "center", justifyContent: "center",
             flexShrink: 0,
             transition: "background 0.18s, color 0.18s",
             boxShadow: canSend
