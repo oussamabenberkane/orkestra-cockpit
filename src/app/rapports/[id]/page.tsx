@@ -6,8 +6,7 @@ import { motion } from "framer-motion";
 import { ArrowLeft, BarChart3, Clock, Circle } from "lucide-react";
 import Link from "next/link";
 import { Sidebar } from "@/components/dashboard/Sidebar";
-import ChatDock from "@/components/dashboard/ChatDock";
-import { ChatDockProvider } from "@/components/dashboard/ChatDockContext";
+import { FloatingDock } from "@/components/dashboard/FloatingDock";
 
 const SIDEBAR_KEY = "orkestra.sidebar.collapsed";
 
@@ -38,7 +37,6 @@ export default function RapportDetailPage() {
     : "Rapport";
 
   return (
-    <ChatDockProvider>
     <div style={{
       minHeight: "100vh", background: "var(--bg)", color: "var(--text)",
       display: "flex", visibility: hydrated ? "visible" : "hidden",
@@ -132,8 +130,7 @@ export default function RapportDetailPage() {
         </motion.div>
       </main>
 
-      <ChatDock />
+      <FloatingDock />
     </div>
-    </ChatDockProvider>
   );
 }

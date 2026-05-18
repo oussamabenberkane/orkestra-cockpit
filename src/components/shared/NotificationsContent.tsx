@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { Mail, AlertCircle, FileText, Flame, TrendingUp, Bell } from "lucide-react";
 
 type Notification = {
@@ -65,7 +66,7 @@ export function NotificationsContent({
   onClose?: () => void;
   bare?: boolean;
 }) {
-  void onClose;
+  const router = useRouter();
   return (
     <div
       style={
@@ -102,7 +103,7 @@ export function NotificationsContent({
               letterSpacing: "-0.01em",
             }}
           >
-            Notifications
+            Alertes
           </span>
           <span
             style={{
@@ -250,6 +251,10 @@ export function NotificationsContent({
         }}
       >
         <button
+          onClick={() => {
+            onClose?.();
+            router.push("/alertes");
+          }}
           style={{
             fontFamily: "inherit",
             fontSize: "0.78rem",
@@ -262,7 +267,7 @@ export function NotificationsContent({
             borderRadius: "5px",
           }}
         >
-          Voir toutes les notifications →
+          Voir toutes les alertes →
         </button>
       </div>
     </div>

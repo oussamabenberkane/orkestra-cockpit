@@ -12,8 +12,7 @@ import {
 import { Sidebar } from "@/components/dashboard/Sidebar";
 import { CommandPalette } from "@/components/shared/CommandPalette";
 import { Sparkline } from "@/components/shared/Sparkline";
-import ChatDock from "@/components/dashboard/ChatDock";
-import { ChatDockProvider } from "@/components/dashboard/ChatDockContext";
+import { FloatingDock } from "@/components/dashboard/FloatingDock";
 
 const SIDEBAR_KEY = "orkestra.sidebar.collapsed";
 
@@ -513,7 +512,6 @@ export default function RapportsPage() {
   ];
 
   return (
-    <ChatDockProvider>
     <div
       style={{
         minHeight: "100vh",
@@ -557,7 +555,7 @@ export default function RapportsPage() {
                   fontSize: "clamp(1.6rem, 2.8vw, 2rem)", fontWeight: 600,
                   letterSpacing: "-0.025em", color: "var(--text)", margin: 0,
                 }}>
-                  Vue d&apos;ensemble des rapports
+                  Tous les rapports
                 </h1>
               </div>
               <p style={{ fontSize: "0.9rem", color: "var(--text-3)", margin: 0 }}>
@@ -768,8 +766,7 @@ export default function RapportsPage() {
         onLogout={() => router.replace("/login")}
       />
 
-      <ChatDock />
+      <FloatingDock />
     </div>
-    </ChatDockProvider>
   );
 }

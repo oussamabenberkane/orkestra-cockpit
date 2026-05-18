@@ -49,6 +49,13 @@ import { Markdown } from "./markdown";
 import type { Memory, MemoryInput, MemoryKind } from "@/agent/memory/types";
 import { getMemoryStore } from "@/agent/memory/store";
 import { isVoiceInputSupported, startVoiceInput, type VoiceSession } from "./voice-input";
+import {
+  useAgentConversation,
+  type Conversation,
+  type Message,
+  type ToolCall,
+  type ToolResult,
+} from "@/components/dashboard/AgentConversationProvider";
 
 /* ─── Plinth tokens (matches /c design language) ─── */
 const T = {
@@ -118,24 +125,9 @@ function actionPillHoverOut(e: React.MouseEvent<HTMLButtonElement>) {
 
 /* ─── types ─── */
 
-type ToolCall = { toolName: string; args: unknown; toolCallId?: string };
-type ToolResult = { toolName: string; result: unknown; toolCallId?: string };
-type Message = {
-  role: "user" | "assistant";
-  content: string;
-  toolCalls?: ToolCall[];
-  toolResults?: ToolResult[];
-  finishReason?: string;
-  usage?: { promptTokens?: number; completionTokens?: number; totalTokens?: number };
-  ts?: number;
-};
-
-type Conversation = {
-  id: string;
-  title: string;
-  messages: Message[];
-  createdAt: number;
-};
+// Message / ToolCall / ToolResult / Conversation are now imported from the
+// AgentConversationProvider so that /chat and the FloatingDock preview share
+// the same shape. The remaining types are page-local.
 
 type Health = {
   dataset?: Record<string, number>;
@@ -189,21 +181,14 @@ const SUGGESTIONS: {
 
 /* ─── Helpers ─── */
 
-// localStorage key for persisted conversations. Bump the suffix if the
-// Conversation/Message shape ever changes in a breaking way.
-const STORAGE_KEY = "orkestra.agent-test.conversations.v1";
-
-// Persisted sidebar collapse state. Independent from STORAGE_KEY so a
-// conversation-schema bump doesn't reset the layout preference.
+// Persisted sidebar collapse state. Conversation persistence is owned by the
+// AgentConversationProvider — only the sidebar preference stays local here.
 const SIDEBAR_STATE_KEY = "orkestra.agent-test.sidebar.v1";
 
 // Below this width the sidebar becomes an overlay drawer and defaults to
 // closed on first visit. Keep this in sync with the @media breakpoint at the
 // bottom of the file.
 const SIDEBAR_BREAKPOINT = 820;
-
-const nowId = () =>
-  Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 
 // French label shown in the live activity indicator while a tool is
 // running. Falls back to the raw tool name if a label isn't mapped.
@@ -221,17 +206,6 @@ function toolLabel(name: string): string {
   return TOOL_LABELS[name] ?? name.replace(/_/g, " ");
 }
 
-// Event types the server emits on `?stream=events` (one JSON object per
-// line). The schema is small on purpose — see the matching server side in
-// src/app/api/agent/route.ts.
-type AgentEvent =
-  | { t: "text"; d: string }
-  | { t: "tool-call"; toolCallId?: string; toolName: string; args: unknown }
-  | { t: "tool-result"; toolCallId?: string; toolName: string; result: unknown }
-  | { t: "step-finish"; finishReason?: string; usage?: unknown }
-  | { t: "finish"; finishReason?: string; usage?: unknown }
-  | { t: "error"; message: string };
-
 function deriveTitle(msg: string): string {
   const t = msg.trim().replace(/\s+/g, " ");
   return t.length > 48 ? t.slice(0, 46) + "…" : t;
@@ -245,21 +219,35 @@ function fmt(n?: number): string {
 /* ─── page ─── */
 
 export default function AgentTestPage() {
-  const [conversations, setConversations] = useState<Conversation[]>(() => [
-    {
-      id: nowId(),
-      title: "Nouvelle conversation",
-      messages: [],
-      createdAt: Date.now(),
-    },
-  ]);
-  const [activeId, setActiveId] = useState(conversations[0].id);
-  const active = conversations.find((c) => c.id === activeId) ?? conversations[0];
+  // Conversation state (list, active id, in-flight stream, errors, active
+  // tool) is now owned by the AgentConversationProvider so the FloatingDock
+  // preview on /dashboard and /rapports can read the same thread.
+  const {
+    conversations,
+    activeId,
+    active,
+    loading,
+    error,
+    activeTool,
+    setActive: setActiveId,
+    newConversation: providerNewConversation,
+    deleteConversation,
+    send: providerSend,
+    stop,
+    editUserMessage: providerEditUserMessage,
+    clearError,
+  } = useAgentConversation();
 
   const [input, setInput] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [health, setHealth] = useState<Health | null>(null);
+  // Local UI-side errors (voice input failures, etc.) live next to the
+  // provider's stream error. The displayed error prefers the local one.
+  const [voiceError, setVoiceError] = useState<string | null>(null);
+  const displayedError = voiceError ?? error;
+  const clearDisplayedError = useCallback(() => {
+    setVoiceError(null);
+    clearError();
+  }, [clearError]);
   // Default is true for SSR parity; on mount we override from localStorage or,
   // for first visits, from the viewport width (closed below SIDEBAR_BREAKPOINT
   // so mobile doesn't land on a full-screen drawer over a scrim).
@@ -290,22 +278,12 @@ export default function AgentTestPage() {
   // memory's id. Mutually exclusive with `memoryDraft` (create mode), but we
   // store both so the dialog can open transparently in either path.
   const [editingMemoryId, setEditingMemoryId] = useState<string | null>(null);
-  // Tool currently running on the server, surfaced live in the activity
-  // indicator. Cleared when a result arrives or when the stream ends.
-  const [activeTool, setActiveTool] = useState<string | null>(null);
 
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
-  // Controller for the in-flight /api/agent request, so the stop button can
-  // abort it. Null whenever no request is streaming.
-  const abortRef = useRef<AbortController | null>(null);
   // Memoised store handle — singleton inside the module, but keeping it on
   // a ref makes the dependency surface explicit for callbacks.
   const memoryStoreRef = useRef(getMemoryStore());
-  // Mirror of the latest `send` for deferred callers (e.g. replaySavedView's
-  // setTimeout). `send` is a useCallback that closes over `active.messages`;
-  // capturing it directly in a timer would freeze it at the pre-defer state.
-  const sendRef = useRef<(text: string) => Promise<void>>(async () => {});
 
   useEffect(() => {
     fetch("/api/agent")
@@ -314,34 +292,9 @@ export default function AgentTestPage() {
       .catch(() => setHealth(null));
   }, []);
 
-  // Rehydrate conversations from localStorage on mount. Done in an effect
-  // (not a lazy useState initializer) so server and client render the same
-  // initial markup — no hydration mismatch.
+  // Conversation rehydration is owned by AgentConversationProvider. We only
+  // recover the sidebar preference here.
   useEffect(() => {
-    try {
-      const raw = window.localStorage.getItem(STORAGE_KEY);
-      if (raw) {
-        const parsed = JSON.parse(raw) as {
-          conversations?: Conversation[];
-          activeId?: string;
-        };
-        if (parsed.conversations && parsed.conversations.length > 0) {
-          setConversations(parsed.conversations);
-          const target = parsed.conversations.some(
-            (c) => c.id === parsed.activeId,
-          )
-            ? parsed.activeId!
-            : parsed.conversations[0].id;
-          setActiveId(target);
-        }
-      }
-    } catch {
-      // Corrupt or unavailable storage — fall back to the fresh conversation.
-    }
-
-    // Sidebar state — explicit user preference wins; otherwise default by
-    // viewport (closed below the breakpoint so mobile lands on the chat
-    // rather than a full-screen drawer).
     const mobile = window.innerWidth < SIDEBAR_BREAKPOINT;
     setIsMobileLayout(mobile);
     try {
@@ -390,33 +343,8 @@ export default function AgentTestPage() {
       .catch(() => setMemories([]));
   }, []);
 
-  // Persist conversations whenever they change (after the initial rehydrate).
-  // Tool results can be large (a SQL query may return up to 1000 rows), so
-  // they are stripped from the persisted copy — the answer text, tool-call
-  // args and usage are what's worth keeping across reloads, and dropping
-  // results keeps us comfortably under the storage quota.
-  useEffect(() => {
-    if (!hydrated) return;
-    try {
-      const slim: Conversation[] = conversations.map((c) => ({
-        ...c,
-        messages: c.messages.map((m) => ({
-          role: m.role,
-          content: m.content,
-          toolCalls: m.toolCalls,
-          finishReason: m.finishReason,
-          usage: m.usage,
-          ts: m.ts,
-        })),
-      }));
-      window.localStorage.setItem(
-        STORAGE_KEY,
-        JSON.stringify({ conversations: slim, activeId }),
-      );
-    } catch {
-      // Quota exceeded or storage disabled — persistence degrades silently.
-    }
-  }, [conversations, activeId, hydrated]);
+  // Conversation persistence is owned by AgentConversationProvider — no
+  // local persist effect here.
 
   // Autoscroll on new content — but only if the user is already pinned to the
   // bottom. The `showScrollBottom` flag (set by the scroll listener below) is
@@ -454,287 +382,55 @@ export default function AgentTestPage() {
     ta.style.height = Math.min(ta.scrollHeight, 220) + "px";
   }, [input]);
 
-  const updateActive = useCallback(
-    (mut: (c: Conversation) => Conversation) => {
-      setConversations((prev) =>
-        prev.map((c) => (c.id === activeId ? mut(c) : c)),
-      );
-    },
-    [activeId],
-  );
+  // /chat-local memory observers: after a stream resolves, the
+  // AgentConversationProvider may have drained save_memory proposals into the
+  // memory store. Refresh `memories` so the sidebar reflects new entries.
+  const refreshMemories = useCallback(async () => {
+    try {
+      const next = await memoryStoreRef.current.list();
+      setMemories(next);
+    } catch {
+      /* swallow — fall back to whatever is in state */
+    }
+  }, []);
 
+  // `send` wrapper — passes the local memories list (which the provider does
+  // not own) and clears the composer immediately on submit. After the stream
+  // finishes, refreshMemories picks up any save_memory proposals the provider
+  // drained into the store.
   const send = useCallback(
     async (text: string) => {
       const trimmed = text.trim();
       if (!trimmed || loading) return;
-
-      const userMsg: Message = { role: "user", content: trimmed, ts: Date.now() };
-      const nextMessages = [...active.messages, userMsg];
-
-      updateActive((c) => ({
-        ...c,
-        messages: nextMessages,
-        title: c.messages.length === 0 ? deriveTitle(trimmed) : c.title,
-      }));
       setInput("");
-      setLoading(true);
-      setError(null);
-
-      const controller = new AbortController();
-      abortRef.current = controller;
-
-      // Hoisted so a save_memory proposal collected before an abort/error is
-      // still drained in `finally`. Without this, the agent confirms "noté"
-      // but the sidebar silently stays empty.
-      const memoryProposals: MemoryInput[] = [];
-
-      try {
-        const res = await fetch("/api/agent?stream=events", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            messages: nextMessages.map(({ role, content }) => ({ role, content })),
-            // Volatile block of the system prompt — see B in the v1 plan.
-            // Empty array is fine; the server treats it as "no memory section".
-            memories,
-          }),
-          signal: controller.signal,
-        });
-        if (!res.ok || !res.body) {
-          const data = (await res.json().catch(() => ({}))) as { error?: string };
-          throw new Error(data?.error ?? `HTTP ${res.status}`);
-        }
-
-        // NDJSON stream — one JSON object per line.
-        // We accumulate state (text, tool calls/results, usage, finish reason)
-        // as events arrive, push live updates to the bubble, and apply final
-        // metadata once the stream completes. The activeTool indicator is
-        // set on tool-call and cleared on the matching tool-result (or when
-        // the next text delta arrives).
-        const reader = res.body.getReader();
-        const decoder = new TextDecoder();
-        let buffer = "";
-        let textAcc = "";
-        let placeholderAppended = false;
-        const toolCalls: ToolCall[] = [];
-        const toolResults: ToolResult[] = [];
-        let usage: Message["usage"] = undefined;
-        let finishReason: string | undefined;
-
-        const ensureBubble = () => {
-          if (placeholderAppended) return;
-          placeholderAppended = true;
-          updateActive((c) => ({
-            ...c,
-            messages: [
-              ...c.messages,
-              { role: "assistant", content: "", ts: Date.now() },
-            ],
-          }));
-        };
-
-        const pushText = (delta: string) => {
-          textAcc += delta;
-          ensureBubble();
-          updateActive((c) => {
-            const msgs = c.messages.slice();
-            const last = msgs[msgs.length - 1];
-            if (last && last.role === "assistant") {
-              msgs[msgs.length - 1] = { ...last, content: textAcc };
-            }
-            return { ...c, messages: msgs };
-          });
-        };
-
-        const handleEvent = (ev: AgentEvent) => {
-          switch (ev.t) {
-            case "text":
-              setActiveTool(null);
-              pushText(ev.d);
-              return;
-            case "tool-call":
-              setActiveTool(ev.toolName);
-              toolCalls.push({
-                toolName: ev.toolName,
-                args: ev.args,
-                toolCallId: ev.toolCallId,
-              });
-              return;
-            case "tool-result":
-              toolResults.push({
-                toolName: ev.toolName,
-                result: ev.result,
-                toolCallId: ev.toolCallId,
-              });
-              // save_memory proposals are applied to the local store after the
-              // stream completes — batching keeps the sidebar update tidy.
-              if (ev.toolName === "save_memory") {
-                const r = ev.result as
-                  | { ok?: boolean; memory_proposal?: MemoryInput }
-                  | undefined;
-                if (r?.ok && r.memory_proposal) memoryProposals.push(r.memory_proposal);
-              }
-              return;
-            case "step-finish":
-              // A step finished — clearing the active tool here gives a tiny
-              // breather between "calling X" and "calling Y" in the UI.
-              setActiveTool(null);
-              return;
-            case "finish":
-              if (ev.usage) usage = ev.usage as Message["usage"];
-              if (ev.finishReason) finishReason = ev.finishReason;
-              return;
-            case "error":
-              throw new Error(ev.message);
-          }
-        };
-
-        while (true) {
-          const { value, done } = await reader.read();
-          if (done) break;
-          buffer += decoder.decode(value, { stream: true });
-          let nl: number;
-          while ((nl = buffer.indexOf("\n")) !== -1) {
-            const line = buffer.slice(0, nl);
-            buffer = buffer.slice(nl + 1);
-            if (!line.trim()) continue;
-            let parsed: AgentEvent | null = null;
-            try {
-              parsed = JSON.parse(line) as AgentEvent;
-            } catch {
-              continue;
-            }
-            handleEvent(parsed);
-          }
-        }
-        // Flush any trailing partial line (rare, but the decoder may have
-        // buffered the last few bytes without a terminating newline).
-        const tail = buffer + decoder.decode();
-        if (tail.trim()) {
-          try {
-            handleEvent(JSON.parse(tail) as AgentEvent);
-          } catch {
-            /* ignore */
-          }
-        }
-
-        setActiveTool(null);
-
-        // Apply the final text and the accumulated tool/usage metadata to the
-        // last assistant message (creating the bubble if no text ever streamed,
-        // e.g. tool-only refusals).
-        const displayFinal = textAcc.trim() === "" ? "_(réponse vide)_" : textAcc;
-        const trailerFields = {
-          toolCalls,
-          toolResults,
-          ...(usage ? { usage } : {}),
-          ...(finishReason ? { finishReason } : {}),
-        };
-
-        if (!placeholderAppended) {
-          updateActive((c) => ({
-            ...c,
-            messages: [
-              ...c.messages,
-              {
-                role: "assistant",
-                content: displayFinal,
-                ts: Date.now(),
-                ...trailerFields,
-              },
-            ],
-          }));
-        } else {
-          updateActive((c) => {
-            const msgs = c.messages.slice();
-            const last = msgs[msgs.length - 1];
-            if (last && last.role === "assistant") {
-              msgs[msgs.length - 1] = {
-                ...last,
-                content: displayFinal,
-                ...trailerFields,
-              };
-            }
-            return { ...c, messages: msgs };
-          });
-        }
-      } catch (err) {
-        const isAbort =
-          typeof err === "object" &&
-          err !== null &&
-          (err as { name?: string }).name === "AbortError";
-        if (isAbort) {
-          // Stop button — keep whatever streamed so far, mark it interrupted.
-          updateActive((c) => {
-            const msgs = c.messages.slice();
-            const last = msgs[msgs.length - 1];
-            if (last && last.role === "assistant") {
-              msgs[msgs.length - 1] = {
-                ...last,
-                content: (last.content || "").trimEnd() + " …(interrompu)",
-              };
-              return { ...c, messages: msgs };
-            }
-            return {
-              ...c,
-              messages: [
-                ...msgs,
-                { role: "assistant", content: "_(interrompu)_", ts: Date.now() },
-              ],
-            };
-          });
-        } else {
-          setError(err instanceof Error ? err.message : String(err));
-        }
-      } finally {
-        abortRef.current = null;
-        setActiveTool(null);
-        setLoading(false);
-        // Drain save_memory proposals regardless of how the stream ended —
-        // the agent's confirmation already streamed before any abort, so
-        // dropping these silently would be a UX lie.
-        if (memoryProposals.length > 0) {
-          const store = memoryStoreRef.current;
-          const saved: Memory[] = [];
-          for (const p of memoryProposals) {
-            try {
-              saved.push(await store.save(p));
-            } catch {
-              /* swallow — keep going on the others */
-            }
-          }
-          if (saved.length > 0) setMemories((prev) => [...prev, ...saved]);
-        }
-      }
+      await providerSend(trimmed, { memories });
+      await refreshMemories();
     },
-    [active.messages, loading, updateActive, memories],
+    [loading, providerSend, memories, refreshMemories],
   );
 
   // Keep sendRef pointing at the latest `send` so deferred callers (timers
   // that fire after a state update has produced a new closure) hit the
   // current `active.messages` and `activeId`.
+  const sendRef = useRef<(text: string) => Promise<void>>(async () => {});
   useEffect(() => {
     sendRef.current = send;
   }, [send]);
 
-  const stop = useCallback(() => {
-    abortRef.current?.abort();
-  }, []);
-
-  // Edit & retry — trim the active conversation back to before the user turn
-  // at `idx`, prefill the composer with its content, focus the textarea. The
-  // user re-submits via Enter or the send button.
+  // Edit & retry — trim the active conversation back to before the user turn,
+  // prefill the composer with its content, focus the textarea. The user
+  // re-submits via Enter or the send button. Truncation is delegated to the
+  // provider; setInput/focus stay local to /chat.
   const editUserMessage = useCallback(
     (idx: number) => {
       const msg = active.messages[idx];
-      if (!msg || msg.role !== "user") return;
+      if (!msg || msg.role !== "user" || !msg.id) return;
       setInput(msg.content);
-      updateActive((c) => ({ ...c, messages: c.messages.slice(0, idx) }));
-      setError(null);
+      providerEditUserMessage(msg.id, msg.content);
       // Defer focus so the textarea exists post-render and autogrow kicks in.
       setTimeout(() => textareaRef.current?.focus(), 0);
     },
-    [active.messages, updateActive],
+    [active.messages, providerEditUserMessage],
   );
 
   const onSubmit = (e: FormEvent) => {
@@ -749,34 +445,10 @@ export default function AgentTestPage() {
     }
   };
 
-  const newConversation = () => {
-    const id = nowId();
-    setConversations((prev) => [
-      { id, title: "Nouvelle conversation", messages: [], createdAt: Date.now() },
-      ...prev,
-    ]);
-    setActiveId(id);
-    setError(null);
+  const newConversation = useCallback(() => {
+    providerNewConversation();
     setInput("");
-  };
-
-  const deleteConversation = (id: string) => {
-    setConversations((prev) => {
-      const next = prev.filter((c) => c.id !== id);
-      if (next.length === 0) {
-        const fresh: Conversation = {
-          id: nowId(),
-          title: "Nouvelle conversation",
-          messages: [],
-          createdAt: Date.now(),
-        };
-        setActiveId(fresh.id);
-        return [fresh];
-      }
-      if (id === activeId) setActiveId(next[0].id);
-      return next;
-    });
-  };
+  }, [providerNewConversation]);
 
   const datasetLabel = useMemo(() => {
     if (!health?.dataset) return null;
@@ -825,20 +497,17 @@ export default function AgentTestPage() {
 
   // Replay a saved view as the first turn of a fresh conversation. The body
   // of a `saved-view` memory holds the French question to fire.
-  const replaySavedView = useCallback((m: Memory) => {
-    const id = nowId();
-    setConversations((prev) => [
-      { id, title: deriveTitle(m.body), messages: [], createdAt: Date.now() },
-      ...prev,
-    ]);
-    setActiveId(id);
-    setError(null);
-    setInput("");
-    // Go through sendRef rather than capturing `send` directly: the captured
-    // version would close over the pre-replay `active.messages` / `activeId`
-    // and write the user message to the previous conversation.
-    setTimeout(() => sendRef.current(m.body), 0);
-  }, []);
+  const replaySavedView = useCallback(
+    (m: Memory) => {
+      providerNewConversation();
+      setInput("");
+      // Go through sendRef rather than capturing `send` directly: the captured
+      // version would close over the pre-replay conversation state. Deferring
+      // also lets the provider commit the new active id before send reads it.
+      setTimeout(() => sendRef.current(m.body), 0);
+    },
+    [providerNewConversation],
+  );
 
   const memoryCounts = useMemo(() => {
     const c = { preference: 0, watch: 0, "saved-view": 0, note: 0 } as Record<
@@ -1008,9 +677,9 @@ export default function AgentTestPage() {
             onKeyDown={onKeyDown}
             onStop={stop}
             loading={loading}
-            error={error}
-            onClearError={() => setError(null)}
-            onVoiceError={setError}
+            error={displayedError}
+            onClearError={clearDisplayedError}
+            onVoiceError={setVoiceError}
             textareaRef={textareaRef}
             model={health?.model}
             memoryCounts={memoryCounts}

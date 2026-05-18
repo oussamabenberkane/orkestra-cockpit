@@ -37,33 +37,32 @@ const sections: { title: string; items: NavItemData[] }[] = [
   {
     title: "Espace",
     items: [
-      { Icon: Home,      label: "Accueil",   iconColor: "var(--accent)",       href: "/dashboard" },
-      { Icon: BarChart3, label: "Rapports",  iconColor: "var(--nav-neutral)" },
+      { Icon: Home, label: "Vue 360", iconColor: "var(--accent)", href: "/dashboard" },
     ],
   },
   {
     title: "Métier",
     items: [
-      { Icon: Target,        label: "Prospection",    iconColor: "var(--nav-prospection)",  modalKey: "prospection", badge: "12", badgeTone: "neutral" },
-      { Icon: FolderArchive, label: "Portefeuille",   iconColor: "var(--nav-portefeuille)", modalKey: "portefeuille" },
-      { Icon: Flame,         label: "Sinistres",      iconColor: "var(--nav-sinistres)",    modalKey: "sinistres",   badge: "3", badgeTone: "danger" },
-      { Icon: Wallet,        label: "Finance",        iconColor: "var(--nav-finance)",      modalKey: "finance",     badge: "2", badgeTone: "warn" },
-      { Icon: Globe,         label: "Vue d'ensemble", iconColor: "var(--nav-vue-ensemble)", href: "/rapports" },
+      { Icon: Target,        label: "Prospection",       iconColor: "var(--nav-prospection)",  modalKey: "prospection", badge: "12", badgeTone: "neutral" },
+      { Icon: FolderArchive, label: "Portefeuille",      iconColor: "var(--nav-portefeuille)", modalKey: "portefeuille" },
+      { Icon: Flame,         label: "Sinistres",         iconColor: "var(--nav-sinistres)",    modalKey: "sinistres",   badge: "3", badgeTone: "danger" },
+      { Icon: Wallet,        label: "Finance",           iconColor: "var(--nav-finance)",      modalKey: "finance",     badge: "2", badgeTone: "warn" },
+      { Icon: Globe,         label: "Tous les rapports", iconColor: "var(--nav-vue-ensemble)", href: "/rapports" },
     ],
   },
   {
     title: "Intelligence",
     items: [
-      { Icon: MessageSquare,  label: "Chat IA",  iconColor: "var(--nav-chat)",    href: "/chat",      badge: "3", badgeTone: "warn" },
-      { Icon: AlertTriangle,  label: "Alertes",  iconColor: "var(--nav-alertes)", badge: "5", badgeTone: "danger" },
+      { Icon: MessageSquare,  label: "Chat IA",  iconColor: "var(--nav-chat)",    href: "/chat",     badge: "3", badgeTone: "warn" },
+      { Icon: AlertTriangle,  label: "Alertes",  iconColor: "var(--nav-alertes)", href: "/alertes", badge: "5", badgeTone: "danger" },
       { Icon: Sparkles,       label: "Agents",   iconColor: "var(--nav-agents)",  modalKey: "agents", badge: "3", badgeTone: "neutral" },
     ],
   },
   {
     title: "Administration",
     items: [
-      { Icon: Settings,   label: "Paramètres", iconColor: "var(--nav-neutral)" },
-      { Icon: HelpCircle, label: "Support",    iconColor: "var(--nav-neutral)" },
+      { Icon: Settings,   label: "Paramètres", iconColor: "var(--nav-neutral)", href: "/parametres" },
+      { Icon: HelpCircle, label: "Support",    iconColor: "var(--nav-neutral)", href: "/support" },
     ],
   },
 ];
@@ -567,14 +566,14 @@ export function Sidebar({
               onMouseEnter={(e) => {
                 if (!open) {
                   e.currentTarget.style.transform = "translateY(-1px)";
-                  if (!isOpen) showTip("Notifications · 3", e.currentTarget);
+                  if (!isOpen) showTip("Alertes · 3", e.currentTarget);
                 }
               }}
               onMouseLeave={(e) => {
                 if (!open) e.currentTarget.style.transform = "translateY(0)";
                 hideTip();
               }}
-              aria-label="Notifications"
+              aria-label="Alertes"
               aria-expanded={open}
               style={{
                 position: "relative",
@@ -589,15 +588,17 @@ export function Sidebar({
                 transition: "transform 0.22s ease, background 0.18s",
               }}
             >
-              <Bell size={17} strokeWidth={2} />
+              <Bell size={16} strokeWidth={2.25} />
               <span style={{
-                position: "absolute", top: 4, right: 4,
-                minWidth: 13, height: 13,
+                position: "absolute", top: 3, right: 3,
+                minWidth: 14, height: 14,
                 padding: "0 3px",
                 borderRadius: "7px",
                 background: "var(--danger)",
                 color: "#FFFFFF",
-                fontSize: "0.56rem", fontWeight: 700,
+                fontSize: "0.58rem", fontWeight: 700,
+                fontVariantNumeric: "tabular-nums",
+                lineHeight: 1,
                 display: "flex", alignItems: "center", justifyContent: "center",
                 border: "1.5px solid var(--surface)",
               }}>3</span>
@@ -645,12 +646,15 @@ export function Sidebar({
             >
               <span style={{
                 width: 26, height: 26,
-                background: "linear-gradient(to bottom, var(--text-2), var(--text))",
-                color: "var(--surface)",
+                background: "var(--accent)",
+                color: "#FFFFFF",
                 borderRadius: "50%",
                 display: "flex", alignItems: "center", justifyContent: "center",
-                fontSize: "0.62rem", fontWeight: 700, flexShrink: 0,
-                boxShadow: "inset 0 1px 0 rgba(255,255,255,0.18), 0 1px 2px rgba(0,0,0,0.1)",
+                fontFamily: "var(--font-mono)",
+                fontSize: "0.7rem", fontWeight: 700,
+                letterSpacing: "0.02em",
+                flexShrink: 0,
+                boxShadow: "inset 0 1px 0 rgba(255,255,255,0.22), 0 1px 2px rgba(0,0,0,0.1)",
               }}>TM</span>
               <span style={{
                 display: "flex", alignItems: "center",
@@ -675,7 +679,7 @@ export function Sidebar({
             </button>
           )}
         >
-          <UserMenuContent onLogout={onLogout} />
+          {(close) => <UserMenuContent onLogout={onLogout} onClose={close} />}
         </Popover>
       </div>
 

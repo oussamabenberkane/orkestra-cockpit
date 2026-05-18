@@ -1,13 +1,21 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { User, Settings, HelpCircle, Moon, LogOut, ChevronRight } from "lucide-react";
 
 interface UserMenuContentProps {
   onLogout: () => void;
   bare?: boolean;
+  /** Closes the popover when an item triggers navigation. */
+  onClose?: () => void;
 }
 
-export function UserMenuContent({ onLogout, bare = false }: UserMenuContentProps) {
+export function UserMenuContent({ onLogout, bare = false, onClose }: UserMenuContentProps) {
+  const router = useRouter();
+  const nav = (path: string) => {
+    onClose?.();
+    router.push(path);
+  };
   const items: Array<{
     Icon: typeof User;
     label: string;
@@ -16,9 +24,9 @@ export function UserMenuContent({ onLogout, bare = false }: UserMenuContentProps
     sub?: string;
   }> = [
     { Icon: User, label: "Mon profil", sub: "Préférences personnelles" },
-    { Icon: Settings, label: "Paramètres", sub: "Workspace, sources, agents" },
+    { Icon: Settings, label: "Paramètres", sub: "Workspace, sources, agents", onClick: () => nav("/parametres") },
     { Icon: Moon, label: "Apparence", sub: "Auto · clair · sombre" },
-    { Icon: HelpCircle, label: "Aide & support", sub: "Documentation, contact" },
+    { Icon: HelpCircle, label: "Aide & support", sub: "Documentation, contact", onClick: () => nav("/support") },
   ];
 
   return (
@@ -153,7 +161,25 @@ export function UserMenuContent({ onLogout, bare = false }: UserMenuContentProps
                   </div>
                 )}
               </div>
-              <ChevronRight size={11} strokeWidth={2} color="var(--text-4)" />
+              {item.onClick ? (
+                <ChevronRight size={11} strokeWidth={2} color="var(--text-4)" />
+              ) : (
+                <span
+                  style={{
+                    fontSize: "0.58rem",
+                    fontWeight: 600,
+                    color: "var(--text-4)",
+                    background: "var(--surface-2)",
+                    border: "1px solid var(--border)",
+                    padding: "0.1rem 0.35rem",
+                    borderRadius: "100px",
+                    letterSpacing: "0.04em",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  Bientôt
+                </span>
+              )}
             </button>
           );
         })}

@@ -22,6 +22,12 @@ interface DashboardModalProps {
   open: boolean;
   modalKey: ModalKey | null;
   onClose: () => void;
+  /**
+   * Optional CTA handler. Receives the active key; if omitted, the CTA simply
+   * closes the modal. Pages can wire this to navigate (e.g. rapport → /rapports)
+   * or trigger an action.
+   */
+  onAction?: (key: ModalKey) => void;
 }
 
 const sectionTag: Record<ModalKey, { label: string; tone: string; bg: string }> = {
@@ -107,7 +113,7 @@ function parseDataBlock(raw: string): { subtitle: string | null; items: DataLine
   return { subtitle, items };
 }
 
-export default function DashboardModal({ open, modalKey, onClose }: DashboardModalProps) {
+export default function DashboardModal({ open, modalKey, onClose, onAction }: DashboardModalProps) {
   const [lastKey, setLastKey] = React.useState<ModalKey | null>(modalKey);
   React.useEffect(() => {
     if (modalKey !== null) setLastKey(modalKey);
@@ -361,6 +367,10 @@ export default function DashboardModal({ open, modalKey, onClose }: DashboardMod
             <button
               type="button"
               className="dm-primary"
+              onClick={() => {
+                if (onAction && effectiveKey) onAction(effectiveKey);
+                onClose();
+              }}
               style={{
                 padding: "0.55rem 1.1rem",
                 background: "linear-gradient(180deg, var(--accent) 0%, var(--accent-2) 100%)",

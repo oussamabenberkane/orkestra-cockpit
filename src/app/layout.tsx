@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Manrope, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
+import { AgentConversationProvider } from "@/components/dashboard/AgentConversationProvider";
 
 const manrope = Manrope({
   variable: "--font-sans",
@@ -29,7 +30,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="fr" className={`${manrope.variable} ${jetBrainsMono.variable}`}>
-      <body>{children}</body>
+      <body>
+        <AgentConversationProvider>{children}</AgentConversationProvider>
+      </body>
     </html>
   );
 }
