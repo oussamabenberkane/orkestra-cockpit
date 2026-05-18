@@ -345,12 +345,17 @@ export function HeroPanel({
           </div>
         </div>
 
+        {/* "Aujourd'hui" pill — anchored to the right edge of the chart so it
+            never bleeds past the container on narrow widths. The 'now' dot is
+            always the rightmost data point, so right-pinning stays semantically
+            correct at every width. */}
         <div style={{
           position: "absolute",
-          left: `${(nowX / w) * 100}%`,
+          right: "0.3rem",
           top: `${(padY / h) * 100}%`,
-          transform: "translate(-50%, calc(-100% - 0.35rem))",
+          transform: "translateY(calc(-100% - 0.35rem))",
           pointerEvents: "none",
+          maxWidth: "calc(100% - 0.6rem)",
         }}>
           <span style={{
             display: "inline-flex", alignItems: "center",

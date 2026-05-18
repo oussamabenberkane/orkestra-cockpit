@@ -75,13 +75,15 @@ export default function DashboardModal({
     <Dialog open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
       <DialogContent
         showCloseButton={false}
+        className="dashboard-modal"
         style={{
           background: "var(--surface)",
           border: "1px solid var(--border)",
           borderRadius: "14px",
           padding: 0,
           /* Definitive viewport-relative width — bypasses Tailwind's max-w[%]
-           * which can resolve to a wider containing block under transforms. */
+           * which can resolve to a wider containing block under transforms.
+           * Mobile width/height are scaled down via .dashboard-modal CSS. */
           width: "min(620px, calc(100vw - 24px))",
           maxWidth: "none",
           maxHeight: "calc(100dvh - 32px)",
@@ -116,8 +118,8 @@ export default function DashboardModal({
           />
 
           {/* Title + body */}
-          <div style={{ padding: "0 clamp(1rem, 3vw, 1.5rem) 1.1rem" }}>
-            <h2 style={{
+          <div className="dm-intro" style={{ padding: "0 clamp(1rem, 3vw, 1.5rem) 1.1rem" }}>
+            <h2 className="dm-title" style={{
               fontSize: "clamp(1.2rem, 3.4vw, 1.5rem)",
               fontWeight: 700,
               letterSpacing: "-0.025em",
@@ -129,7 +131,7 @@ export default function DashboardModal({
             }}>
               {data.title}
             </h2>
-            <p style={{
+            <p className="dm-body" style={{
               fontSize: "clamp(0.84rem, 2vw, 0.92rem)",
               lineHeight: 1.55,
               color: "var(--text-2)",
@@ -141,7 +143,7 @@ export default function DashboardModal({
           </div>
 
           {/* Sections */}
-          <div style={{
+          <div className="dm-sections" style={{
             display: "flex",
             flexDirection: "column",
             gap: "0.9rem",
@@ -179,7 +181,7 @@ function ModalHeader({
   onClose: () => void;
 }) {
   return (
-    <div style={{
+    <div className="dm-header" style={{
       padding: "clamp(0.85rem, 2.4vw, 1rem) clamp(1rem, 3vw, 1.4rem) 0.85rem",
       display: "flex",
       alignItems: "center",
@@ -271,7 +273,7 @@ function ModalFooter({
   onAction: () => void;
 }) {
   return (
-    <div style={{
+    <div className="dm-footer" style={{
       display: "flex",
       justifyContent: "flex-end",
       gap: "0.5rem",

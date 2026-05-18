@@ -27,22 +27,26 @@ export function TroisChoses({ items, onOpen }: TroisChosesProps) {
   const allDone = done.every(Boolean);
 
   return (
-    <div style={{
-      background: "var(--surface)",
-      borderRadius: "14px",
-      padding: "clamp(0.95rem, 2.4vw, 1.2rem) clamp(1rem, 2.8vw, 1.4rem)",
-      boxShadow: "var(--tier-1)",
-      position: "relative",
-      overflow: "hidden",
-    }}>
-      <div style={{
-        fontSize: "0.7rem", fontWeight: 700,
-        letterSpacing: "0.16em",
-        textTransform: "uppercase",
-        color: "var(--accent)",
-        marginBottom: "0.4rem",
-        display: "flex", alignItems: "center", gap: "0.45rem",
+    <div
+      className="trois-card"
+      style={{
+        background: "var(--surface)",
+        borderRadius: "14px",
+        padding: "clamp(0.95rem, 2.4vw, 1.2rem) clamp(1rem, 2.8vw, 1.4rem)",
+        boxShadow: "var(--tier-1)",
+        position: "relative",
+        overflow: "hidden",
       }}>
+      <div
+        className="trois-card__eyebrow"
+        style={{
+          fontSize: "0.7rem", fontWeight: 700,
+          letterSpacing: "0.16em",
+          textTransform: "uppercase",
+          color: "var(--accent)",
+          marginBottom: "0.4rem",
+          display: "flex", alignItems: "center", gap: "0.45rem",
+        }}>
         Trois choses aujourd&apos;hui
         {!allDone && (
           <span style={{
@@ -57,14 +61,16 @@ export function TroisChoses({ items, onOpen }: TroisChosesProps) {
           </span>
         )}
       </div>
-      <h2 style={{
-        fontSize: "clamp(0.92rem, 2.2vw, 1.05rem)",
-        fontWeight: 600,
-        color: "var(--text)",
-        margin: 0, marginBottom: "1rem",
-        letterSpacing: "-0.015em",
-        lineHeight: 1.35,
-      }}>
+      <h2
+        className="trois-card__subtitle"
+        style={{
+          fontSize: "clamp(0.92rem, 2.2vw, 1.05rem)",
+          fontWeight: 600,
+          color: "var(--text)",
+          margin: 0, marginBottom: "1rem",
+          letterSpacing: "-0.015em",
+          lineHeight: 1.35,
+        }}>
         Vos priorités du matin, mises au premier plan.
       </h2>
 

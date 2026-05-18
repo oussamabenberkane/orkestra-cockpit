@@ -241,17 +241,31 @@ html, body {
   gap: clamp(0.6rem, 1.5vw, 0.85rem);
 }
 
+/* Satellite KPI column next to the hero. Vertical stack on desktop where
+   it lives beside the hero, then a horizontal 3-up row once the hero
+   stacks above, then single-column at mobile widths. */
+.dashboard-kpis-stack {
+  display: grid;
+  grid-template-rows: repeat(3, 1fr);
+  gap: clamp(0.6rem, 1.5vw, 0.85rem);
+}
+
 /* Tablet / small desktop: hero stacks, tiles drop to 2-col */
 @media (max-width: 1024px) {
   .dashboard-hero  { grid-template-columns: 1fr; }
   .dashboard-tiles { grid-template-columns: repeat(2, 1fr); }
   .dashboard-kpis  { grid-template-columns: repeat(2, 1fr); }
+  .dashboard-kpis-stack {
+    grid-template-rows: none;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }
 
-/* Small tablet → mobile: tiles drop to 1-col */
+/* Small tablet → mobile: tiles drop to 1-col, KPIs stack vertically */
 @media (max-width: 640px) {
   .dashboard-tiles { grid-template-columns: 1fr; }
   .dashboard-kpis  { grid-template-columns: 1fr; }
+  .dashboard-kpis-stack { grid-template-columns: 1fr; }
 }
 
 /* Mobile: sidebar becomes a slide-over drawer (handled by Sidebar.tsx).
@@ -298,11 +312,72 @@ html, body {
 @media (max-width: 480px) {
   .trois-row {
     grid-template-columns: auto 1fr !important;
-    row-gap: 0.55rem !important;
+    row-gap: 0.45rem !important;
+    padding: 0.55rem 0.25rem !important;
+    column-gap: 0.65rem !important;
   }
   .trois-row-actions {
     grid-column: 1 / -1;
     justify-content: flex-end;
+    gap: 0.3rem !important;
+  }
+}
+
+/* Action-first banner — push padding/type down on mobile so the
+   banner+TroisChoses pair reads as one compact unit. */
+@media (max-width: 640px) {
+  .dashboard-action-banner {
+    padding: 0.75rem 0.95rem !important;
+    margin-bottom: 0.45rem !important;
+    border-radius: 12px !important;
+  }
+  .dashboard-action-banner__eyebrow {
+    font-size: 0.56rem !important;
+    margin-bottom: 0.3rem !important;
+  }
+  .dashboard-action-banner__title {
+    font-size: 0.95rem !important;
+    line-height: 1.2 !important;
+  }
+}
+
+/* TroisChoses card — mobile-first compaction. Trims the card padding,
+   drops the redundant subtitle (the Action-first banner above the card
+   already states intent), and tightens the eyebrow row. */
+@media (max-width: 640px) {
+  .trois-card {
+    padding: 0.7rem 0.7rem 0.45rem !important;
+    border-radius: 12px !important;
+  }
+  .trois-card__eyebrow {
+    font-size: 0.6rem !important;
+    margin-bottom: 0.3rem !important;
+    letter-spacing: 0.14em !important;
+  }
+  .trois-card__subtitle {
+    display: none !important;
+  }
+  .trois-row {
+    padding: 0.45rem 0.2rem !important;
+    column-gap: 0.55rem !important;
+  }
+}
+
+/* Section spacing — bump between-section margins on mobile so the page
+   breathes more, even as each section gets more compact internally. */
+@media (max-width: 640px) {
+  .dash-section { margin-bottom: 2.5rem !important; }
+}
+
+/* Mobile cube grid — small stat tiles for the Domaines section.
+   Visible only at ≤640px; desktop continues to render the full TileCards. */
+.dashboard-tiles-mobile { display: none; }
+@media (max-width: 640px) {
+  .dashboard-tiles-desktop { display: none !important; }
+  .dashboard-tiles-mobile {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 0.55rem;
   }
 }
 
@@ -343,5 +418,60 @@ html, body {
   .dm-close {
     min-width: 32px;
     min-height: 32px;
+  }
+}
+
+/* ── DashboardModal — mobile scale-down ───────────────────────────
+   Shrinks the modal box on small viewports and tightens all internal
+   paddings/sizes so the modal feels compact and proportional rather
+   than a near-fullscreen sheet. Content classnames (dm-*) keep the
+   internal responsive logic — only chrome dimensions change. */
+@media (max-width: 640px) {
+  .dashboard-modal {
+    width: min(440px, calc(100vw - 40px)) !important;
+    max-height: min(560px, calc(100dvh - 64px)) !important;
+    border-radius: 12px !important;
+  }
+  .dashboard-modal .dm-header {
+    padding: 0.7rem 0.85rem 0.6rem !important;
+    gap: 0.5rem !important;
+  }
+  .dashboard-modal .dm-intro {
+    padding: 0 0.85rem 0.75rem !important;
+  }
+  .dashboard-modal .dm-title {
+    font-size: 1.05rem !important;
+    margin-bottom: 0.3rem !important;
+  }
+  .dashboard-modal .dm-body {
+    font-size: 0.82rem !important;
+    line-height: 1.5 !important;
+  }
+  .dashboard-modal .dm-sections {
+    gap: 0.65rem !important;
+    padding: 0 0.85rem 0.85rem !important;
+  }
+  .dashboard-modal .dm-footer {
+    padding: 0.65rem 0.85rem !important;
+  }
+}
+
+/* Even tighter on small phones */
+@media (max-width: 380px) {
+  .dashboard-modal {
+    width: calc(100vw - 28px) !important;
+    max-height: calc(100dvh - 56px) !important;
+  }
+  .dashboard-modal .dm-header {
+    padding: 0.6rem 0.75rem 0.5rem !important;
+  }
+  .dashboard-modal .dm-intro {
+    padding: 0 0.75rem 0.65rem !important;
+  }
+  .dashboard-modal .dm-sections {
+    padding: 0 0.75rem 0.75rem !important;
+  }
+  .dashboard-modal .dm-footer {
+    padding: 0.6rem 0.75rem !important;
   }
 }

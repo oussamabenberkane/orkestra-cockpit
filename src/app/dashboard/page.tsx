@@ -2,17 +2,16 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
-import { Calendar, Circle } from "lucide-react";
+import { Circle } from "lucide-react";
 import type { ModalKey } from "@/lib/types";
 import { Sidebar } from "@/components/dashboard/Sidebar";
 import DashboardModal from "@/components/dashboard/DashboardModal";
+import { FloatingDock } from "@/components/dashboard/FloatingDock";
+import { CommandPalette } from "@/components/shared/CommandPalette";
 import { HeroPanel } from "@/components/dashboard/HeroPanel";
 import { SatelliteKPI } from "@/components/dashboard/SatelliteKPI";
 import { TroisChoses } from "@/components/dashboard/TroisChoses";
-import { TileCard } from "@/components/dashboard/TileCard";
-import { FloatingDock } from "@/components/dashboard/FloatingDock";
-import { CommandPalette } from "@/components/shared/CommandPalette";
+import { TileCard, type TileEntry } from "@/components/dashboard/TileCard";
 import {
   heroByPeriod,
   satellites,
@@ -48,8 +47,8 @@ export default function DashboardPage() {
     });
   };
 
-  const onOpen   = (k: ModalKey) => setModalKey(k);
-  const onClose  = () => setModalKey(null);
+  const onOpen  = (k: ModalKey) => setModalKey(k);
+  const onClose = () => setModalKey(null);
   /** Smart CTA defaults — modals with a related route navigate; others just close. */
   const handleModalAction = (k: ModalKey) => {
     if (k === "rapport" || k === "vue360") router.push("/rapports");
@@ -82,113 +81,144 @@ export default function DashboardPage() {
         style={{
           flex: 1,
           minWidth: 0,
-          padding: "clamp(1.75rem, 3vw, 2.5rem) clamp(1.25rem, 3vw, 2.5rem) 3rem",
+          padding: "clamp(1.25rem, 3vw, 2.5rem) clamp(1rem, 3vw, 2.5rem) 3rem",
           maxWidth: "1240px",
           marginInline: "auto",
           width: "100%",
         }}
       >
-        {/* Greeting row */}
-        <motion.section
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
+        {/* ─── Greeting strip ──────────────────────────────────────────
+         * Single-line on desktop. Wraps cleanly on narrow widths so the
+         * date suffix drops below the name, and source badges flow onto
+         * their own row rather than being pushed off-screen. */}
+        <header className="dash-section" style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: "clamp(0.6rem, 2vw, 1rem)",
+          flexWrap: "wrap",
+          rowGap: "0.6rem",
+          marginBottom: "clamp(1rem, 2.5vw, 1.4rem)",
+          paddingBottom: "clamp(0.85rem, 2vw, 1rem)",
+          borderBottom: "1px solid var(--border)",
+        }}>
           <div style={{
             display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            gap: "0.75rem",
-            rowGap: "0.4rem",
+            alignItems: "baseline",
+            gap: "0.5rem",
             flexWrap: "wrap",
-            marginBottom: "0.85rem",
+            rowGap: "0.15rem",
+            minWidth: 0,
           }}>
             <h1 style={{
-              fontSize: "clamp(1.15rem, 2.6vw, 1.7rem)",
+              fontSize: "clamp(1.1rem, 3.6vw, 1.45rem)",
               fontWeight: 700,
               letterSpacing: "-0.025em",
               color: "var(--text)",
               margin: 0,
-              whiteSpace: "nowrap",
+              lineHeight: 1.15,
             }}>Bonjour Thomas</h1>
             <span style={{
-              display: "inline-flex", alignItems: "center",
-              gap: "0.35rem",
-              fontSize: "clamp(0.66rem, 1.6vw, 0.72rem)",
-              fontWeight: 600,
+              fontSize: "clamp(0.7rem, 1.8vw, 0.78rem)",
               color: "var(--text-3)",
-              whiteSpace: "nowrap",
-              flexShrink: 0,
-            }}>
-              <Calendar size={11} strokeWidth={2.25} />
-              Mardi 12 mai 2026 · semaine 19
-            </span>
+            }}>· 12 mai 2026 · semaine 19</span>
           </div>
-          <div style={{
-            display: "flex",
-            justifyContent: "flex-end",
-            gap: "0.4rem",
-            flexWrap: "wrap",
-            marginBottom: "1.25rem",
-          }}>
+          <div style={{ display: "flex", gap: "0.35rem", flexWrap: "wrap" }}>
             {sourceBadges.map((b) => (
-              <SourceBadge key={b.label} dot={b.dot} label={b.label} />
+              <span key={b.label} style={{
+                display: "inline-flex", alignItems: "center",
+                gap: "0.3rem",
+                fontSize: "clamp(0.68rem, 1.7vw, 0.72rem)",
+                color: "var(--text-2)",
+                background: "var(--surface-2)",
+                padding: "0.28rem 0.55rem",
+                borderRadius: "100px",
+                whiteSpace: "nowrap",
+              }}>
+                <Circle size={5} strokeWidth={0} fill={b.dot} />
+                {b.label}
+              </span>
             ))}
           </div>
+        </header>
 
-          {/* Hero + 3 satellites */}
-          <div className="dashboard-hero">
-            <HeroPanel
-              title={hero.title}
-              combinedBadge={hero.combinedBadge}
-              value={hero.value}
-              unit={hero.unit}
-              yoyLabel={hero.yoyLabel}
-              data={hero.data}
-              months={hero.months}
-              events={hero.events}
-              period={period}
-              onPeriodChange={setPeriod}
-            />
-            <div style={{
-              display: "grid",
-              gridTemplateRows: "repeat(3, 1fr)",
-              gap: "0.85rem",
-            }}>
-              {satellites.map((s) => (
-                <SatelliteKPI key={s.label} kpi={s} onOpen={onOpen} />
-              ))}
-            </div>
-          </div>
-        </motion.section>
+        {/* ─── Action-first banner ──────────────────────────────────── */}
+        <div className="dashboard-action-banner" style={{
+          position: "relative",
+          background: "linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%)",
+          borderRadius: 14,
+          padding: "clamp(0.95rem, 2.5vw, 1.35rem) clamp(1rem, 3vw, 1.5rem)",
+          color: "#FFFFFF",
+          marginBottom: "clamp(0.6rem, 1.5vw, 0.85rem)",
+          boxShadow: "0 12px 30px -14px rgba(88,86,214,0.55)",
+          overflow: "hidden",
+        }}>
+          <div className="dashboard-action-banner__eyebrow" style={{
+            fontFamily: "var(--font-mono)",
+            fontSize: "clamp(0.6rem, 1.7vw, 0.66rem)",
+            fontWeight: 700,
+            letterSpacing: "0.18em",
+            textTransform: "uppercase",
+            opacity: 0.85,
+            marginBottom: "0.4rem",
+          }}>3 choses · aujourd&apos;hui</div>
+          <h2 className="dashboard-action-banner__title" style={{
+            fontSize: "clamp(1.05rem, 3vw, 1.4rem)",
+            fontWeight: 700,
+            letterSpacing: "-0.02em",
+            margin: 0,
+            lineHeight: 1.25,
+          }}>Validez. Relancez. Signez.</h2>
+        </div>
 
-        {/* Trois choses */}
-        <motion.section
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.08, duration: 0.5 }}
-          style={{ marginTop: "clamp(1.5rem, 3vw, 2.25rem)" }}
-        >
+        {/* ─── Priorities (Action-first: above the hero) ───────────── */}
+        <div className="dash-section" style={{ marginBottom: "clamp(1.5rem, 3.5vw, 2.25rem)" }}>
           <TroisChoses items={troisItems} onOpen={onOpen} />
-        </motion.section>
+        </div>
 
-        {/* Domain tiles */}
-        <motion.section
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.14, duration: 0.5 }}
-          style={{ marginTop: "clamp(1.5rem, 3vw, 2.25rem)" }}
-        >
-          <SectionHeader
-            title="Domaines"
-            subtitle="Six tableaux opérationnels — cliquez pour ouvrir."
+        {/* ─── Hero + satellite KPIs ───────────────────────────────── */}
+        <div className="dashboard-hero dash-section" style={{ marginBottom: "clamp(1.5rem, 3.5vw, 2.25rem)" }}>
+          <HeroPanel
+            title={hero.title}
+            combinedBadge={hero.combinedBadge}
+            value={hero.value}
+            unit={hero.unit}
+            yoyLabel={hero.yoyLabel}
+            data={hero.data}
+            months={hero.months}
+            events={hero.events}
+            period={period}
+            onPeriodChange={setPeriod}
           />
-          <div className="dashboard-tiles" style={{ marginTop: "0.85rem" }}>
-            {tiles.map((t) => (
-              <TileCard key={t.title} tile={t} onOpen={onOpen} />
+          <div className="dashboard-kpis-stack">
+            {satellites.map((s) => (
+              <SatelliteKPI key={s.label} kpi={s} onOpen={onOpen} />
             ))}
           </div>
-        </motion.section>
+        </div>
+
+        {/* ─── Domain tiles ─────────────────────────────────────────
+         * Desktop / tablet: full-detail <TileCard> in a 3- → 2-col grid.
+         * Mobile (≤640px): compact cube tiles only — icon + title + metric.
+         * Both lists are rendered; CSS toggles visibility per viewport. */}
+        <div style={{
+          fontSize: "clamp(0.7rem, 1.8vw, 0.78rem)",
+          fontWeight: 700,
+          color: "var(--text-3)",
+          letterSpacing: "0.06em",
+          textTransform: "uppercase",
+          marginBottom: "clamp(0.6rem, 1.5vw, 0.85rem)",
+        }}>Domaines</div>
+        <div className="dashboard-tiles dashboard-tiles-desktop">
+          {tiles.map((t) => (
+            <TileCard key={t.title} tile={t} onOpen={onOpen} />
+          ))}
+        </div>
+        <div className="dashboard-tiles-mobile" aria-hidden={false}>
+          {tiles.map((t) => (
+            <CubeTile key={t.title} tile={t} onOpen={onOpen} />
+          ))}
+        </div>
 
         <Footer />
       </main>
@@ -212,46 +242,70 @@ export default function DashboardPage() {
   );
 }
 
-function SourceBadge({ dot, label }: { dot: string; label: string }) {
+/** Compact stat-tile used only on mobile (≤640px). Icon + title + metric,
+ *  ~96px tall, fits two-up at 320px. Desktop continues to use <TileCard>. */
+function CubeTile({ tile, onOpen }: { tile: TileEntry; onOpen: (k: ModalKey) => void }) {
+  const Icon = tile.Icon;
   return (
-    <span style={{
-      display: "inline-flex", alignItems: "center",
-      gap: "0.3rem",
-      fontSize: "clamp(0.68rem, 1.7vw, 0.74rem)",
-      fontWeight: 500,
-      color: "var(--text-2)",
-      background: "var(--surface)",
-      padding: "0.3rem 0.55rem",
-      borderRadius: "100px",
-      boxShadow: "var(--tier-1)",
-      whiteSpace: "nowrap",
-    }}>
-      <Circle size={5} strokeWidth={0} fill={dot} />
-      {label}
-    </span>
-  );
-}
-
-function SectionHeader({ title, subtitle }: { title: string; subtitle?: string }) {
-  return (
-    <div style={{ marginBottom: "0.85rem" }}>
-      <h2 style={{
-        fontSize: "clamp(0.95rem, 2.2vw, 1.1rem)",
+    <button
+      onClick={() => onOpen(tile.modalKey)}
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "flex-start",
+        gap: "0.4rem",
+        padding: "0.7rem 0.8rem 0.75rem",
+        background: "var(--surface)",
+        border: "1px solid var(--border)",
+        borderRadius: 10,
+        boxShadow: "var(--tier-1)",
+        cursor: "pointer",
+        fontFamily: "inherit",
+        color: "inherit",
+        textAlign: "left",
+        minHeight: 96,
+        width: "100%",
+      }}
+    >
+      <span style={{
+        width: 26, height: 26,
+        background: tile.iconBg,
+        color: tile.iconColor,
+        borderRadius: 7,
+        display: "flex", alignItems: "center", justifyContent: "center",
+        flexShrink: 0,
+      }}>
+        <Icon size={13} strokeWidth={2} />
+      </span>
+      <span style={{
+        fontSize: "0.72rem",
+        color: "var(--text-3)",
+        fontWeight: 500,
+        overflow: "hidden",
+        textOverflow: "ellipsis",
+        whiteSpace: "nowrap",
+        width: "100%",
+      }}>{tile.title}</span>
+      <span style={{
+        fontFamily: "var(--font-mono)",
+        fontSize: "1.2rem",
         fontWeight: 700,
         color: "var(--text)",
+        fontVariantNumeric: "tabular-nums",
         letterSpacing: "-0.02em",
-        margin: 0,
-      }}>{title}</h2>
-      {subtitle && (
-        <p style={{
-          fontSize: "clamp(0.76rem, 1.9vw, 0.84rem)",
-          color: "var(--text-3)",
-          margin: 0,
-          marginTop: "0.15rem",
-          lineHeight: 1.45,
-        }}>{subtitle}</p>
-      )}
-    </div>
+        lineHeight: 1,
+      }}>
+        {tile.metric}
+        {tile.unit && (
+          <span style={{
+            fontSize: "0.55em",
+            color: "var(--text-3)",
+            marginLeft: 2,
+            fontWeight: 500,
+          }}>{tile.unit}</span>
+        )}
+      </span>
+    </button>
   );
 }
 
