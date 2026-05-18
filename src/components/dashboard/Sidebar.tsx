@@ -74,10 +74,14 @@ const COLLAPSED_W = 64;
 const ICON_BTN = 36;
 const BREAKPOINT_MOBILE = 720;
 const NOTIF_COUNT = 3;
-/* Popup geometry — same in both tabs so they are visually identical. */
+/* Popup geometry — same in both tabs so they are visually identical.
+ * Height clamps so short viewports get a tighter panel without breaking layout. */
 const POPUP_INSET = 8;
-const POPUP_HEIGHT = 380;
-const POPUP_TABBAR_H = 40;
+const POPUP_WIDTH = 296;
+const POPUP_HEIGHT_MAX = 312;
+const POPUP_VIEWPORT_RESERVE = 200; /* header + search + bottom row + margin */
+const POPUP_TABBAR_H = 42;
+const POPUP_BOTTOM_OFFSET = 58;
 
 interface TooltipState { label: string; x: number; y: number }
 
@@ -347,6 +351,21 @@ export function Sidebar({
     setPopupOpen(false);
   }, [pathname]);
 
+  /* Lock body scroll while the mobile drawer is open. Prevents any underlying
+   * page scroll from being able to shift the drawer visually, and matches the
+   * conventional behavior of a modal drawer. */
+  useEffect(() => {
+    if (!isMobile || !drawerOpen) return;
+    const prevOverflow = document.body.style.overflow;
+    const prevTouchAction = document.body.style.touchAction;
+    document.body.style.overflow = "hidden";
+    document.body.style.touchAction = "none";
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      document.body.style.touchAction = prevTouchAction;
+    };
+  }, [isMobile, drawerOpen]);
+
   // Close popup if sidebar gets collapsed (popup lives inside it and would clip)
   useEffect(() => {
     if (collapsed && !isMobile) setPopupOpen(false);
@@ -360,6 +379,9 @@ export function Sidebar({
       if (popupRef.current?.contains(t)) return;
       const triggerEl = (t as HTMLElement).closest?.("[data-popup-trigger]");
       if (triggerEl) return;
+      // Mobile drawer backdrop handles its own click → close popup only first,
+      // then close drawer on the next click. Don't dismiss from here.
+      if ((t as HTMLElement).closest?.("[data-drawer-backdrop]")) return;
       setPopupOpen(false);
     };
     const onKey = (e: KeyboardEvent) => {
@@ -421,13 +443,14 @@ export function Sidebar({
     }
   };
 
+  /* Mobile uses top/bottom anchoring (no height: 100vh) so the bottom row stays
+   * pinned to the visible viewport even when the mobile address bar resizes. */
   const sidebarPosition: React.CSSProperties = isMobile
     ? {
         position: "fixed",
         top: 0,
         left: 0,
         bottom: 0,
-        height: "100vh",
         transform: drawerOpen ? "translateX(0)" : `translateX(-${EXPANDED_W + 4}px)`,
         transition: "transform 0.34s cubic-bezier(0.22, 1, 0.36, 1)",
         zIndex: 50,
@@ -471,16 +494,43 @@ export function Sidebar({
         </button>
       )}
 
+      {/* Mobile top clearance bar — full-width fixed strip matching page bg.
+       * Sits at z:39 (below the drawer backdrop) so it's only visible when the
+       * drawer is closed; prevents page content from scrolling behind the
+       * hamburger. Portalled to body so position:fixed anchors to the viewport
+       * (same reasoning as the sidebar itself). */}
+      {mounted && isMobile && createPortal(
+        <div
+          aria-hidden
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            height: "4.5rem",
+            background: "var(--bg)",
+            zIndex: 39,
+          }}
+        />,
+        document.body,
+      )}
+
       {/* Mobile backdrop */}
       {mounted && createPortal(
         <AnimatePresence>
           {isMobile && drawerOpen && (
             <motion.div
+              data-drawer-backdrop="true"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.18 }}
-              onClick={() => setDrawerOpen(false)}
+              onClick={() => {
+                // Layered dismiss: close the popup first if it's open,
+                // then close the drawer on the next click.
+                if (popupOpen) setPopupOpen(false);
+                else setDrawerOpen(false);
+              }}
               style={{
                 position: "fixed",
                 inset: 0,
@@ -493,20 +543,21 @@ export function Sidebar({
         document.body,
       )}
 
-      <aside
-        ref={sidebarRef}
-        className="app-sidebar"
-        style={{
-          width: isMobile ? EXPANDED_W : (collapsed ? COLLAPSED_W : EXPANDED_W),
-          flexShrink: 0,
-          background: "var(--surface-2)",
-          borderRight: "1px solid var(--border)",
-          display: "flex",
-          flexDirection: "column",
-          overflow: "hidden",
-          ...sidebarPosition,
-        }}
-      >
+      {(() => {
+        const asideElement = (
+        <aside
+          ref={sidebarRef}
+          className="app-sidebar"
+          style={{
+            width: isMobile ? EXPANDED_W : (collapsed ? COLLAPSED_W : EXPANDED_W),
+            flexShrink: 0,
+            background: "var(--surface-2)",
+            borderRight: "1px solid var(--border)",
+            display: "flex",
+            flexDirection: "column",
+            ...sidebarPosition,
+          }}
+        >
         {/* Header */}
         <div style={{
           display: "flex",
@@ -782,9 +833,9 @@ export function Sidebar({
               style={{
                 position: "absolute",
                 left: POPUP_INSET,
-                right: POPUP_INSET,
-                bottom: 64,
-                height: POPUP_HEIGHT,
+                width: `min(${POPUP_WIDTH}px, calc(100vw - 16px))`,
+                bottom: POPUP_BOTTOM_OFFSET,
+                height: `min(${POPUP_HEIGHT_MAX}px, calc(100vh - ${POPUP_VIEWPORT_RESERVE}px))`,
                 background: "var(--surface)",
                 border: "1px solid var(--border)",
                 borderRadius: 12,
@@ -801,13 +852,13 @@ export function Sidebar({
                 <div style={{
                   display: "grid",
                   gridTemplateColumns: "1fr 1fr",
-                  padding: "0.25rem 0.3rem",
-                  gap: "0.18rem",
+                  padding: "0.18rem 0.22rem",
+                  gap: "0.15rem",
                   borderBottom: "1px solid var(--border)",
                   height: POPUP_TABBAR_H,
                   flexShrink: 0,
                 }}>
-                  {(["profile", "notif"] as PopupTab[]).map((t) => {
+                  {(["notif", "profile"] as PopupTab[]).map((t) => {
                     const active = popupTab === t;
                     const label = t === "profile" ? "Profil" : "Alertes";
                     return (
@@ -820,13 +871,13 @@ export function Sidebar({
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "center",
-                          gap: "0.4rem",
+                          gap: "0.35rem",
                           height: "100%",
                           background: "transparent",
                           border: "none",
-                          borderRadius: 7,
+                          borderRadius: 6,
                           fontFamily: "inherit",
-                          fontSize: "0.74rem",
+                          fontSize: "0.68rem",
                           fontWeight: active ? 600 : 500,
                           color: active ? "var(--text)" : "var(--text-3)",
                           cursor: "pointer",
@@ -846,7 +897,7 @@ export function Sidebar({
                               position: "absolute",
                               inset: 0,
                               background: "var(--surface-2)",
-                              borderRadius: 7,
+                              borderRadius: 6,
                               zIndex: 0,
                             }}
                             transition={{ duration: 0.26, ease: [0.22, 1, 0.36, 1] }}
@@ -859,33 +910,33 @@ export function Sidebar({
                         }}>
                           {t === "profile" ? (
                             <span style={{
-                              width: 16, height: 16,
+                              width: 14, height: 14,
                               borderRadius: "100px",
                               background: "var(--accent)",
                               color: "#FFFFFF",
                               display: "flex",
                               alignItems: "center", justifyContent: "center",
                               fontFamily: "var(--font-mono)",
-                              fontSize: "0.5rem", fontWeight: 700,
+                              fontSize: "0.46rem", fontWeight: 700,
                               letterSpacing: "0.02em",
                               flexShrink: 0,
                             }}>TM</span>
                           ) : (
                             <span style={{ position: "relative", display: "inline-flex" }}>
-                              <Bell size={13} strokeWidth={2.25} />
+                              <Bell size={12} strokeWidth={2.25} />
                               <span aria-hidden style={{
                                 position: "absolute",
-                                top: -4, right: -5,
-                                minWidth: 11, height: 11,
+                                top: -3, right: -5,
+                                minWidth: 10, height: 10,
                                 padding: "0 2px",
-                                borderRadius: "6px",
+                                borderRadius: "5px",
                                 background: "var(--danger)",
                                 color: "#FFFFFF",
-                                fontSize: "0.48rem", fontWeight: 700,
+                                fontSize: "0.44rem", fontWeight: 700,
                                 lineHeight: 1,
                                 display: "flex",
                                 alignItems: "center", justifyContent: "center",
-                                border: "1.5px solid var(--surface)",
+                                border: "1.25px solid var(--surface)",
                               }}>{NOTIF_COUNT}</span>
                             </span>
                           )}
@@ -918,7 +969,12 @@ export function Sidebar({
             </motion.div>
           )}
         </AnimatePresence>
-      </aside>
+        </aside>
+        );
+        return isMobile && mounted
+          ? createPortal(asideElement, document.body)
+          : asideElement;
+      })()}
 
       {mounted && tooltip && createPortal(
         <TooltipBubble label={tooltip.label} x={tooltip.x} y={tooltip.y} />,

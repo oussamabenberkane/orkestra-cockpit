@@ -528,7 +528,7 @@ export default function RapportsPage() {
         onOpenPalette={() => setPaletteOpen(true)}
       />
 
-      <main style={{
+      <main className="app-main" style={{
         flex: 1, minWidth: 0,
         padding: "clamp(2rem, 4vw, 3rem) clamp(1.5rem, 3vw, 2.5rem) 4rem",
         maxWidth: "1240px", marginInline: "auto", width: "100%",

@@ -78,6 +78,7 @@ export default function DashboardPage() {
       />
 
       <main
+        className="app-main"
         style={{
           flex: 1,
           minWidth: 0,
@@ -96,35 +97,40 @@ export default function DashboardPage() {
           <div style={{
             display: "flex",
             justifyContent: "space-between",
-            alignItems: "flex-end",
+            alignItems: "center",
             gap: "1rem",
+            marginBottom: "0.85rem",
+          }}>
+            <h1 style={{
+              fontSize: "clamp(1.15rem, 2.6vw, 1.7rem)",
+              fontWeight: 700,
+              letterSpacing: "-0.025em",
+              color: "var(--text)",
+              margin: 0,
+              whiteSpace: "nowrap",
+            }}>Bonjour Thomas</h1>
+            <span style={{
+              display: "inline-flex", alignItems: "center",
+              gap: "0.35rem",
+              fontSize: "0.72rem", fontWeight: 600,
+              color: "var(--text-3)",
+              whiteSpace: "nowrap",
+              flexShrink: 0,
+            }}>
+              <Calendar size={11} strokeWidth={2.25} />
+              Mardi 12 mai 2026 · semaine 19
+            </span>
+          </div>
+          <div style={{
+            display: "flex",
+            justifyContent: "flex-end",
+            gap: "0.4rem",
             flexWrap: "wrap",
             marginBottom: "1.25rem",
           }}>
-            <div>
-              <span style={{
-                display: "inline-flex", alignItems: "center",
-                gap: "0.35rem",
-                fontSize: "0.72rem", fontWeight: 600,
-                color: "var(--text-3)",
-                marginBottom: "0.3rem",
-              }}>
-                <Calendar size={11} strokeWidth={2.25} />
-                Mardi 12 mai 2026 · semaine 19
-              </span>
-              <h1 style={{
-                fontSize: "clamp(1.6rem, 3vw, 1.95rem)",
-                fontWeight: 700,
-                letterSpacing: "-0.025em",
-                color: "var(--text)",
-                margin: 0,
-              }}>Bonjour Thomas</h1>
-            </div>
-            <div style={{ display: "flex", gap: "0.4rem" }}>
-              {sourceBadges.map((b) => (
-                <SourceBadge key={b.label} dot={b.dot} label={b.label} />
-              ))}
-            </div>
+            {sourceBadges.map((b) => (
+              <SourceBadge key={b.label} dot={b.dot} label={b.label} />
+            ))}
           </div>
 
           {/* Hero + 3 satellites */}

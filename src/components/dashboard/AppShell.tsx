@@ -81,6 +81,7 @@ export function AppShell({ children, mainStyle }: AppShellProps) {
       />
 
       <main
+        className="app-main"
         style={{
           flex: 1,
           minWidth: 0,

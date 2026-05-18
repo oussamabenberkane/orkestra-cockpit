@@ -41,35 +41,35 @@ export function UserMenuContent({ onLogout, bare = false, onClose }: UserMenuCon
       >
         <div
           style={{
-            padding: "0.55rem 0.6rem",
+            padding: "0.6rem 0.7rem",
             borderBottom: "1px solid var(--border)",
             display: "flex",
             alignItems: "center",
-            gap: "0.55rem",
+            gap: "0.6rem",
             flexShrink: 0,
           }}
         >
           <div
             style={{
-              width: 28,
-              height: 28,
+              width: 24,
+              height: 24,
               borderRadius: "50%",
               background: "var(--text)",
               color: "var(--surface)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              fontSize: "0.68rem",
+              fontSize: "0.6rem",
               fontWeight: 700,
               flexShrink: 0,
             }}
           >
             TM
           </div>
-          <div style={{ minWidth: 0, lineHeight: 1.25 }}>
+          <div style={{ minWidth: 0, lineHeight: 1.2 }}>
             <div
               style={{
-                fontSize: "0.78rem",
+                fontSize: "0.72rem",
                 fontWeight: 600,
                 color: "var(--text)",
                 letterSpacing: "-0.005em",
@@ -82,7 +82,7 @@ export function UserMenuContent({ onLogout, bare = false, onClose }: UserMenuCon
             </div>
             <div
               style={{
-                fontSize: "0.64rem",
+                fontSize: "0.58rem",
                 color: "var(--text-3)",
                 whiteSpace: "nowrap",
                 overflow: "hidden",
@@ -99,7 +99,10 @@ export function UserMenuContent({ onLogout, bare = false, onClose }: UserMenuCon
             flex: 1,
             minHeight: 0,
             overflowY: "auto",
-            padding: "0.25rem",
+            padding: "0.4rem 0.35rem",
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "space-evenly",
           }}
         >
           {items.map((item) => {
@@ -112,9 +115,9 @@ export function UserMenuContent({ onLogout, bare = false, onClose }: UserMenuCon
                   width: "100%",
                   display: "grid",
                   gridTemplateColumns: "auto 1fr auto",
-                  gap: "0.5rem",
+                  gap: "0.6rem",
                   alignItems: "center",
-                  padding: "0.4rem 0.45rem",
+                  padding: "0.55rem 0.55rem",
                   border: "none",
                   background: "transparent",
                   borderRadius: "7px",
@@ -123,6 +126,7 @@ export function UserMenuContent({ onLogout, bare = false, onClose }: UserMenuCon
                   color: "inherit",
                   textAlign: "left",
                   transition: "background 0.12s",
+                  flexShrink: 0,
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.background = "var(--surface-2)";
@@ -133,20 +137,20 @@ export function UserMenuContent({ onLogout, bare = false, onClose }: UserMenuCon
               >
                 <span
                   style={{
-                    width: 20,
-                    height: 20,
+                    width: 18,
+                    height: 18,
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
                     color: "var(--text-3)",
                   }}
                 >
-                  <I size={12} strokeWidth={2} />
+                  <I size={11} strokeWidth={2} />
                 </span>
-                <div style={{ minWidth: 0, lineHeight: 1.2 }}>
+                <div style={{ minWidth: 0, lineHeight: 1.15 }}>
                   <div
                     style={{
-                      fontSize: "0.76rem",
+                      fontSize: "0.68rem",
                       fontWeight: 500,
                       color: "var(--text)",
                       letterSpacing: "-0.005em",
@@ -160,9 +164,9 @@ export function UserMenuContent({ onLogout, bare = false, onClose }: UserMenuCon
                   {item.sub && (
                     <div
                       style={{
-                        fontSize: "0.62rem",
+                        fontSize: "0.56rem",
                         color: "var(--text-4)",
-                        marginTop: "0.05rem",
+                        marginTop: "0.02rem",
                         whiteSpace: "nowrap",
                         overflow: "hidden",
                         textOverflow: "ellipsis",
@@ -173,16 +177,16 @@ export function UserMenuContent({ onLogout, bare = false, onClose }: UserMenuCon
                   )}
                 </div>
                 {item.onClick ? (
-                  <ChevronRight size={10} strokeWidth={2} color="var(--text-4)" />
+                  <ChevronRight size={9} strokeWidth={2} color="var(--text-4)" />
                 ) : (
                   <span
                     style={{
-                      fontSize: "0.52rem",
+                      fontSize: "0.48rem",
                       fontWeight: 600,
                       color: "var(--text-4)",
                       background: "var(--surface-2)",
                       border: "1px solid var(--border)",
-                      padding: "0.08rem 0.3rem",
+                      padding: "0.06rem 0.28rem",
                       borderRadius: "100px",
                       letterSpacing: "0.04em",
                       textTransform: "uppercase",
@@ -198,7 +202,7 @@ export function UserMenuContent({ onLogout, bare = false, onClose }: UserMenuCon
 
         <div
           style={{
-            padding: "0.3rem",
+            padding: "0.4rem 0.45rem",
             borderTop: "1px solid var(--border)",
             background: "var(--surface-2)",
             flexShrink: 0,
@@ -211,14 +215,14 @@ export function UserMenuContent({ onLogout, bare = false, onClose }: UserMenuCon
               display: "flex",
               alignItems: "center",
               gap: "0.55rem",
-              padding: "0.4rem 0.5rem",
+              padding: "0.5rem 0.55rem",
               border: "none",
               background: "transparent",
               borderRadius: "7px",
               cursor: "pointer",
               fontFamily: "inherit",
               color: "var(--text-2)",
-              fontSize: "0.76rem",
+              fontSize: "0.68rem",
               fontWeight: 500,
               transition: "background 0.12s, color 0.12s",
             }}
@@ -231,7 +235,7 @@ export function UserMenuContent({ onLogout, bare = false, onClose }: UserMenuCon
               e.currentTarget.style.color = "var(--text-2)";
             }}
           >
-            <LogOut size={12} strokeWidth={2} />
+            <LogOut size={11} strokeWidth={2} />
             Déconnexion
           </button>
         </div>

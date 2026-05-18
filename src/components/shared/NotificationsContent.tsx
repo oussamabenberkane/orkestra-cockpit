@@ -84,18 +84,18 @@ export function NotificationsContent({
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
-            padding: "0.4rem 0.55rem",
+            padding: "0.5rem 0.7rem",
             borderBottom: "1px solid var(--border)",
             flexShrink: 0,
           }}
         >
           <span
             style={{
-              fontSize: "0.6rem",
+              fontSize: "0.56rem",
               fontWeight: 600,
               color: "var(--danger)",
               background: "var(--danger-tint)",
-              padding: "0.1rem 0.4rem",
+              padding: "0.12rem 0.45rem",
               borderRadius: "100px",
               letterSpacing: "0.02em",
             }}
@@ -105,13 +105,13 @@ export function NotificationsContent({
           <button
             style={{
               fontFamily: "inherit",
-              fontSize: "0.66rem",
+              fontSize: "0.6rem",
               fontWeight: 600,
               color: "var(--text-3)",
               background: "transparent",
               border: "none",
               cursor: "pointer",
-              padding: "0.15rem 0.35rem",
+              padding: "0.18rem 0.4rem",
               borderRadius: "5px",
               transition: "color 0.15s, background 0.15s",
             }}
@@ -144,9 +144,9 @@ export function NotificationsContent({
                   width: "100%",
                   display: "grid",
                   gridTemplateColumns: "auto 1fr",
-                  gap: "0.5rem",
+                  gap: "0.6rem",
                   alignItems: "flex-start",
-                  padding: "0.5rem 0.55rem",
+                  padding: "0.6rem 0.7rem",
                   border: "none",
                   borderBottom:
                     i === notifications.length - 1 ? "none" : "1px solid var(--border)",
@@ -170,8 +170,8 @@ export function NotificationsContent({
                     aria-hidden
                     style={{
                       position: "absolute",
-                      left: 2,
-                      top: "calc(0.5rem + 8px)",
+                      left: 4,
+                      top: "calc(0.6rem + 7px)",
                       width: 4,
                       height: 4,
                       borderRadius: "50%",
@@ -181,11 +181,11 @@ export function NotificationsContent({
                 )}
                 <span
                   style={{
-                    width: 22,
-                    height: 22,
+                    width: 18,
+                    height: 18,
                     background: n.iconBg,
                     color: n.iconColor,
-                    borderRadius: "6px",
+                    borderRadius: "5px",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
@@ -193,16 +193,16 @@ export function NotificationsContent({
                     marginLeft: n.unread ? "0.35rem" : 0,
                   }}
                 >
-                  <I size={11} strokeWidth={2} />
+                  <I size={10} strokeWidth={2} />
                 </span>
                 <div style={{ minWidth: 0 }}>
                   <div
                     style={{
-                      fontSize: "0.74rem",
+                      fontSize: "0.68rem",
                       fontWeight: 600,
                       color: "var(--text)",
                       letterSpacing: "-0.005em",
-                      lineHeight: 1.3,
+                      lineHeight: 1.25,
                       whiteSpace: "nowrap",
                       overflow: "hidden",
                       textOverflow: "ellipsis",
@@ -212,10 +212,10 @@ export function NotificationsContent({
                   </div>
                   <div
                     style={{
-                      fontSize: "0.66rem",
+                      fontSize: "0.6rem",
                       color: "var(--text-3)",
-                      lineHeight: 1.35,
-                      marginTop: "0.1rem",
+                      lineHeight: 1.3,
+                      marginTop: "0.05rem",
                       whiteSpace: "nowrap",
                       overflow: "hidden",
                       textOverflow: "ellipsis",
@@ -225,9 +225,9 @@ export function NotificationsContent({
                   </div>
                   <div
                     style={{
-                      fontSize: "0.6rem",
+                      fontSize: "0.54rem",
                       color: "var(--text-4)",
-                      marginTop: "0.15rem",
+                      marginTop: "0.1rem",
                     }}
                   >
                     {n.time}
@@ -240,7 +240,7 @@ export function NotificationsContent({
 
         <div
           style={{
-            padding: "0.4rem 0.55rem",
+            padding: "0.5rem 0.7rem",
             borderTop: "1px solid var(--border)",
             background: "var(--surface-2)",
             display: "flex",
@@ -255,13 +255,13 @@ export function NotificationsContent({
             }}
             style={{
               fontFamily: "inherit",
-              fontSize: "0.72rem",
+              fontSize: "0.64rem",
               fontWeight: 600,
               color: "var(--accent)",
               background: "transparent",
               border: "none",
               cursor: "pointer",
-              padding: "0.2rem 0.4rem",
+              padding: "0.25rem 0.45rem",
               borderRadius: "5px",
             }}
           >

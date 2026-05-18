@@ -48,7 +48,7 @@ export default function RapportDetailPage() {
         onOpenPalette={() => {}}
       />
 
-      <main style={{
+      <main className="app-main" style={{
         flex: 1, minWidth: 0,
         padding: "clamp(2rem, 4vw, 3rem) clamp(1.5rem, 3vw, 2.5rem) 4rem",
         maxWidth: "900px", marginInline: "auto", width: "100%",
