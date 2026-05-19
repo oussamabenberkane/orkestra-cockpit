@@ -45,6 +45,7 @@ import {
   Mic,
   MicOff,
   Brain,
+  type LucideIcon,
 } from "lucide-react";
 import { Markdown } from "./markdown";
 import type { Memory, MemoryInput, MemoryKind } from "@/agent/memory/types";
@@ -59,35 +60,36 @@ import {
 } from "@/components/dashboard/AgentConversationProvider";
 import { Sidebar as AppSidebar } from "@/components/dashboard/Sidebar";
 
-/* ─── Plinth tokens (matches /c design language) ─── */
+/* ─── Plinth tokens — references the dashboard's CSS variables.
+ * Keeping the `T` shape lets the rest of this file stay readable while
+ * every color/shadow now resolves to the same `var(--*)` tokens the
+ * dashboard uses. Theme flips (dark mode, brand change) propagate. */
 const T = {
-  bg: "#F5F5F7",
-  surface: "#FFFFFF",
-  surface2: "#FBFBFD",
-  surface3: "#F2F2F4",
-  border: "rgba(0,0,0,0.06)",
-  borderStrong: "rgba(0,0,0,0.10)",
-  text: "#1D1D1F",
-  text2: "#424245",
-  text3: "#6E6E73",
-  text4: "#86868B",
-  accent: "#007AFF",
-  accent2: "#0062CC",
-  accentTint: "rgba(0,122,255,0.16)",
-  accentTint2: "rgba(0,122,255,0.10)",
-  success: "#34A853",
-  successTint: "rgba(52,168,83,0.10)",
-  warn: "#FF9F0A",
-  warnTint: "rgba(255,159,10,0.10)",
-  danger: "#FF3B30",
-  dangerTint: "rgba(255,59,48,0.10)",
-  info: "#007AFF",
-  infoTint: "rgba(0,122,255,0.10)",
-  // Elevation system (Plinth tier-1 / tier-2)
-  tier1:
-    "inset 0 1px 0 rgba(255,255,255,1), 0 0 0 1px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.05), 0 6px 16px -10px rgba(0,0,0,0.12)",
-  tier2:
-    "inset 0 1px 0 rgba(255,255,255,1), 0 0 0 1px rgba(0,0,0,0.06), 0 2px 4px rgba(0,0,0,0.06), 0 16px 32px -12px rgba(0,0,0,0.18)",
+  bg: "var(--bg)",
+  surface: "var(--surface)",
+  surface2: "var(--surface-2)",
+  surface3: "var(--surface-3)",
+  border: "var(--border)",
+  borderStrong: "var(--border-strong)",
+  text: "var(--text)",
+  text2: "var(--text-2)",
+  text3: "var(--text-3)",
+  text4: "var(--text-4)",
+  accent: "var(--accent)",
+  accent2: "var(--accent-2)",
+  accentTint: "var(--accent-tint-2)",   /* 16% — matches the original visual */
+  accentTint2: "var(--accent-tint)",    /* 10% */
+  success: "var(--success)",
+  successTint: "var(--success-tint)",
+  warn: "var(--warn)",
+  warnTint: "var(--warn-tint)",
+  danger: "var(--danger)",
+  dangerTint: "var(--danger-tint)",
+  info: "var(--info)",
+  infoTint: "var(--info-tint)",
+  // Elevation system — atomic tokens from globals.css
+  tier1: "var(--tier-1)",
+  tier2: "var(--tier-2)",
   gradient: "linear-gradient(to bottom, #007AFF, #0062CC)",
   gradientShadow:
     "inset 0 1px 0 rgba(255,255,255,0.25), 0 0 0 1px rgba(0,98,204,0.30), 0 4px 14px -4px rgba(0,122,255,0.40)",
@@ -643,7 +645,11 @@ export default function AgentTestPage() {
               {active.messages.length === 0 && !loading ? (
                 <Welcome onPick={send} loading={loading} />
               ) : (
-                <div style={{ display: "flex", flexDirection: "column", gap: "1.4rem" }}>
+                <div style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "clamp(1.2rem, 2.8vw, 1.6rem)",
+                }}>
                   <AnimatePresence initial={false}>
                     {active.messages.map((m, i) => (
                       <MessageBubble
@@ -1400,63 +1406,78 @@ function Sidebar({
           height: "100%",
         }}
       >
-            <div style={{ padding: "1rem 0.85rem 0.6rem" }}>
+            {/* ─── Solid-accent banner CTA (mirrors dashboard action banner) ─── */}
+            <div style={{ padding: "1rem 0.85rem 0.65rem" }}>
               <button
                 onClick={() => {
                   onNew();
-                  // On mobile, the drawer overlays the chat — auto-close so the
-                  // user immediately lands on the fresh empty thread.
                   if (typeof window !== "undefined" &&
-                      window.matchMedia("(max-width: 820px)").matches) {
+                      window.matchMedia("(max-width: 720px)").matches) {
                     onCloseMobile();
                   }
                 }}
+                className="agent-conv-cta"
                 style={{
                   width: "100%",
                   display: "flex",
                   alignItems: "center",
-                  justifyContent: "center",
+                  justifyContent: "space-between",
                   gap: "0.5rem",
-                  padding: "0.6rem 0.75rem",
-                  background: T.gradient,
+                  padding: "0.7rem 0.95rem",
+                  background: "var(--accent)",
                   color: "#FFFFFF",
                   border: "none",
-                  borderRadius: 10,
+                  borderRadius: 12,
                   fontFamily: "inherit",
                   fontSize: "0.82rem",
                   fontWeight: 600,
                   letterSpacing: "-0.005em",
                   cursor: "pointer",
-                  boxShadow: T.gradientShadow,
+                  boxShadow: "0 12px 30px -14px rgba(0,122,255,0.55)",
                   transition: "transform 0.22s ease, box-shadow 0.22s ease",
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.transform = "translateY(-1px)";
-                  e.currentTarget.style.boxShadow = T.gradientShadowHover;
+                  e.currentTarget.style.boxShadow = "0 16px 36px -14px rgba(0,122,255,0.65)";
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.transform = "translateY(0)";
-                  e.currentTarget.style.boxShadow = T.gradientShadow;
+                  e.currentTarget.style.boxShadow = "0 12px 30px -14px rgba(0,122,255,0.55)";
                 }}
               >
-                <Plus size={14} strokeWidth={2.5} />
-                Nouvelle conversation
+                <span style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem" }}>
+                  <span aria-hidden="true" style={{
+                    width: 22, height: 22, borderRadius: 7,
+                    background: "rgba(255,255,255,0.18)",
+                    display: "inline-flex", alignItems: "center", justifyContent: "center",
+                  }}>
+                    <Plus size={13} strokeWidth={2.5} />
+                  </span>
+                  Nouvelle conversation
+                </span>
+                <ChevronRight size={14} strokeWidth={2.25} style={{ opacity: 0.7 }} />
               </button>
             </div>
 
-            <div style={{ padding: "0.1rem 0.85rem 0.5rem" }}>
+            {/* ─── Search card (tier-1 elevation, accent-tint focus ring) ─── */}
+            <div style={{ padding: "0.1rem 0.85rem 0.65rem" }}>
               <div
+                className="agent-conv-search"
                 style={{
                   position: "relative",
                   display: "flex",
                   alignItems: "center",
+                  background: "var(--surface)",
+                  borderRadius: 10,
+                  boxShadow: "var(--tier-1)",
+                  transition: "box-shadow 0.18s ease",
                 }}
               >
                 <Search
                   size={12}
                   strokeWidth={2.25}
-                  color={T.text4}
-                  style={{ position: "absolute", left: 9, pointerEvents: "none" }}
+                  color="var(--text-4)"
+                  style={{ position: "absolute", left: 10, pointerEvents: "none" }}
                 />
                 <input
                   type="text"
@@ -1465,15 +1486,14 @@ function Sidebar({
                   placeholder="Rechercher…"
                   style={{
                     width: "100%",
-                    padding: "0.45rem 0.6rem 0.45rem 1.85rem",
-                    background: T.surface,
+                    padding: "0.5rem 0.6rem 0.5rem 1.95rem",
+                    background: "transparent",
                     border: "none",
                     borderRadius: 10,
                     fontFamily: "inherit",
                     fontSize: "0.8rem",
-                    color: T.text,
+                    color: "var(--text)",
                     outline: "none",
-                    boxShadow: T.tier1,
                   }}
                 />
                 {searchQuery && (
@@ -1490,9 +1510,9 @@ function Sidebar({
                       justifyContent: "center",
                       background: "transparent",
                       border: "none",
-                      color: T.text3,
+                      color: "var(--text-3)",
                       cursor: "pointer",
-                      borderRadius: 4,
+                      borderRadius: 6,
                     }}
                   >
                     <X size={11} strokeWidth={2.25} />
@@ -1501,31 +1521,61 @@ function Sidebar({
               </div>
             </div>
 
+            {/* ─── Mono eyebrow (matches dashboard section labels) ─── */}
             <div
               style={{
-                fontSize: "0.62rem",
+                fontFamily: "var(--font-mono), ui-monospace, monospace",
+                fontSize: "clamp(0.6rem, 1.7vw, 0.66rem)",
                 fontWeight: 700,
-                letterSpacing: "0.14em",
+                letterSpacing: "0.18em",
                 textTransform: "uppercase",
-                color: T.text4,
-                padding: "0.1rem 1rem 0.35rem",
+                color: "var(--text-4)",
+                padding: "0.3rem 1.05rem 0.5rem",
+                display: "flex",
+                alignItems: "center",
+                gap: "0.45rem",
               }}
             >
-              Conversations
-              {searchQuery && (
-                <span style={{ color: T.text3, fontWeight: 500, marginLeft: "0.4rem" }}>
+              <span>Conversations</span>
+              {searchQuery ? (
+                <span style={{
+                  color: "var(--accent)",
+                  fontWeight: 700,
+                  letterSpacing: "0.02em",
+                  fontVariantNumeric: "tabular-nums",
+                }}>
                   · {filteredConvs.length}/{conversations.length}
+                </span>
+              ) : (
+                <span style={{
+                  color: "var(--text-3)",
+                  fontWeight: 600,
+                  fontVariantNumeric: "tabular-nums",
+                }}>
+                  · {conversations.length}
                 </span>
               )}
             </div>
 
-            <div className="agent-scroll" style={{ flex: 1, overflowY: "auto", padding: "0 0.5rem 0.5rem" }}>
+            {/* ─── Conversation cards (tier-1 elevated rows, hover-lift) ─── */}
+            <div className="agent-scroll agent-conv-list" style={{
+              flex: 1,
+              overflowY: "auto",
+              padding: "0 0.85rem 0.85rem",
+              display: "flex",
+              flexDirection: "column",
+              gap: "0.4rem",
+            }}>
               {filteredConvs.length === 0 ? (
                 <div
                   style={{
-                    padding: "0.6rem 0.7rem",
-                    fontSize: "0.74rem",
-                    color: T.text4,
+                    padding: "0.85rem 0.9rem",
+                    fontSize: "0.78rem",
+                    color: "var(--text-4)",
+                    background: "var(--surface)",
+                    border: "1px dashed var(--border-strong)",
+                    borderRadius: 10,
+                    textAlign: "center",
                   }}
                 >
                   Aucune conversation ne correspond.
@@ -1540,7 +1590,7 @@ function Sidebar({
                       active={isActive}
                       onSelect={() => {
                         onSelect(c.id);
-                        if (window.matchMedia("(max-width: 820px)").matches) {
+                        if (window.matchMedia("(max-width: 720px)").matches) {
                           onCloseMobile();
                         }
                       }}
@@ -1552,66 +1602,40 @@ function Sidebar({
 
             </div>
 
+            {/* ─── Footer tile strip (3 tier-1 chips: tools / dataset / model) ─── */}
             <div
               style={{
-                padding: "0.75rem 0.9rem calc(0.75rem + env(safe-area-inset-bottom, 0px))",
-                display: "flex",
-                flexDirection: "column",
-                gap: "0.35rem",
-                background:
-                  "linear-gradient(to right, transparent, rgba(0,0,0,0.06) 12%, rgba(0,0,0,0.06) 88%, transparent) top / 100% 1px no-repeat",
+                padding: "0.7rem 0.85rem calc(0.85rem + env(safe-area-inset-bottom, 0px))",
+                display: "grid",
+                gridTemplateColumns: model && datasetLabel ? "1fr 1fr" : "1fr",
+                gap: "0.4rem",
+                borderTop: "1px solid var(--border)",
               }}
             >
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "0.45rem",
-                  fontSize: "0.7rem",
-                  color: T.text3,
-                }}
-              >
-                <Wrench size={11} strokeWidth={2.25} color={T.accent} aria-hidden="true" />
-                <span style={{ fontWeight: 600, color: T.text2 }}>8 outils</span>
-                <span style={{ color: T.text4 }}>· KPI · lookups · SQL · mémoire</span>
-              </div>
+              <FooterChip
+                Icon={Wrench}
+                iconColor="var(--accent)"
+                label="8 outils"
+                sub="KPI · SQL · mémoire"
+              />
               {datasetLabel && (
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "0.45rem",
-                    fontSize: "0.7rem",
-                    color: T.text3,
-                  }}
-                >
-                  <Database size={11} strokeWidth={2.25} color={T.text4} aria-hidden="true" />
-                  <span style={{ fontVariantNumeric: "tabular-nums" }}>{datasetLabel}</span>
-                </div>
+                <FooterChip
+                  Icon={Database}
+                  iconColor="var(--info)"
+                  label="Données"
+                  sub={datasetLabel}
+                  mono
+                />
               )}
               {model && (
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "0.45rem",
-                    fontSize: "0.68rem",
-                    color: T.text3,
-                    fontFamily: "var(--font-mono), ui-monospace, monospace",
-                  }}
-                >
-                  <Cpu size={11} strokeWidth={2.25} color={T.text4} aria-hidden="true" />
-                  <span
-                    style={{
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                      whiteSpace: "nowrap",
-                      minWidth: 0,
-                    }}
-                  >
-                    {model}
-                  </span>
-                </div>
+                <FooterChip
+                  Icon={Cpu}
+                  iconColor="var(--purple)"
+                  label="Modèle"
+                  sub={model}
+                  mono
+                  spanFull={!datasetLabel}
+                />
               )}
             </div>
       </div>
@@ -1649,22 +1673,29 @@ function ConvRow({
     conv.messages.length > 0
       ? conv.messages[conv.messages.length - 1].ts ?? conv.createdAt
       : conv.createdAt;
+  /* Each conversation row is an elevated card — same plinth tier-1 / tier-2
+   * elevation rhythm as the dashboard tiles. Active state uses a left
+   * accent rail + tier-2 + accent-tint background for a clear "selected"
+   * read; hover lifts the card -1px and bumps to tier-2 transiently. */
   return (
     <div
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
+      className={`agent-conv-row${active ? " is-active" : ""}`}
       style={{
+        position: "relative",
         display: "grid",
-        gridTemplateColumns: "auto 1fr auto",
+        gridTemplateColumns: "auto minmax(0, 1fr) auto",
         alignItems: "center",
         gap: "0.55rem",
-        padding: "0.5rem 0.6rem",
-        background: active ? T.surface : hover ? T.surface : "transparent",
-        borderRadius: 9,
-        marginBottom: 2,
+        padding: "0.6rem 0.7rem 0.6rem 0.85rem",
+        background: active ? "var(--accent-tint)" : "var(--surface)",
+        borderRadius: 10,
         cursor: "pointer",
-        boxShadow: active ? T.tier1 : "none",
-        transition: "background 0.15s, box-shadow 0.18s",
+        boxShadow: active ? "var(--tier-2)" : "var(--tier-1)",
+        transition:
+          "background 0.18s ease, box-shadow 0.22s ease, transform 0.18s ease",
+        transform: hover && !active ? "translateY(-1px)" : "translateY(0)",
       }}
       onClick={onSelect}
       role="button"
@@ -1677,17 +1708,42 @@ function ConvRow({
         }
       }}
     >
-      <MessageSquare
-        size={13}
-        strokeWidth={2}
-        color={active ? T.accent : T.text3}
-        style={{ flexShrink: 0 }}
+      {/* Active-state left accent rail */}
+      {active && (
+        <span
+          aria-hidden="true"
+          style={{
+            position: "absolute",
+            left: 0,
+            top: 8,
+            bottom: 8,
+            width: 3,
+            background: "var(--accent)",
+            borderRadius: "0 2px 2px 0",
+          }}
+        />
+      )}
+      <span
         aria-hidden="true"
-      />
+        style={{
+          width: 26,
+          height: 26,
+          borderRadius: 7,
+          display: "inline-flex",
+          alignItems: "center",
+          justifyContent: "center",
+          background: active ? "var(--accent)" : "var(--accent-tint)",
+          color: active ? "#FFFFFF" : "var(--accent)",
+          flexShrink: 0,
+          transition: "background 0.18s ease, color 0.18s ease",
+        }}
+      >
+        <MessageSquare size={13} strokeWidth={2.25} />
+      </span>
       <span
         style={{
-          fontSize: "0.82rem",
-          color: active ? T.text : T.text2,
+          fontSize: "0.84rem",
+          color: active ? "var(--text)" : "var(--text-2)",
           fontWeight: active ? 600 : 500,
           letterSpacing: "-0.005em",
           overflow: "hidden",
@@ -1706,28 +1762,29 @@ function ConvRow({
           }}
           aria-label="Supprimer la conversation"
           style={{
-            width: 22,
-            height: 22,
+            width: 24,
+            height: 24,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            background: "transparent",
+            background: "var(--surface-2)",
             border: "none",
-            color: T.text4,
+            color: "var(--text-3)",
             cursor: "pointer",
-            borderRadius: 5,
+            borderRadius: 6,
             transition: "background 0.12s, color 0.12s",
+            flexShrink: 0,
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.background = T.surface;
-            e.currentTarget.style.color = T.danger;
+            e.currentTarget.style.background = "var(--danger-tint)";
+            e.currentTarget.style.color = "var(--danger)";
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.background = "transparent";
-            e.currentTarget.style.color = T.text4;
+            e.currentTarget.style.background = "var(--surface-2)";
+            e.currentTarget.style.color = "var(--text-3)";
           }}
         >
-          <Trash2 size={11} strokeWidth={2} aria-hidden="true" />
+          <Trash2 size={12} strokeWidth={2.25} aria-hidden="true" />
         </button>
       ) : (
         <span
@@ -1735,15 +1792,81 @@ function ConvRow({
           style={{
             fontSize: "0.66rem",
             fontFamily: "var(--font-mono), ui-monospace, monospace",
-            color: T.text4,
+            color: active ? "var(--accent)" : "var(--text-4)",
             whiteSpace: "nowrap",
             fontVariantNumeric: "tabular-nums",
-            opacity: active ? 0.85 : 0.7,
+            fontWeight: active ? 600 : 500,
+            flexShrink: 0,
           }}
         >
           {relTime(lastTs)}
         </span>
       )}
+    </div>
+  );
+}
+
+/* Footer chip used in the sidebar's bottom strip — small tier-1 card that
+ * mirrors the dashboard's CompactStat rhythm: icon chip + label + sub. */
+function FooterChip({
+  Icon,
+  iconColor,
+  label,
+  sub,
+  mono = false,
+  spanFull = false,
+}: {
+  Icon: LucideIcon;
+  iconColor: string;
+  label: string;
+  sub: string;
+  mono?: boolean;
+  spanFull?: boolean;
+}) {
+  return (
+    <div style={{
+      display: "flex",
+      alignItems: "center",
+      gap: "0.45rem",
+      padding: "0.5rem 0.6rem",
+      background: "var(--surface)",
+      borderRadius: 8,
+      boxShadow: "var(--tier-1)",
+      minWidth: 0,
+      gridColumn: spanFull ? "1 / -1" : undefined,
+    }}>
+      <span aria-hidden="true" style={{
+        width: 20,
+        height: 20,
+        borderRadius: 5,
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        background: "var(--surface-2)",
+        color: iconColor,
+        flexShrink: 0,
+      }}>
+        <Icon size={11} strokeWidth={2.25} />
+      </span>
+      <div style={{ display: "flex", flexDirection: "column", minWidth: 0, lineHeight: 1.2 }}>
+        <span style={{
+          fontSize: "0.58rem",
+          fontWeight: 700,
+          letterSpacing: "0.08em",
+          textTransform: "uppercase",
+          color: "var(--text-4)",
+        }}>{label}</span>
+        <span style={{
+          fontSize: "0.7rem",
+          color: "var(--text-2)",
+          fontFamily: mono ? "var(--font-mono), ui-monospace, monospace" : "inherit",
+          fontWeight: mono ? 500 : 600,
+          fontVariantNumeric: mono ? "tabular-nums" : undefined,
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+          whiteSpace: "nowrap",
+        }}>{sub}</span>
+      </div>
     </div>
   );
 }
@@ -2840,34 +2963,39 @@ function Welcome({
       className="agent-welcome"
       style={{ paddingTop: "clamp(0.5rem, 4vh, 2.5rem)" }}
     >
+      {/* ─── Mono eyebrow (dashboard section-label style) ─── */}
       <div
         style={{
-          display: "inline-flex",
+          display: "flex",
           alignItems: "center",
-          gap: "0.4rem",
-          fontSize: "0.66rem",
+          gap: "0.6rem",
+          fontFamily: "var(--font-mono), ui-monospace, monospace",
+          fontSize: "clamp(0.6rem, 1.7vw, 0.66rem)",
           fontWeight: 700,
-          letterSpacing: "0.14em",
+          letterSpacing: "0.18em",
           textTransform: "uppercase",
-          color: T.accent,
-          background: T.surface,
-          padding: "0.3rem 0.7rem 0.3rem 0.55rem",
-          borderRadius: 100,
-          marginBottom: "1rem",
-          boxShadow: T.tier1,
+          color: "var(--accent)",
+          marginBottom: "0.85rem",
         }}
       >
-        <Sparkles size={11} strokeWidth={2.25} aria-hidden="true" />
-        Agent Cabinet Müller
+        <span aria-hidden="true" style={{
+          width: 18, height: 1,
+          background: "var(--accent)",
+          opacity: 0.45,
+        }} />
+        <Sparkles size={11} strokeWidth={2.5} aria-hidden="true" />
+        <span>Agent · Cabinet Müller</span>
       </div>
+
+      {/* ─── Editorial display heading + paragraph ─── */}
       <h1
         style={{
-          fontSize: "clamp(1.65rem, 3.2vw, 2.25rem)",
+          fontSize: "clamp(1.75rem, 4.4vw, 2.4rem)",
           fontWeight: 700,
-          letterSpacing: "-0.028em",
-          lineHeight: 1.12,
-          color: T.text,
-          margin: "0 0 0.55rem",
+          letterSpacing: "-0.03em",
+          lineHeight: 1.1,
+          color: "var(--text)",
+          margin: "0 0 0.7rem",
           maxWidth: "22ch",
         }}
       >
@@ -2875,46 +3003,50 @@ function Welcome({
       </h1>
       <p
         style={{
-          fontSize: "0.98rem",
-          color: T.text3,
+          fontSize: "clamp(0.92rem, 2vw, 1rem)",
+          color: "var(--text-3)",
           lineHeight: 1.55,
-          margin: "0 0 1.8rem",
+          margin: "0 0 clamp(1.5rem, 3.5vw, 2.25rem)",
           maxWidth: "58ch",
         }}
       >
-        L&apos;agent connaît les <strong style={{ color: T.text2 }}>50 clients</strong>,{" "}
-        <strong style={{ color: T.text2 }}>189 contrats</strong> et{" "}
-        <strong style={{ color: T.text2 }}>2 518 primes</strong>.
+        L&apos;agent connaît les <strong style={{ color: "var(--text-2)" }}>50 clients</strong>,{" "}
+        <strong style={{ color: "var(--text-2)" }}>189 contrats</strong> et{" "}
+        <strong style={{ color: "var(--text-2)" }}>2 518 primes</strong>.
         Chiffres exacts, jamais d&apos;invention.
       </p>
 
+      {/* ─── Section header bar: eyebrow + helper text on the right ─── */}
       <div
         style={{
           display: "flex",
           alignItems: "baseline",
           justifyContent: "space-between",
           gap: "0.75rem",
-          marginBottom: "0.65rem",
+          marginBottom: "0.75rem",
+          paddingBottom: "0.55rem",
+          borderBottom: "1px solid var(--border)",
         }}
       >
         <div
           style={{
-            fontSize: "0.64rem",
+            fontFamily: "var(--font-mono), ui-monospace, monospace",
+            fontSize: "clamp(0.6rem, 1.7vw, 0.66rem)",
             fontWeight: 700,
-            letterSpacing: "0.14em",
+            letterSpacing: "0.18em",
             textTransform: "uppercase",
-            color: T.text4,
+            color: "var(--text-3)",
           }}
         >
           Pour démarrer
         </div>
         <div
           style={{
-            fontSize: "0.66rem",
-            color: T.text4,
+            fontSize: "0.7rem",
+            color: "var(--text-4)",
           }}
         >
-          Cliquez sur une suggestion · ou tapez votre question
+          Cliquez une suggestion · ou tapez votre question
         </div>
       </div>
 
@@ -2922,8 +3054,8 @@ function Welcome({
         className="agent-welcome-grid"
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(3, 1fr)",
-          gap: "0.7rem",
+          gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+          gap: "clamp(0.6rem, 1.5vw, 0.85rem)",
         }}
       >
         {SUGGESTIONS.map((s, i) => (
@@ -2957,49 +3089,50 @@ function SuggestionCard({
         display: "flex",
         flexDirection: "column",
         alignItems: "stretch",
-        gap: "0.5rem",
-        padding: "0.95rem 1rem 0.85rem",
-        background: T.surface,
+        gap: "0.55rem",
+        padding: "clamp(0.85rem, 2.2vw, 1.05rem) clamp(0.9rem, 2.4vw, 1.1rem) clamp(0.8rem, 2vw, 0.95rem)",
+        background: "var(--surface)",
         border: "none",
-        borderRadius: 14,
+        borderRadius: 12,
         textAlign: "left",
         fontFamily: "inherit",
         cursor: disabled ? "not-allowed" : "pointer",
         opacity: disabled ? 0.55 : 1,
-        boxShadow: T.tier1,
-        transition: "transform 0.22s ease, box-shadow 0.22s ease",
+        boxShadow: "var(--tier-1)",
+        transition: "transform 0.22s ease, box-shadow 0.25s ease",
         color: "inherit",
         position: "relative",
         overflow: "hidden",
-        minHeight: 112,
+        minHeight: 118,
       }}
       onMouseEnter={(e) => {
         if (disabled) return;
         e.currentTarget.style.transform = "translateY(-2px)";
-        e.currentTarget.style.boxShadow = `${T.tier2}, 0 0 0 4px ${T.accentTint2}`;
+        e.currentTarget.style.boxShadow =
+          "var(--tier-2), 0 0 0 4px var(--accent-tint)";
         const icon = e.currentTarget.querySelector(
           "[data-suggest-icon]",
         ) as HTMLElement | null;
-        if (icon) icon.style.transform = "rotate(3deg) scale(1.06)";
+        if (icon) icon.style.transform = "rotate(4deg) scale(1.08)";
       }}
       onMouseLeave={(e) => {
         if (disabled) return;
         e.currentTarget.style.transform = "translateY(0)";
-        e.currentTarget.style.boxShadow = T.tier1;
+        e.currentTarget.style.boxShadow = "var(--tier-1)";
         const icon = e.currentTarget.querySelector(
           "[data-suggest-icon]",
         ) as HTMLElement | null;
         if (icon) icon.style.transform = "rotate(0) scale(1)";
       }}
     >
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "0.6rem" }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "0.55rem" }}>
         <span
           data-suggest-icon
           style={{
             width: 30,
             height: 30,
-            background: T.accentTint,
-            color: T.accent,
+            background: "var(--accent-tint-2)",
+            color: "var(--accent)",
             borderRadius: 9,
             display: "flex",
             alignItems: "center",
@@ -3012,20 +3145,24 @@ function SuggestionCard({
         >
           <s.Icon size={14} strokeWidth={2.25} />
         </span>
-        <ChevronRight size={13} strokeWidth={2.25} color={T.text4} aria-hidden="true" />
+        <ChevronRight size={13} strokeWidth={2.25} color="var(--text-4)" aria-hidden="true" />
       </div>
       <div
         style={{
-          fontSize: "0.92rem",
+          fontSize: "clamp(0.86rem, 2vw, 0.92rem)",
           fontWeight: 600,
-          color: T.text,
+          color: "var(--text)",
           letterSpacing: "-0.01em",
           lineHeight: 1.25,
         }}
       >
         {s.title}
       </div>
-      <div style={{ fontSize: "0.76rem", color: T.text3, lineHeight: 1.4 }}>{s.hint}</div>
+      <div style={{
+        fontSize: "clamp(0.72rem, 1.7vw, 0.78rem)",
+        color: "var(--text-3)",
+        lineHeight: 1.45,
+      }}>{s.hint}</div>
     </motion.button>
   );
 }
@@ -3183,15 +3320,16 @@ function AssistantMessage({
         style={{
           display: "flex",
           alignItems: "center",
-          gap: "0.4rem",
-          fontSize: "0.62rem",
+          gap: "0.45rem",
+          fontFamily: "var(--font-mono), ui-monospace, monospace",
+          fontSize: "clamp(0.6rem, 1.7vw, 0.66rem)",
           fontWeight: 700,
-          letterSpacing: "0.14em",
+          letterSpacing: "0.18em",
           textTransform: "uppercase",
-          color: T.accent,
+          color: "var(--accent)",
         }}
       >
-        <Sparkles size={10} strokeWidth={2.5} />
+        <Sparkles size={11} strokeWidth={2.5} />
         Agent
         {hasContent && (
           <div
@@ -3240,10 +3378,11 @@ function AssistantMessage({
       </div>
       <div
         style={{
-          background: T.surface,
+          background: "var(--surface)",
           borderRadius: "4px 14px 14px 14px",
-          padding: "1rem 1.15rem",
-          boxShadow: T.tier1,
+          padding: "clamp(0.85rem, 2.2vw, 1.1rem) clamp(0.95rem, 2.4vw, 1.2rem)",
+          boxShadow: "var(--tier-1)",
+          transition: "box-shadow 0.22s ease",
         }}
       >
         <Markdown source={message.content} />
