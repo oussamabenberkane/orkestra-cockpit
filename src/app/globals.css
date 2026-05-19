@@ -212,6 +212,66 @@ html, body {
   max-width: 100vw;
 }
 
+/* ── KPI "Ask AI" overlay ─────────────────────────────────────────────
+ * The KpiWithAsk wrapper overlays a small Sparkles button on top of the
+ * KPI card. Hide SatelliteKPI's decorative top-right arrow when wrapped
+ * so the two glyphs don't collide. */
+.kpi-with-ask .satellite-kpi-arrow {
+  display: none !important;
+}
+
+/* Force the wrapper and the compact card to fill their grid cell so the
+ * AskButton — anchored to the wrapper's right edge — always lands at
+ * the cell's right edge, not at the inner card's natural content width.
+ * Without this, a card with short content (e.g. "Rétention") shrinks
+ * and the AskButton drifts left of the cell boundary. */
+.kpi-with-ask {
+  width: 100%;
+  min-width: 0;
+}
+.kpi-with-ask .kpi-compact {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+/* Reserve right-padding on the compact (mobile/tablet) KPI cells so the
+ * label / value / delta naturally ellipsize before the corner AskButton
+ * instead of being clipped behind it. Padding scales with the button's
+ * own per-breakpoint size below. */
+.kpi-with-ask .kpi-compact {
+  padding-right: 2.4rem !important;
+}
+
+@media (max-width: 640px) {
+  .kpi-ask-btn {
+    width: 24px !important;
+    height: 24px !important;
+    top: 6px !important;
+    right: 6px !important;
+    border-radius: 7px !important;
+  }
+  .kpi-with-ask .kpi-compact {
+    padding-right: 2.05rem !important;
+  }
+}
+
+@media (max-width: 380px) {
+  .kpi-ask-btn {
+    width: 22px !important;
+    height: 22px !important;
+    top: 5px !important;
+    right: 5px !important;
+  }
+  .kpi-with-ask .kpi-compact {
+    /* At ~95px cell width every pixel matters — minimum padding that still
+     * clears the 22×22 button (button right-edge sits at 27px from cell
+     * right; 1.85rem ≈ 30px gives a 3px breathing strip). */
+    padding-right: 1.85rem !important;
+    padding-left: 0.5rem !important;
+  }
+}
+
 /* ── Action carousel — progress fill on the active dot ────────────────
  * Used by the action-first banner on /dashboard. The active dot has a
  * white overlay that scales from 0 → 1 over the auto-cycle interval, so

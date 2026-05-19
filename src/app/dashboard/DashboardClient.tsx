@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   ArrowDown, ArrowUp, ArrowRight, Circle, Minus, Mail, AlertCircle, FileText,
-  ShieldAlert, RefreshCw,
+  ShieldAlert, RefreshCw, Sparkles,
   type LucideIcon,
 } from "lucide-react";
 import type { ModalKey, ModalData } from "@/lib/types";
@@ -391,12 +391,16 @@ export default function DashboardClient({
           />
           <div className="dashboard-kpis-stack chart-desktop-only">
             {satellites.map((s) => (
-              <SatelliteKPI key={s.label} kpi={s} onOpen={onOpen} />
+              <KpiWithAsk key={s.label} label={s.label}>
+                <SatelliteKPI kpi={s} onOpen={onOpen} />
+              </KpiWithAsk>
             ))}
           </div>
           <div className="kpi-strip-compact">
             {satellites.map((s) => (
-              <CompactStat key={s.label} kpi={s} onOpen={onOpen} />
+              <KpiWithAsk key={s.label} label={s.label}>
+                <CompactStat kpi={s} onOpen={onOpen} />
+              </KpiWithAsk>
             ))}
           </div>
         </div>
@@ -459,6 +463,7 @@ function CompactStat({ kpi, onOpen }: { kpi: Satellite; onOpen: (k: ModalKey) =>
     <button
       type="button"
       onClick={() => onOpen(kpi.modalKey)}
+      className="kpi-compact"
       style={{
         display: "flex",
         flexDirection: "column",
@@ -512,9 +517,16 @@ function CompactStat({ kpi, onOpen }: { kpi: Satellite; onOpen: (k: ModalKey) =>
         fontWeight: 700,
         color,
         whiteSpace: "nowrap",
+        maxWidth: "100%",
+        minWidth: 0,
+        overflow: "hidden",
       }}>
-        <Icon size={10} strokeWidth={2.5} />
-        {kpi.trend}
+        <Icon size={10} strokeWidth={2.5} style={{ flexShrink: 0 }} />
+        <span style={{
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+          minWidth: 0,
+        }}>{kpi.trend}</span>
       </span>
     </button>
   );
@@ -582,6 +594,84 @@ function CubeTile({ tile, onOpen }: { tile: TileEntry; onOpen: (k: ModalKey) => 
         )}
       </span>
     </button>
+  );
+}
+
+/** Per-KPI seed prompts. Matches the original "ask-chat" copy so the
+ *  agent answers the same focused question for each metric. */
+function kpiSeed(label: string): string {
+  switch (label) {
+    case "CA mensuel":
+      return "Pourquoi le CA mensuel est-il à ce niveau ce mois ? Détaille la composition par compagnie partenaire.";
+    case "Marge nette":
+      return "D'où vient la marge nette ? Quels postes contribuent le plus ?";
+    case "Cash-flow":
+      return "Décompose le cash-flow net : encaissements vs sorties principales.";
+    case "Rétention":
+      return "Pourquoi la rétention est à ce niveau ? Quels contrats ont été résiliés récemment et chez quelles compagnies ?";
+    default:
+      return `Donne-moi une analyse rapide du KPI « ${label} ».`;
+  }
+}
+
+/** Overlays a small "Ask AI" button on a KPI card. Clicking it opens the
+ *  FloatingDock chat preview and auto-submits a KPI-specific seed prompt so
+ *  the agent starts answering immediately. The KPI itself stays interactive —
+ *  the ask button stops propagation so taps don't bubble to the card.
+ *
+ *  The wrapper is tagged with `.kpi-with-ask` so CSS can hide SatelliteKPI's
+ *  decorative top-right arrow (which would otherwise sit under our button). */
+function KpiWithAsk({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="kpi-with-ask" style={{ position: "relative" }}>
+      {children}
+      <button
+        type="button"
+        className="kpi-ask-btn"
+        aria-label={`Demander à l'IA · ${label}`}
+        title={`Demander à l'IA · ${label}`}
+        onClick={(e) => {
+          e.stopPropagation();
+          window.dispatchEvent(
+            new CustomEvent("orkestra:open-floating-dock", {
+              detail: { seed: kpiSeed(label) },
+            }),
+          );
+        }}
+        onPointerDown={(e) => e.stopPropagation()}
+        onKeyDown={(e) => e.stopPropagation()}
+        style={{
+          position: "absolute",
+          top: 8,
+          right: 8,
+          width: 28,
+          height: 28,
+          padding: 0,
+          display: "inline-flex",
+          alignItems: "center",
+          justifyContent: "center",
+          background: "var(--accent-tint)",
+          color: "var(--accent)",
+          border: "none",
+          borderRadius: 8,
+          boxShadow: "inset 0 0 0 1px var(--accent-tint-2)",
+          cursor: "pointer",
+          fontFamily: "inherit",
+          transition: "transform 0.18s ease, background 0.18s ease",
+          zIndex: 2,
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.background = "var(--accent-tint-2)";
+          e.currentTarget.style.transform = "translateY(-1px)";
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.background = "var(--accent-tint)";
+          e.currentTarget.style.transform = "translateY(0)";
+        }}
+      >
+        <Sparkles size={13} strokeWidth={2.25} aria-hidden="true" />
+      </button>
+    </div>
   );
 }
 

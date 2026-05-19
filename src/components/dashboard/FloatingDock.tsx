@@ -82,6 +82,27 @@ export function FloatingDock() {
     return () => window.removeEventListener("keydown", onKey);
   }, [open]);
 
+  /* External "open me" signal — KPI cards (and any other surface that
+   * wants to surface the chat preview) dispatch this window event so they
+   * don't need a controlled prop on the dock. Optional `detail.seed`
+   * payload is auto-submitted as a user message so the agent starts
+   * answering the specific KPI question without the user typing anything. */
+  const submitRef = useRef<((text: string) => Promise<void>) | null>(null);
+  useEffect(() => {
+    const onOpenEvent = (e: Event) => {
+      setOpen(true);
+      const detail = (e as CustomEvent<{ seed?: string }>).detail;
+      const seed = detail?.seed?.trim();
+      if (!seed) return;
+      /* Let the panel mount/morph first, then fire the seed query. The
+       * 80ms delay matches the panel's morph entry — the user sees the
+       * dock open, then the message appear and the agent start thinking. */
+      window.setTimeout(() => { void submitRef.current?.(seed); }, 80);
+    };
+    window.addEventListener("orkestra:open-floating-dock", onOpenEvent);
+    return () => window.removeEventListener("orkestra:open-floating-dock", onOpenEvent);
+  }, []);
+
   // Autoscroll to the bottom on new messages or on open. The dock is a
   // preview, not a full reader, so we always pin to the latest turn.
   useEffect(() => {
@@ -108,6 +129,10 @@ export function FloatingDock() {
     },
     [send, loading],
   );
+
+  /* Keep submitRef pointed at the latest submit closure so the external
+   * "open + seed" event handler always sees the current `loading`/`send`. */
+  useEffect(() => { submitRef.current = submit; }, [submit]);
 
   const onSubmit = (e: FormEvent) => {
     e.preventDefault();
