@@ -500,3 +500,34 @@ html.scroll-locked body {
     padding: 0.6rem 0.75rem !important;
   }
 }
+
+/* ── Alerts page ──────────────────────────────────────────────
+   Two-panel master-detail layout. Below 900 px the preview panel
+   is hidden — users navigate to /alertes/[id] for the editor. */
+.alerts-layout {
+  display: flex;
+  gap: 1.5rem;
+  align-items: flex-start;
+}
+.alerts-layout-list {
+  width: 400px;
+  flex-shrink: 0;
+}
+.alerts-layout-preview {
+  flex: 1;
+  min-width: 0;
+}
+@media (max-width: 900px) {
+  .alerts-layout { flex-direction: column; }
+  .alerts-layout-list { width: 100%; }
+  .alerts-layout-preview { display: none; }
+}
+
+/* ── Rich email body rendering ──────────────────────────────── */
+.email-body p { margin: 0 0 0.95em; line-height: 1.75; }
+.email-body p:last-child { margin-bottom: 0; }
+.email-body strong { font-weight: 700; color: var(--text); }
+.email-body hr { border: none; border-top: 1px solid var(--border-strong); margin: 1.25em 0; }
+.email-body ul, .email-body ol { padding-left: 1.5em; margin: 0 0 0.95em; }
+.email-body li { margin-bottom: 0.35em; line-height: 1.65; }
+.email-body mark { background: var(--accent-tint); color: var(--accent); padding: 0 3px; border-radius: 3px; font-weight: 600; }

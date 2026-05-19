@@ -14,6 +14,7 @@ import {
 import type { ModalKey } from "@/lib/types";
 import { NotificationsContent } from "@/components/shared/NotificationsContent";
 import { UserMenuContent } from "@/components/shared/UserMenuContent";
+import { useNotifications } from "@/components/dashboard/NotificationsProvider";
 
 interface SidebarProps {
   collapsed: boolean;
@@ -73,7 +74,6 @@ const EXPANDED_W = 248;
 const COLLAPSED_W = 64;
 const ICON_BTN = 36;
 const BREAKPOINT_MOBILE = 720;
-const NOTIF_COUNT = 3;
 /* Popup geometry — same in both tabs so they are visually identical.
  * Height clamps so short viewports get a tighter panel without breaking layout. */
 const POPUP_INSET = 8;
@@ -320,6 +320,7 @@ function NavItem({
 export function Sidebar({
   collapsed, onToggle, onLogout, onOpenPalette, onOpenModal,
 }: SidebarProps) {
+  const { unreadCount } = useNotifications();
   const pathname = usePathname() ?? "";
   const [tooltip, setTooltip] = useState<TooltipState | null>(null);
   const [mounted, setMounted] = useState(false);
@@ -744,7 +745,7 @@ export function Sidebar({
             onMouseEnter={(e) => {
               if (popupOpen && popupTab === "notif") return;
               e.currentTarget.style.transform = "translateY(-1px)";
-              if (!isOpen) showTip(`Alertes · ${NOTIF_COUNT}`, e.currentTarget);
+              if (!isOpen) showTip(`Alertes · ${unreadCount}`, e.currentTarget);
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.transform = "translateY(0)";
@@ -778,7 +779,7 @@ export function Sidebar({
               lineHeight: 1,
               display: "flex", alignItems: "center", justifyContent: "center",
               border: "1.5px solid var(--surface)",
-            }}>{NOTIF_COUNT}</span>
+            }}>{unreadCount}</span>
           </button>
 
           <button
@@ -939,7 +940,7 @@ export function Sidebar({
                                 display: "flex",
                                 alignItems: "center", justifyContent: "center",
                                 border: "1.25px solid var(--surface)",
-                              }}>{NOTIF_COUNT}</span>
+                              }}>{unreadCount}</span>
                             </span>
                           )}
                           {label}
