@@ -7,9 +7,9 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-jakarta);
+  --font-sans: var(--font-sans);
   --font-mono: var(--font-mono);
-  --font-heading: var(--font-jakarta);
+  --font-heading: var(--font-sans);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -47,74 +47,111 @@
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
 
-  /* Brand colors */
+  /* Brand colors (legacy navy still used by login BrandPanel) */
   --color-navy: #1E2761;
   --color-malyz: #2B3AE8;
-  --color-teal: #028090;
-  --color-brand-green: #10B981;
-  --color-brand-red: #EF4444;
-  --color-brand-orange: #F59E0B;
-  --color-brand-purple: #8B5CF6;
-  --color-brand-blue: #3B82F6;
-  --color-brand-muted: #6B7280;
-  --color-brand-text: #1A1F36;
-  --color-brand-border: #E4E7F0;
-  --color-brand-bg: #F4F6FB;
+  --color-accent-indigo: #5856D6;
+  --color-accent-indigo-2: #4441C8;
+  --color-success: #34A853;
+  --color-warn:    #FF9F0A;
+  --color-danger:  #FF3B30;
+  --color-info:    #007AFF;
+  --color-purple:  #5856D6;
 }
 
 :root {
-  --navy:      #1E2761;
-  --malyz:     #2B3AE8;
-  --teal:      #028090;
-  --white:     #FFFFFF;
-  --bg:        #F4F6FB;
-  --card:      #FFFFFF;
-  --border:    #E4E7F0;
-  --text:      #1A1F36;
-  --muted:     #6B7280;
-  --green:     #10B981;
-  --green-bg:  #ECFDF5;
-  --red:       #EF4444;
-  --red-bg:    #FEF2F2;
-  --orange:    #F59E0B;
-  --orange-bg: #FFFBEB;
-  --purple:    #8B5CF6;
-  --purple-bg: #F5F3FF;
-  --blue:      #3B82F6;
-  --blue-bg:   #EFF6FF;
+  /* ── Surfaces ─────────────────────────────────────────── */
+  --bg:           #FFFFFF;
+  --surface:      #FFFFFF;
+  --surface-2:    #F5F5F7;  /* sidebar background */
+  --surface-3:    #ECECEF;
+  --border:       rgba(0,0,0,0.06);
+  --border-strong:rgba(0,0,0,0.10);
 
+  /* ── Text ─────────────────────────────────────────────── */
+  --text:   #1D1D1F;
+  --text-2: #424245;
+  --text-3: #6E6E73;
+  --text-4: #86868B;
+
+  /* ── Brand accent (iOS-style indigo) ─────────────────── */
+  --accent:        #5856D6;
+  --accent-2:      #4441C8;
+  --accent-tint:   rgba(88,86,214,0.10);
+  --accent-tint-2: rgba(88,86,214,0.16);
+
+  /* ── Semantic ─────────────────────────────────────────── */
+  --success:      #34A853;
+  --success-tint: rgba(52,168,83,0.10);
+  --warn:         #FF9F0A;
+  --warn-tint:    rgba(255,159,10,0.10);
+  --danger:       #FF3B30;
+  --danger-tint:  rgba(255,59,48,0.10);
+  --info:         #007AFF;
+  --info-tint:    rgba(0,122,255,0.10);
+  --purple:       #5856D6;
+  --purple-tint:  rgba(88,86,214,0.10);
+
+  /* ── Per-category navigation tints ─────────────────────
+     Used by the sidebar to colorize each nav item even
+     when inactive. Mirrors the dashboard tile palette. */
+  --nav-prospection:    var(--accent);
+  --nav-portefeuille:   var(--info);
+  --nav-sinistres:      var(--danger);
+  --nav-finance:        var(--warn);
+  --nav-vue-ensemble:   var(--accent);
+  --nav-chat:           var(--accent);
+  --nav-alertes:        var(--danger);
+  --nav-agents:         var(--accent);
+  --nav-neutral:        var(--text-3);
+
+  /* ── Elevation tokens (tier shadows) ───────────────────
+     Multi-layer shadows produce a soft, "plinth" surface. */
+  --tier-1:
+    inset 0 1px 0 rgba(255,255,255,1),
+    0 0 0 1px rgba(0,0,0,0.04),
+    0 1px 2px rgba(0,0,0,0.05),
+    0 6px 16px -10px rgba(0,0,0,0.12);
+  --tier-2:
+    inset 0 1px 0 rgba(255,255,255,1),
+    0 0 0 1px rgba(0,0,0,0.06),
+    0 2px 4px rgba(0,0,0,0.06),
+    0 16px 32px -12px rgba(0,0,0,0.18);
+  --tier-press:
+    inset 0 1px 2px rgba(0,0,0,0.06),
+    0 0 0 1px rgba(0,0,0,0.05);
+
+  /* ── shadcn / Tailwind compatibility ──────────────────── */
   --background: #FFFFFF;
-  --foreground: #1A1F36;
+  --foreground: #1D1D1F;
   --card: #FFFFFF;
-  --card-foreground: #1A1F36;
+  --card-foreground: #1D1D1F;
   --popover: #FFFFFF;
-  --popover-foreground: #1A1F36;
-  --primary: #2B3AE8;
+  --popover-foreground: #1D1D1F;
+  --primary: #5856D6;
   --primary-foreground: #FFFFFF;
-  --secondary: #F4F6FB;
-  --secondary-foreground: #1A1F36;
-  --muted: #F4F6FB;
-  --muted-foreground: #6B7280;
-  --accent: #F4F6FB;
-  --accent-foreground: #1A1F36;
-  --destructive: #EF4444;
-  --border: #E4E7F0;
-  --input: #E4E7F0;
-  --ring: #2B3AE8;
+  --secondary: #F5F5F7;
+  --secondary-foreground: #1D1D1F;
+  --muted: #F5F5F7;
+  --muted-foreground: #6E6E73;
+  --accent-foreground: #1D1D1F;
+  --destructive: #FF3B30;
+  --input: rgba(0,0,0,0.06);
+  --ring: #5856D6;
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
   --chart-4: oklch(0.371 0 0);
   --chart-5: oklch(0.269 0 0);
   --radius: 0.625rem;
-  --sidebar: #1E2761;
-  --sidebar-foreground: rgba(255,255,255,0.55);
-  --sidebar-primary: #2B3AE8;
+  --sidebar: var(--surface-2);
+  --sidebar-foreground: var(--text-2);
+  --sidebar-primary: var(--accent);
   --sidebar-primary-foreground: #FFFFFF;
-  --sidebar-accent: rgba(255,255,255,0.06);
-  --sidebar-accent-foreground: rgba(255,255,255,0.85);
-  --sidebar-border: rgba(255,255,255,0.08);
-  --sidebar-ring: #2B3AE8;
+  --sidebar-accent: var(--surface);
+  --sidebar-accent-foreground: var(--text);
+  --sidebar-border: var(--border);
+  --sidebar-ring: var(--accent);
 }
 
 @layer base {
@@ -125,268 +162,26 @@
     box-sizing: border-box;
   }
   body {
-    font-family: var(--font-jakarta), 'Plus Jakarta Sans', sans-serif;
+    font-family: var(--font-sans), system-ui, -apple-system, Segoe UI, sans-serif;
     background: var(--bg);
     color: var(--text);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 }
 
-/* Scrollbar */
-::-webkit-scrollbar { width: 5px; }
+/* ── Scrollbar ───────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-4); }
 
-/* ── RESPONSIVE DASHBOARD ── */
-
-.kpi-grid {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 0.85rem;
-  margin-bottom: 1.25rem;
-}
-
-.tiles-grid-responsive {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1rem;
-  margin-bottom: 1.25rem;
-}
-
-.agents-grid-responsive {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0.75rem;
-}
-
-.combined-banner-responsive {
-  background: white;
-  border: 1px solid #E4E7F0;
-  border-radius: 14px;
-  padding: 1rem 1.25rem;
-  margin-bottom: 1.25rem;
-  display: flex;
-  align-items: center;
-  gap: 1.5rem;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
-}
-
-.combined-items-responsive {
-  display: flex;
-  gap: 2rem;
-  flex: 1;
-}
-
-.combined-formula-responsive {
-  font-size: 0.7rem;
-  color: #6B7280;
-  line-height: 1.6;
-  border-left: 2px solid #E4E7F0;
-  padding-left: 1rem;
-}
-
-.sidebar-nav {
-  width: 200px;
-  background: #1E2761;
-  padding: 1rem 0;
-  display: flex;
-  flex-direction: column;
-  flex-shrink: 0;
-  transition: transform 0.3s ease;
-  overflow-y: auto;
-}
-
-.hamburger-btn {
-  display: none;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  background: transparent;
-  border: 1px solid #E4E7F0;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 1.1rem;
-  color: #1A1F36;
-  transition: all 0.15s;
-  flex-shrink: 0;
-}
-
-.hamburger-btn:hover {
-  background: #F4F6FB;
-  border-color: #2B3AE8;
-}
-
-.header-center-text {
-  font-size: 0.8rem;
-  color: #6B7280;
-  font-weight: 500;
-}
-
-.page-header-row {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  margin-bottom: 1.25rem;
-}
-
-.source-pills-row {
-  display: flex;
-  gap: 0.4rem;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-}
-
-.footer-responsive {
-  background: white;
-  border-top: 1px solid #E4E7F0;
-  padding: 0.5rem 1.5rem;
-  display: flex;
-  align-items: center;
-  gap: 1.5rem;
-  font-size: 0.68rem;
-  color: #6B7280;
-  flex-shrink: 0;
-  flex-wrap: wrap;
-}
-
-.footer-sync {
-  margin-left: auto;
-  font-size: 0.65rem;
-  color: #6B7280;
-  white-space: nowrap;
-}
-
-.footer-item-label {
-  white-space: nowrap;
-}
-
-/* ── TABLET: ≤ 1024px ── */
-@media (max-width: 1024px) {
-  .kpi-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
-  .tiles-grid-responsive {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  .agents-grid-responsive {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-/* ── MOBILE: ≤ 768px ── */
-@media (max-width: 768px) {
-  .hamburger-btn {
-    display: flex;
-  }
-  .sidebar-close-btn {
-    display: block !important;
-    margin-top: 0.5rem;
-  }
-  .header-center-text {
-    display: none;
-  }
-  .header-divider {
-    display: none;
-  }
-  .header-orkestra-brand {
-    display: none;
-  }
-  .header-malyz-sub {
-    display: none;
-  }
-  .sidebar-nav {
-    position: fixed;
-    top: 56px;
-    left: 0;
-    height: calc(100vh - 56px);
-    z-index: 50;
-    width: 240px;
-    transform: translateX(-100%);
-  }
-  .sidebar-nav.sidebar-open {
-    transform: translateX(0);
-    box-shadow: 4px 0 24px rgba(0,0,0,0.25);
-  }
-  .kpi-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  .tiles-grid-responsive {
-    grid-template-columns: 1fr;
-  }
-  .agents-grid-responsive {
-    grid-template-columns: 1fr;
-  }
-  .combined-banner-responsive {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.75rem;
-  }
-  .combined-items-responsive {
-    flex-wrap: wrap;
-    gap: 1rem;
-    width: 100%;
-  }
-  .combined-formula-responsive {
-    display: none;
-  }
-  .page-header-row {
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-  .source-pills-row {
-    justify-content: flex-start;
-  }
-  .footer-sync {
-    display: none;
-  }
-  .dashboard-main-padding {
-    padding: 1rem;
-  }
-  .agents-lpd-text {
-    display: none;
-  }
-  .footer-responsive {
-    justify-content: center;
-    gap: 1.25rem;
-    padding: 0.5rem 1rem;
-  }
-  .footer-item-label {
-    display: none;
-  }
-}
-
-/* ── SMALL MOBILE: ≤ 480px ── */
-@media (max-width: 480px) {
-  .kpi-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  .header-settings-text {
-    display: none;
-  }
-  .header-logout-btn {
-    display: none;
-  }
-  .header-live-text {
-    display: none;
-  }
-}
-
-/* Animations */
-@keyframes blink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.3; }
-}
-
+/* ── Hex grid (login BrandPanel decoration) ──────────────── */
 @keyframes hexFloat {
-  0%, 100% { transform: translateY(0px) rotate(0deg); opacity: 0.04; }
-  50% { transform: translateY(-8px) rotate(3deg); opacity: 0.07; }
+  0%, 100% { transform: translateY(0) rotate(0deg); opacity: 0.05; }
+  50%      { transform: translateY(-8px) rotate(3deg); opacity: 0.08; }
 }
 
-.animate-blink {
-  animation: blink 2s infinite;
-}
-
-/* Login hex grid background */
 .hex-grid-bg {
   position: absolute;
   inset: 0;
@@ -397,4 +192,311 @@
 .hex-grid-bg svg {
   position: absolute;
   animation: hexFloat 6s ease-in-out infinite;
+}
+
+/* ── Subtle blink (for "live" indicators) ────────────────── */
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.3; }
+}
+
+.animate-blink {
+  animation: blink 2s infinite;
+}
+
+/* Safety net: no element should ever cause horizontal page scroll on mobile.
+ * Belt-and-suspenders for any responsive miss that would otherwise spill
+ * the layout sideways and cause modals to render off-center. */
+html, body {
+  overflow-x: clip;
+  max-width: 100vw;
+}
+
+/* Body scroll lock — applied by Sidebar.tsx when the mobile drawer is open.
+ * Locks both <html> and <body> so background pages can't scroll behind the
+ * drawer. Targets both elements + disables touch panning for iOS Safari. */
+html.scroll-locked,
+html.scroll-locked body {
+  overflow: hidden !important;
+  height: 100% !important;
+  touch-action: none;
+  overscroll-behavior: none;
+}
+
+/* ── Dashboard responsive helpers ────────────────────────────
+ * Breakpoints used throughout the dashboard:
+ *   320  → smallest mobile (default styles)
+ *   480  → large mobile
+ *   640  → small tablet (single-col → 2-col reflow)
+ *   768  → tablet
+ *   1024 → small desktop (stacked-hero → side-by-side reflow)
+ *   1280 → standard desktop
+ *   1536 → large desktop
+ * Container queries unavailable; using viewport media queries. */
+
+.dashboard-hero {
+  display: grid;
+  grid-template-columns: 1.55fr 1fr;
+  gap: clamp(0.6rem, 1.5vw, 0.85rem);
+}
+
+.dashboard-tiles {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: clamp(0.6rem, 1.5vw, 0.85rem);
+}
+
+.dashboard-kpis {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: clamp(0.6rem, 1.5vw, 0.85rem);
+}
+
+/* Satellite KPI column next to the hero. Vertical stack on desktop where
+   it lives beside the hero, then a horizontal 3-up row once the hero
+   stacks above, then single-column at mobile widths. */
+.dashboard-kpis-stack {
+  display: grid;
+  grid-template-rows: repeat(3, 1fr);
+  gap: clamp(0.6rem, 1.5vw, 0.85rem);
+}
+
+/* Tablet / small desktop: hero stacks, tiles drop to 2-col. The
+   KPI column is hidden at this width (replaced by .kpi-strip-compact
+   below the hero) so its grid rules are unnecessary here. */
+@media (max-width: 1024px) {
+  .dashboard-hero  { grid-template-columns: 1fr; }
+  .dashboard-tiles { grid-template-columns: repeat(2, 1fr); }
+  .dashboard-kpis  { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* Small tablet → mobile: tiles drop to 1-col */
+@media (max-width: 640px) {
+  .dashboard-tiles { grid-template-columns: 1fr; }
+  .dashboard-kpis  { grid-template-columns: 1fr; }
+}
+
+/* Mobile: sidebar becomes a slide-over drawer (handled by Sidebar.tsx).
+   Reserve top space for the floating hamburger trigger. !important required
+   because page <main> elements set padding via inline shorthand. */
+@media (max-width: 720px) {
+  .app-main {
+    padding-top: 4.5rem !important;
+  }
+}
+
+/* Touch devices: disable hover-only reveals so essential content stays
+   visible. Used by SatelliteKPI which hides its breakdown behind hover. */
+@media (hover: none) {
+  .satellite-kpi-spark { opacity: 1 !important; }
+  .satellite-kpi-break { opacity: 0 !important; }
+}
+
+/* Touch targets: enforce ≥44px minimum on mobile per Apple HIG / WCAG.
+   Applies to all interactive elements within the dashboard. */
+@media (max-width: 720px) {
+  .tap-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  /* Period toggle and similar small buttons: bump to 40px on touch */
+  .hero-period-btn {
+    min-height: 40px;
+    padding-left: 0.95rem;
+    padding-right: 0.95rem;
+  }
+}
+
+/* Hero chart month labels: hide every-other (dimmed) label on narrow
+   viewports to avoid crowding. */
+@media (max-width: 480px) {
+  .hero-month-labels span:nth-child(2n) {
+    display: none;
+  }
+}
+
+/* TroisChoses row: stack icon+sentence on top, action buttons below on
+   narrow viewports so CTAs aren't squished against the text. */
+@media (max-width: 480px) {
+  .trois-row {
+    grid-template-columns: auto 1fr !important;
+    row-gap: 0.45rem !important;
+    padding: 0.55rem 0.25rem !important;
+    column-gap: 0.65rem !important;
+  }
+  .trois-row-actions {
+    grid-column: 1 / -1;
+    justify-content: flex-end;
+    gap: 0.3rem !important;
+  }
+}
+
+/* Action-first banner — push padding/type down on mobile so the
+   banner+TroisChoses pair reads as one compact unit. */
+@media (max-width: 640px) {
+  .dashboard-action-banner {
+    padding: 0.75rem 0.95rem !important;
+    margin-bottom: 0.45rem !important;
+    border-radius: 12px !important;
+  }
+  .dashboard-action-banner__eyebrow {
+    font-size: 0.56rem !important;
+    margin-bottom: 0.3rem !important;
+  }
+  .dashboard-action-banner__title {
+    font-size: 0.95rem !important;
+    line-height: 1.2 !important;
+  }
+}
+
+/* TroisChoses card — mobile-first compaction. Trims the card padding,
+   drops the redundant subtitle (the Action-first banner above the card
+   already states intent), and tightens the eyebrow row. */
+@media (max-width: 640px) {
+  .trois-card {
+    padding: 0.7rem 0.7rem 0.45rem !important;
+    border-radius: 12px !important;
+  }
+  .trois-card__eyebrow {
+    font-size: 0.6rem !important;
+    margin-bottom: 0.3rem !important;
+    letter-spacing: 0.14em !important;
+  }
+  .trois-card__subtitle {
+    display: none !important;
+  }
+  .trois-row {
+    padding: 0.45rem 0.2rem !important;
+    column-gap: 0.55rem !important;
+  }
+}
+
+/* Section spacing — bump between-section margins on mobile so the page
+   breathes more, even as each section gets more compact internally. */
+@media (max-width: 640px) {
+  .dash-section { margin-bottom: 2.5rem !important; }
+}
+
+/* ── Chart + KPI — compact strip layout at ≤1024px ────────────────
+   Desktop keeps the side-by-side hero + 3-up <SatelliteKPI> column.
+   Below 1024px the full KPI column is hidden and three compact stat
+   cells (small label · mono value · delta) sit in a single row under
+   the hero — always visible, no scroll, smallest vertical footprint. */
+.kpi-strip-compact { display: none; }
+
+@media (max-width: 1024px) {
+  .chart-desktop-only { display: none !important; }
+  .kpi-strip-compact {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.45rem;
+    margin-top: 0.6rem;
+  }
+}
+
+/* Mobile cube grid — small stat tiles for the Domaines section.
+   Visible only at ≤640px; desktop continues to render the full TileCards. */
+.dashboard-tiles-mobile { display: none; }
+@media (max-width: 640px) {
+  .dashboard-tiles-desktop { display: none !important; }
+  .dashboard-tiles-mobile {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 0.55rem;
+  }
+}
+
+/* DashboardModal data rows: stack the source pill onto its own row at
+   narrow widths so pill + label + value don't fight for the same line. */
+@media (max-width: 480px) {
+  .dm-row.dm-row--with-pill {
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    grid-template-rows: auto auto;
+    row-gap: 0.35rem;
+  }
+  .dm-row.dm-row--with-pill .dm-row-pill {
+    grid-column: 1 / -1;
+    grid-row: 1;
+  }
+  .dm-row.dm-row--with-pill .dm-row-label {
+    grid-column: 1;
+    grid-row: 2;
+  }
+  .dm-row.dm-row--with-pill .dm-row-value {
+    grid-column: 2;
+    grid-row: 2;
+  }
+}
+
+/* Bump tap targets for touch on key dashboard buttons */
+@media (hover: none) {
+  .trois-row-actions button {
+    min-height: 44px !important;
+  }
+  .trois-row-actions button[aria-label="Marquer comme fait"] {
+    min-width: 44px !important;
+  }
+  .dm-primary,
+  .dm-secondary {
+    min-height: 44px !important;
+  }
+  .dm-close {
+    min-width: 32px;
+    min-height: 32px;
+  }
+}
+
+/* ── DashboardModal — mobile scale-down ───────────────────────────
+   Shrinks the modal box on small viewports and tightens all internal
+   paddings/sizes so the modal feels compact and proportional rather
+   than a near-fullscreen sheet. Content classnames (dm-*) keep the
+   internal responsive logic — only chrome dimensions change. */
+@media (max-width: 640px) {
+  .dashboard-modal {
+    width: min(440px, calc(100vw - 40px)) !important;
+    max-height: min(560px, calc(100dvh - 64px)) !important;
+    border-radius: 12px !important;
+  }
+  .dashboard-modal .dm-header {
+    padding: 0.7rem 0.85rem 0.6rem !important;
+    gap: 0.5rem !important;
+  }
+  .dashboard-modal .dm-intro {
+    padding: 0 0.85rem 0.75rem !important;
+  }
+  .dashboard-modal .dm-title {
+    font-size: 1.05rem !important;
+    margin-bottom: 0.3rem !important;
+  }
+  .dashboard-modal .dm-body {
+    font-size: 0.82rem !important;
+    line-height: 1.5 !important;
+  }
+  .dashboard-modal .dm-sections {
+    gap: 0.65rem !important;
+    padding: 0 0.85rem 0.85rem !important;
+  }
+  .dashboard-modal .dm-footer {
+    padding: 0.65rem 0.85rem !important;
+  }
+}
+
+/* Even tighter on small phones */
+@media (max-width: 380px) {
+  .dashboard-modal {
+    width: calc(100vw - 28px) !important;
+    max-height: calc(100dvh - 56px) !important;
+  }
+  .dashboard-modal .dm-header {
+    padding: 0.6rem 0.75rem 0.5rem !important;
+  }
+  .dashboard-modal .dm-intro {
+    padding: 0 0.75rem 0.65rem !important;
+  }
+  .dashboard-modal .dm-sections {
+    padding: 0 0.75rem 0.75rem !important;
+  }
+  .dashboard-modal .dm-footer {
+    padding: 0.6rem 0.75rem !important;
+  }
 }
