@@ -361,7 +361,7 @@ export function Sidebar({
       const detail = (e as CustomEvent<{ source?: string }>).detail;
       if (detail?.source === "app-sidebar") return;
       setDrawerOpen(false);
-      setPopupOpen(false);
+      setOpenPopup(null);
     };
     window.addEventListener("orkestra:close-sidebars", onCloseOthers);
     return () => window.removeEventListener("orkestra:close-sidebars", onCloseOthers);

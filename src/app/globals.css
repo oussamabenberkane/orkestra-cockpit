@@ -212,6 +212,37 @@ html, body {
   max-width: 100vw;
 }
 
+/* ── Action carousel — progress fill on the active dot ────────────────
+ * Used by the action-first banner on /dashboard. The active dot has a
+ * white overlay that scales from 0 → 1 over the auto-cycle interval, so
+ * the user gets a visual cue of when the next action will surface. */
+@keyframes action-carousel-fill {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+
+/* Stack the carousel under the text on narrow widths so the button row
+ * has its own line and the dots sit centred beneath it. The button
+ * overrides its desktop clamp() width with 100% so it fills the wrap. */
+@media (max-width: 640px) {
+  .action-carousel { width: 100%; }
+  .action-carousel__btn { width: 100% !important; max-width: 100%; }
+  .action-carousel__dots { justify-content: center !important; }
+}
+
+/* On wider screens, center the dots under the button (the carousel
+ * container's width matches the button's, so flex centering aligns
+ * the dot row to the button's horizontal midpoint). */
+@media (min-width: 641px) {
+  .action-carousel__dots { justify-content: center !important; }
+}
+
+/* Respect reduced-motion: cap the progress fill animation so it lands
+ * instantly rather than running as a constant motion source. */
+@media (prefers-reduced-motion: reduce) {
+  .action-carousel__progress { animation: none !important; transform: scaleX(1); }
+}
+
 /* Body scroll lock — applied by Sidebar.tsx when the mobile drawer is open.
  * Locks both <html> and <body> so background pages can't scroll behind the
  * drawer. Targets both elements + disables touch panning for iOS Safari. */
