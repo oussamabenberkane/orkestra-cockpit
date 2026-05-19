@@ -9,6 +9,7 @@ import {
   type FormEvent,
   type KeyboardEvent,
 } from "react";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowUp,
@@ -29,8 +30,8 @@ import {
   Cpu,
   CircleCheck,
   CircleAlert,
-  PanelLeftClose,
-  PanelLeftOpen,
+  PanelRightClose,
+  PanelRightOpen,
   BookmarkPlus,
   Bookmark,
   Eye,
@@ -56,6 +57,7 @@ import {
   type ToolCall,
   type ToolResult,
 } from "@/components/dashboard/AgentConversationProvider";
+import { Sidebar as AppSidebar } from "@/components/dashboard/Sidebar";
 
 /* ─── Plinth tokens (matches /c design language) ─── */
 const T = {
@@ -185,10 +187,15 @@ const SUGGESTIONS: {
 // AgentConversationProvider — only the sidebar preference stays local here.
 const SIDEBAR_STATE_KEY = "orkestra.agent-test.sidebar.v1";
 
-// Below this width the sidebar becomes an overlay drawer and defaults to
-// closed on first visit. Keep this in sync with the @media breakpoint at the
-// bottom of the file.
-const SIDEBAR_BREAKPOINT = 820;
+// Shared with /dashboard so the app-wide sidebar's collapsed preference
+// carries across routes.
+const APP_SIDEBAR_KEY = "orkestra.sidebar.collapsed";
+
+// Below this width both sidebars become overlay drawers and the chat history
+// rail defaults to closed on first visit. Matches /dashboard's mobile
+// breakpoint so the two rails feel consistent across routes. Keep this in
+// sync with the @media (max-width: 720px) blocks at the bottom of the file.
+const SIDEBAR_BREAKPOINT = 720;
 
 // French label shown in the live activity indicator while a tool is
 // running. Falls back to the raw tool name if a label isn't mapped.
@@ -237,6 +244,26 @@ export default function AgentTestPage() {
     editUserMessage: providerEditUserMessage,
     clearError,
   } = useAgentConversation();
+
+  const router = useRouter();
+
+  /* App-wide left sidebar collapse state — mirrors /dashboard so the
+   * preference carries across routes. Hydrated from localStorage after mount. */
+  const [appSidebarCollapsed, setAppSidebarCollapsed] = useState(false);
+  useEffect(() => {
+    try {
+      const stored = window.localStorage.getItem(APP_SIDEBAR_KEY);
+      if (stored === "true") setAppSidebarCollapsed(true);
+    } catch {}
+  }, []);
+  const toggleAppSidebar = useCallback(() => {
+    setAppSidebarCollapsed((prev) => {
+      const next = !prev;
+      try { window.localStorage.setItem(APP_SIDEBAR_KEY, String(next)); } catch {}
+      return next;
+    });
+  }, []);
+  const onLogout = useCallback(() => router.replace("/login"), [router]);
 
   const [input, setInput] = useState("");
   const [health, setHealth] = useState<Health | null>(null);
@@ -318,6 +345,34 @@ export default function AgentTestPage() {
       // storage disabled — preference degrades to per-session.
     }
   }, [sidebarOpen, hydrated]);
+
+  /* Cross-sidebar mobile coordination — when the right history drawer
+   * opens, signal the app sidebar (left) to close, and vice versa. */
+  useEffect(() => {
+    if (!sidebarOpen || !isMobileLayout) return;
+    window.dispatchEvent(
+      new CustomEvent("orkestra:close-sidebars", { detail: { source: "chat-history" } }),
+    );
+  }, [sidebarOpen, isMobileLayout]);
+  useEffect(() => {
+    const onCloseOthers = (e: Event) => {
+      const detail = (e as CustomEvent<{ source?: string }>).detail;
+      if (detail?.source === "chat-history") return;
+      if (isMobileLayout) setSidebarOpen(false);
+    };
+    window.addEventListener("orkestra:close-sidebars", onCloseOthers);
+    return () => window.removeEventListener("orkestra:close-sidebars", onCloseOthers);
+  }, [isMobileLayout]);
+
+  /* Lock background scroll when the chat history drawer is open on mobile
+   * (same mechanism the app sidebar uses — toggling a class on <html>). */
+  useEffect(() => {
+    if (!sidebarOpen || !isMobileLayout) return;
+    document.documentElement.classList.add("scroll-locked");
+    return () => {
+      document.documentElement.classList.remove("scroll-locked");
+    };
+  }, [sidebarOpen, isMobileLayout]);
 
   // Keep `isMobileLayout` reactive so the drawer styling/scrim toggle correctly
   // when the user rotates a tablet or resizes a desktop window. The matchMedia
@@ -524,44 +579,44 @@ export default function AgentTestPage() {
       style={{
         minHeight: "100vh",
         height: "100dvh",
-        background: T.bg,
-        color: T.text,
+        background: "var(--surface-2)",
+        color: "var(--text)",
         fontFamily: "var(--font-sans), system-ui, sans-serif",
         display: "flex",
-        flexDirection: "column",
         overflow: "hidden",
         visibility: hydrated ? "visible" : "hidden",
       }}
     >
-      <TopBar
-        health={health}
-        sidebarOpen={sidebarOpen}
-        onToggleSidebar={() => setSidebarOpen((v) => !v)}
-        title={active.title}
-        hasMessages={active.messages.length > 0}
-        loading={loading}
-        memoryCount={memories.length}
-        memoryDrawerOpen={memoryDrawerOpen}
-        onToggleMemoryDrawer={() => setMemoryDrawerOpen((v) => !v)}
+      {/* ─── App-wide sidebar (left) — same component as /dashboard ─── */}
+      <AppSidebar
+        collapsed={appSidebarCollapsed}
+        onToggle={toggleAppSidebar}
+        onLogout={onLogout}
+        onOpenPalette={() => {}}
+        onOpenModal={() => router.push("/dashboard")}
       />
 
+      {/* ─── Chat column ─── */}
       <div
+        className="agent-column"
         style={{
           flex: 1,
           display: "flex",
+          flexDirection: "column",
+          minWidth: 0,
           minHeight: 0,
+          background: "var(--bg)",
         }}
       >
-        <Sidebar
-          open={sidebarOpen}
-          conversations={conversations}
-          activeId={activeId}
-          onSelect={setActiveId}
-          onNew={newConversation}
-          onDelete={deleteConversation}
-          datasetLabel={datasetLabel}
-          model={health?.model}
-          onCloseMobile={() => setSidebarOpen(false)}
+        <TopBar
+          title={active.title}
+          hasMessages={active.messages.length > 0}
+          loading={loading}
+          memoryCount={memories.length}
+          memoryDrawerOpen={memoryDrawerOpen}
+          onToggleMemoryDrawer={() => setMemoryDrawerOpen((v) => !v)}
+          historyOpen={sidebarOpen}
+          onToggleHistory={() => setSidebarOpen((v) => !v)}
         />
 
         <main
@@ -570,7 +625,8 @@ export default function AgentTestPage() {
             display: "flex",
             flexDirection: "column",
             minWidth: 0,
-            background: T.bg,
+            minHeight: 0,
+            background: "var(--bg)",
             position: "relative",
           }}
         >
@@ -687,6 +743,19 @@ export default function AgentTestPage() {
         </main>
       </div>
 
+      {/* ─── Chat history (right rail) — own expand/collapse + mobile drawer ─── */}
+      <Sidebar
+        open={sidebarOpen}
+        conversations={conversations}
+        activeId={activeId}
+        onSelect={setActiveId}
+        onNew={newConversation}
+        onDelete={deleteConversation}
+        datasetLabel={datasetLabel}
+        model={health?.model}
+        onCloseMobile={() => setSidebarOpen(false)}
+      />
+
       <AnimatePresence>
         {memoryDrawerOpen && (
           <MemoryDrawer
@@ -746,53 +815,52 @@ export default function AgentTestPage() {
       </AnimatePresence>
 
       <style>{`
-        /* Sidebar width responds to viewport — narrower on tablet, full
+        /* History rail width responds to viewport — narrower on tablet, full
            drawer width on mobile so the touch targets stay comfortable. */
-        :root, .agent-root { --agent-sidebar-w: 268px; }
+        :root, .agent-root { --agent-sidebar-w: 288px; }
         @media (max-width: 1100px) {
-          .agent-root { --agent-sidebar-w: 244px; }
+          .agent-root { --agent-sidebar-w: 256px; }
         }
-        @media (max-width: 820px) {
+        @media (max-width: 720px) {
           .agent-root { --agent-sidebar-w: min(86vw, 320px); }
         }
 
-        /* Mobile drawer + scrim. The sidebar lives below the topbar so the
-           hamburger toggle is always reachable. Scrim sits one z-index below
-           the drawer so a tap closes it without intercepting drawer clicks. */
+        /* Mobile drawer — pins to the right edge so it slides in opposite the
+           shared app sidebar on the left. Scrim catches taps outside the
+           drawer; one-at-a-time coordination with the app sidebar happens via
+           the orkestra:close-sidebars custom event. */
         .agent-sidebar-scrim { display: none; }
-        @media (max-width: 820px) {
+        @media (max-width: 720px) {
           .agent-sidebar {
             position: fixed !important;
-            top: 56px;
+            top: 0;
             bottom: 0;
-            left: 0;
-            z-index: 40;
-            box-shadow: 8px 0 32px rgba(0,0,0,0.16);
+            right: 0;
+            z-index: 50;
+            box-shadow: -8px 0 32px rgba(0,0,0,0.16);
           }
           .agent-sidebar-scrim {
             display: block;
             position: fixed;
-            inset: 56px 0 0 0;
+            inset: 0;
             background: rgba(0,0,0,0.32);
             backdrop-filter: blur(2px);
             -webkit-backdrop-filter: blur(2px);
-            z-index: 39;
+            z-index: 49;
           }
         }
 
-        /* TopBar — collapse the brand text and centre title on narrow widths
-           so the hamburger + model chip stay legible without overflow. */
-        @media (max-width: 720px) {
-          .agent-topbar-brand-text { display: none !important; }
-        }
+        /* TopBar — hide the memory label on narrow widths so the chrome stays
+           tight; the icon + count badge alone are enough on small screens. */
         @media (max-width: 600px) {
           .agent-memory-trigger-label { display: none !important; }
         }
-        @media (max-width: 540px) {
-          .agent-topbar-title { display: none !important; }
-        }
-        @media (max-width: 460px) {
-          .agent-topbar-brand { display: none !important; }
+
+        /* On mobile, the app sidebar's portaled top clearance bar adds 4.5rem
+           of safe top space for the hamburger. Inset our column past that so
+           the topbar isn't hidden behind it. */
+        @media (max-width: 720px) {
+          .agent-column { padding-top: 4.5rem; }
         }
 
         /* Composer — focus ring lives on the wrapper via :focus-within so the
@@ -879,147 +947,56 @@ export default function AgentTestPage() {
 /* ─── topbar ─── */
 
 function TopBar({
-  health,
-  sidebarOpen,
-  onToggleSidebar,
   title,
   hasMessages,
   loading,
   memoryCount,
   memoryDrawerOpen,
   onToggleMemoryDrawer,
+  historyOpen,
+  onToggleHistory,
 }: {
-  health: Health | null;
-  sidebarOpen: boolean;
-  onToggleSidebar: () => void;
   title: string;
   hasMessages: boolean;
   loading: boolean;
   memoryCount: number;
   memoryDrawerOpen: boolean;
   onToggleMemoryDrawer: () => void;
+  historyOpen: boolean;
+  onToggleHistory: () => void;
 }) {
-  // Show the conversation title in the center slot only when the user is
-  // actually inside a conversation — for a fresh "Nouvelle conversation"
-  // (no messages yet) the title is generic and would just be visual noise.
+  // Show the conversation title only when the user is actually inside a
+  // conversation — for a fresh "Nouvelle conversation" (no messages yet) the
+  // title is generic and would just be visual noise.
   const showTitle = hasMessages;
   return (
     <header
       className="agent-topbar"
       style={{
-        height: 56,
-        background: T.surface,
-        borderBottom: `1px solid ${T.border}`,
+        minHeight: 56,
+        background: "var(--surface)",
+        borderBottom: "1px solid var(--border)",
         display: "flex",
         alignItems: "center",
-        gap: "0.75rem",
-        padding: "0 clamp(0.75rem, 2vw, 1.5rem)",
+        gap: "clamp(0.5rem, 1.5vw, 0.75rem)",
+        padding: "0.5rem clamp(0.85rem, 2.5vw, 1.5rem)",
         flexShrink: 0,
         position: "sticky",
         top: 0,
         zIndex: 30,
       }}
     >
-      <button
-        onClick={onToggleSidebar}
-        aria-label={sidebarOpen ? "Fermer la sidebar" : "Ouvrir la sidebar"}
-        aria-expanded={sidebarOpen}
-        className="agent-icon-btn"
-        style={{
-          width: 36,
-          height: 36,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          background: "transparent",
-          border: `1px solid transparent`,
-          borderRadius: 9,
-          color: T.text3,
-          cursor: "pointer",
-          flexShrink: 0,
-          transition: "background 0.15s, border-color 0.15s, color 0.15s",
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.background = T.surface3;
-          e.currentTarget.style.borderColor = T.border;
-          e.currentTarget.style.color = T.text2;
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.background = "transparent";
-          e.currentTarget.style.borderColor = "transparent";
-          e.currentTarget.style.color = T.text3;
-        }}
-      >
-        {sidebarOpen ? (
-          <PanelLeftClose size={16} strokeWidth={2} aria-hidden="true" />
-        ) : (
-          <PanelLeftOpen size={16} strokeWidth={2} aria-hidden="true" />
-        )}
-      </button>
-
-      <div
-        className="agent-topbar-brand"
-        style={{ display: "flex", alignItems: "center", gap: "0.6rem", flexShrink: 0 }}
-      >
-        <span
-          aria-hidden="true"
-          style={{
-            width: 28,
-            height: 28,
-            background: T.gradient,
-            color: "#FFFFFF",
-            borderRadius: 8,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontSize: "0.62rem",
-            fontWeight: 700,
-            boxShadow:
-              "inset 0 1px 0 rgba(255,255,255,0.30), 0 0 0 1px rgba(68,65,200,0.20), 0 2px 6px -2px rgba(88,86,214,0.40)",
-            letterSpacing: "0.02em",
-            flexShrink: 0,
-          }}
-        >
-          CMA
-        </span>
-        <div
-          className="agent-topbar-brand-text"
-          style={{ display: "flex", flexDirection: "column", lineHeight: 1.15 }}
-        >
-          <span
-            style={{
-              fontSize: "0.9rem",
-              fontWeight: 600,
-              letterSpacing: "-0.015em",
-              color: T.text,
-            }}
-          >
-            Cabinet Müller
-          </span>
-          <span
-            style={{
-              fontSize: "0.62rem",
-              fontWeight: 600,
-              letterSpacing: "0.12em",
-              textTransform: "uppercase",
-              color: T.text4,
-            }}
-          >
-            Agent · Conversation
-          </span>
-        </div>
-      </div>
-
       <div
         className="agent-topbar-title"
         aria-live="polite"
         style={{
           flex: 1,
           minWidth: 0,
-          display: showTitle ? "flex" : "none",
+          display: "flex",
           alignItems: "center",
-          justifyContent: "center",
           gap: "0.45rem",
+          opacity: showTitle ? 1 : 0,
+          transition: "opacity 0.18s ease",
         }}
       >
         <span
@@ -1028,8 +1005,8 @@ function TopBar({
             width: 6,
             height: 6,
             borderRadius: "50%",
-            background: loading ? T.accent : T.text4,
-            boxShadow: loading ? `0 0 0 4px ${T.accentTint2}` : "none",
+            background: loading ? "var(--accent)" : "var(--text-4)",
+            boxShadow: loading ? "0 0 0 4px var(--accent-tint-2)" : "none",
             transition: "background 0.2s, box-shadow 0.2s",
             flexShrink: 0,
             animation: loading ? "agent-pulse 1.4s ease-in-out infinite" : "none",
@@ -1038,21 +1015,19 @@ function TopBar({
         <span
           title={title}
           style={{
-            fontSize: "0.84rem",
-            fontWeight: 500,
-            color: T.text2,
-            letterSpacing: "-0.005em",
+            fontSize: "clamp(0.82rem, 2vw, 0.92rem)",
+            fontWeight: 600,
+            color: "var(--text)",
+            letterSpacing: "-0.01em",
             overflow: "hidden",
             textOverflow: "ellipsis",
             whiteSpace: "nowrap",
-            maxWidth: "min(48ch, 100%)",
+            minWidth: 0,
           }}
         >
           {title}
         </span>
       </div>
-
-      {!showTitle && <div style={{ flex: 1 }} />}
 
       <div style={{ display: "flex", alignItems: "center", gap: "0.45rem", flexShrink: 0 }}>
         <MemoryButton
@@ -1060,11 +1035,46 @@ function TopBar({
           open={memoryDrawerOpen}
           onToggle={onToggleMemoryDrawer}
         />
-        <ModelChip
-          model={health?.model}
-          hasKey={health?.has_api_key}
-          rows={health?.dataset}
-        />
+        <button
+          type="button"
+          onClick={onToggleHistory}
+          aria-label={historyOpen ? "Fermer l'historique" : "Ouvrir l'historique"}
+          aria-expanded={historyOpen}
+          className="agent-icon-btn"
+          style={{
+            width: 36,
+            height: 36,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            background: historyOpen ? "var(--surface-2)" : "transparent",
+            border: "1px solid",
+            borderColor: historyOpen ? "var(--border)" : "transparent",
+            borderRadius: 9,
+            color: historyOpen ? "var(--text)" : "var(--text-3)",
+            cursor: "pointer",
+            flexShrink: 0,
+            transition: "background 0.15s, border-color 0.15s, color 0.15s",
+          }}
+          onMouseEnter={(e) => {
+            if (historyOpen) return;
+            e.currentTarget.style.background = "var(--surface-2)";
+            e.currentTarget.style.borderColor = "var(--border)";
+            e.currentTarget.style.color = "var(--text-2)";
+          }}
+          onMouseLeave={(e) => {
+            if (historyOpen) return;
+            e.currentTarget.style.background = "transparent";
+            e.currentTarget.style.borderColor = "transparent";
+            e.currentTarget.style.color = "var(--text-3)";
+          }}
+        >
+          {historyOpen ? (
+            <PanelRightClose size={16} strokeWidth={2} aria-hidden="true" />
+          ) : (
+            <PanelRightOpen size={16} strokeWidth={2} aria-hidden="true" />
+          )}
+        </button>
       </div>
     </header>
   );
@@ -1362,17 +1372,18 @@ function Sidebar({
   return (
     <aside
       className="agent-sidebar"
-      aria-label="Historique et mémoire"
+      aria-label="Historique des conversations"
       aria-hidden={!open}
       data-open={open ? "true" : "false"}
       style={{
         // Width animates via CSS so the responsive variable (per breakpoint)
         // is respected without re-mounting the element. The inner content
         // div keeps its full width while the outer rail collapses, so the
-        // labels don't reflow during the transition.
+        // labels don't reflow during the transition. Sits on the right side
+        // of the page — borderLeft (not borderRight) carries the divider.
         width: open ? "var(--agent-sidebar-w, 268px)" : 0,
-        background: T.surface2,
-        borderRight: open ? `1px solid ${T.border}` : "1px solid transparent",
+        background: "var(--surface-2)",
+        borderLeft: open ? "1px solid var(--border)" : "1px solid transparent",
         display: "flex",
         flexDirection: "column",
         overflow: "hidden",
@@ -3721,9 +3732,9 @@ function Composer({
     <div
       className="agent-composer-wrap"
       style={{
-        borderTop: `1px solid ${T.border}`,
-        background: T.bg,
-        padding: "0.75rem clamp(0.85rem, 3vw, 2rem) calc(0.85rem + env(safe-area-inset-bottom, 0px))",
+        background: "var(--bg)",
+        padding:
+          "clamp(0.5rem, 1.5vw, 0.9rem) clamp(0.85rem, 3vw, 2rem) calc(clamp(0.75rem, 2vw, 1rem) + env(safe-area-inset-bottom, 0px))",
         flexShrink: 0,
       }}
     >
@@ -3772,11 +3783,11 @@ function Composer({
             className="agent-composer"
             style={{
               position: "relative",
-              background: T.surface,
+              background: "var(--surface)",
               border: "none",
-              borderRadius: 14,
+              borderRadius: 12,
               transition: "box-shadow 0.2s ease",
-              boxShadow: T.tier1,
+              boxShadow: "var(--tier-1)",
             }}
           >
             <textarea
