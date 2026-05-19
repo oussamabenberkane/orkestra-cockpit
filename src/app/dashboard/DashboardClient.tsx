@@ -221,7 +221,11 @@ export default function DashboardClient({
   const handleModalAction = (k: ModalKey) => {
     if (k === "rapport" || k === "vue360") router.push("/rapports");
   };
-  const onLogout = () => router.replace("/login");
+  const onLogout = async () => {
+    const { supabase } = await import("@/lib/supabase");
+    await supabase.auth.signOut();
+    router.replace("/login");
+  };
 
   const hero = initialHero[period];
 

@@ -69,8 +69,10 @@ export function AppShell({ children, mainStyle }: AppShellProps) {
   const handleModalAction = (key: ModalKey) => {
     if (key === "rapport" || key === "vue360") router.push("/rapports");
   };
-  // Use replace so the back stack doesn't preserve the protected page.
-  const onLogout = () => router.replace("/login");
+  const onLogout = async () => {
+    await supabase.auth.signOut();
+    router.replace("/login");
+  };
 
   return (
     <div

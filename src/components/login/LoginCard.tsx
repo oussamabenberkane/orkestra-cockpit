@@ -4,17 +4,26 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
+import { supabase } from "@/lib/supabase";
 
 export default function LoginCard() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
     setLoading(true);
-    setTimeout(() => router.push("/dashboard"), 400);
+    const { error: authError } = await supabase.auth.signInWithPassword({ email, password });
+    if (authError) {
+      setError("Identifiants incorrects. Veuillez réessayer.");
+      setLoading(false);
+      return;
+    }
+    router.replace("/dashboard");
   };
 
   return (
@@ -95,19 +104,40 @@ export default function LoginCard() {
           </div>
         </div>
 
-        <h1
-          style={{
-            fontSize: "1.7rem",
-            fontWeight: 700,
-            letterSpacing: "-0.025em",
-            color: "var(--text)",
-            margin: 0,
-            marginBottom: "0.4rem",
-            lineHeight: 1.1,
-          }}
-        >
-          Bonjour, Thomas.
-        </h1>
+        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "0.4rem" }}>
+          <h1
+            style={{
+              fontSize: "1.7rem",
+              fontWeight: 700,
+              letterSpacing: "-0.025em",
+              color: "var(--text)",
+              margin: 0,
+              lineHeight: 1.1,
+            }}
+          >
+            Bonjour, Thomas.
+          </h1>
+          <button
+            type="button"
+            onClick={() => { setEmail("demo@cabinet-muller.ch"); setPassword("Cockpit2026"); }}
+            style={{
+              marginTop: "0.25rem",
+              background: "var(--accent-tint)",
+              border: "1px solid var(--accent-tint-2)",
+              borderRadius: "7px",
+              padding: "0.25rem 0.6rem",
+              fontSize: "0.7rem",
+              fontWeight: 600,
+              color: "var(--accent)",
+              fontFamily: "inherit",
+              cursor: "pointer",
+              whiteSpace: "nowrap",
+              letterSpacing: "-0.005em",
+            }}
+          >
+            Démo
+          </button>
+        </div>
         <p
           style={{
             fontSize: "0.92rem",
@@ -139,6 +169,23 @@ export default function LoginCard() {
             placeholder="••••••••"
             autoComplete="current-password"
           />
+
+          {error && (
+            <div
+              style={{
+                marginBottom: "1rem",
+                padding: "0.65rem 0.9rem",
+                background: "var(--danger-tint)",
+                border: "1px solid var(--danger)",
+                borderRadius: "9px",
+                fontSize: "0.8rem",
+                color: "var(--danger)",
+                fontWeight: 500,
+              }}
+            >
+              {error}
+            </div>
+          )}
 
           <div
             style={{
