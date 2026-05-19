@@ -7,9 +7,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Stack
 
 - **Next.js 16.2** (App Router) on **React 19**, TypeScript strict mode, path alias `@/* → ./src/*`.
-- **Tailwind CSS v4** via `@tailwindcss/postcss`. There is no `tailwind.config.{js,ts}` — design tokens live in [src/app/globals.css](src/app/globals.css) using `@theme inline { ... }` and CSS variables. Do not create a Tailwind config file; extend tokens by editing `globals.css`.
+- **Tailwind CSS v4** via `@tailwindcss/postcss`. There is no `tailwind.config.{js,ts}` — design tokens live in [src/app/globals.css](src/app/globals.css) using `@theme inline { ... }` and CSS variables on `:root`. Do not create a Tailwind config file; extend tokens by editing `globals.css`.
 - **shadcn/ui** with the `base-nova` style on top of **`@base-ui/react`** primitives (not Radix). See [components.json](components.json). When adding UI components from shadcn, they will be wired to `@base-ui/react` — do not import from `@radix-ui/*`.
+- **Fonts:** Manrope (`--font-sans`) and JetBrains Mono (`--font-mono`), loaded once in [src/app/layout.tsx](src/app/layout.tsx) via `next/font/google`. The app `lang` is `fr`.
 - **Icons:** `lucide-react`. **Animation:** `framer-motion`. **Class merging:** `cn()` in [src/lib/utils.ts](src/lib/utils.ts).
+- **AI SDK:** Vercel AI SDK v4 with `@ai-sdk/mistral` (default model `mistral-large-latest`). `@ai-sdk/google` is kept as a commented alternative in [src/agent/runtime.ts](src/agent/runtime.ts). `MISTRAL_API_KEY` env required for `/api/agent` and `/chat`.
+- **Data:** demo CSVs in [data/](data/) loaded with `papaparse` and cached in memory by [src/agent/data/loader.ts](src/agent/data/loader.ts). `sql.js` is wired in [src/agent/data/sqljs-adapter.ts](src/agent/data/sqljs-adapter.ts) but the dataset loader uses CSVs.
 - Package manager: **pnpm** (lockfile + `pnpm-workspace.yaml` present, though this is a single-package repo).
 
 ## Commands
@@ -24,23 +27,50 @@ There is no lint, test, or typecheck script configured. For typechecking run `pn
 
 ## Architecture
 
-This is a single-page BFSI cockpit demo for "Cabinet Müller & Associés SA" (French/Swiss insurance brokerage). It is a static prototype — **there is no backend, no auth, no data fetching**. All displayed figures are hardcoded in components or in [src/lib/modal-data.ts](src/lib/modal-data.ts).
+This is a single-page BFSI cockpit demo for "Cabinet Müller & Associés SA" (French/Swiss insurance brokerage). The dashboard surface is a static prototype — figures are hardcoded inline or in [src/lib/modal-data.ts](src/lib/modal-data.ts). The AI agent surface (`/chat` and the `/api/agent` route) is real: it streams responses from Mistral and answers questions over the demo CSVs.
 
 **Routes** ([src/app/](src/app/)):
-- `/` → [page.tsx](src/app/page.tsx) just `redirect("/login")`.
-- `/login` → server component composing `BrandPanel` + `LoginForm`. The form does not authenticate — it routes to `/dashboard`.
-- `/dashboard` → **client component** ([dashboard/page.tsx](src/app/dashboard/page.tsx)) that owns all top-level UI state: which modal is open (`ModalKey | null`), settings modal, sidebar open/close. Modal state is passed down via `onOpenModal` callbacks through `TilesGrid` and `AgentsSection`.
+- `/` → [page.tsx](src/app/page.tsx) — minimal landing (Malyz brand mark + tagline + "Accéder au cockpit →" → `/login`). Temporary placeholder; intended to be replaced by a marketing page later.
+- `/login` → [login/page.tsx](src/app/login/page.tsx) — split layout: dark navy `BrandPanel` on the left (42% on `md+`, hidden below), `LoginCard` on the right. Form simulates auth and routes to `/dashboard`.
+- `/dashboard` → [dashboard/page.tsx](src/app/dashboard/page.tsx) — **client component** that owns the unified shell: `<Sidebar>` + scroll `<main>` with Hero panel + 3 satellite KPIs + "Trois choses aujourd'hui" + 6 domain tiles + footer. Modal state (`ModalKey | null`), sidebar collapse, command palette, and period toggle all live here. Mounts `<FloatingDock />`.
+- `/rapports` → [rapports/page.tsx](src/app/rapports/page.tsx) — "Tous les rapports" index with filter chips and per-report cards. Uses the same `<Sidebar>` shell. `/rapports/[id]` for detail view. Mounts `<FloatingDock />`.
+- `/alertes`, `/parametres`, `/support` → temporary mock pages wrapped in `<AppShell>` + `<MockPagePlaceholder>`. They exist so every sidebar item resolves end-to-end; promote to real features as they're built.
+- `/chat` → [chat/page.tsx](src/app/chat/page.tsx) — **full-screen** LLM chat harness (no sidebar/shell). Talks to `/api/agent` using the rich event protocol. Includes conversation history (via `AgentConversationProvider`), memory store, tool-call inspection, voice input. Does **not** mount `<FloatingDock />` — the page itself is the full chat surface.
+- `/api/agent` → [api/agent/route.ts](src/app/api/agent/route.ts) — POST streaming + `?mode=once` + `?stream=text` variants. GET is a health/dataset smoke-check. `export const runtime = "nodejs"` because the CSV loader uses `node:fs`.
 
-**Dashboard composition** ([src/components/dashboard/](src/components/dashboard/)) is a fixed vertical stack: `DashboardHeader` → (`Sidebar` | `main`: `KPIRow` + `CombinedBanner` + `TilesGrid` + `AgentsSection`) → `DashboardFooter`. The page uses `height: 100vh; overflow: hidden` with only `<main>` scrolling — preserve this when editing the layout shell.
+**Shell composition** — `/dashboard` and `/rapports` share the same shell:
 
-**Modal content** for the seven tiles/agents is centralized in [src/lib/modal-data.ts](src/lib/modal-data.ts), keyed by `ModalKey` (`finance | vue360 | sinistres | prospection | portefeuille | agents | rapport`). To add a new modal: extend `ModalKey` in [src/lib/types.ts](src/lib/types.ts), add an entry to `modalData`, then reference the key from a `Tile` or `AgentCard`.
+```
+<Sidebar />  | <main>                         + <FloatingDock />
+              |   greeting row + source badges
+              |   HeroPanel + 3 SatelliteKPI            (dashboard only)
+              |   TroisChoses                            (dashboard only)
+              |   filter strip + report cards           (rapports only)
+              |   6 TileCards (3-col grid)              (dashboard only)
+              |   footer
+```
 
-**Styling convention is mixed and intentional:**
-- Brand tokens (navy `#1E2761`, malyz `#2B3AE8`, teal `#028090`, etc.) are defined twice in [src/app/globals.css](src/app/globals.css): once as `--color-*` inside `@theme inline` (Tailwind utilities) and once as plain `--*` on `:root` (inline styles).
-- Components heavily use **inline `style={{ ... }}`** with these CSS variables and literal hex values, not Tailwind utility classes. Match this style when editing existing components rather than refactoring to Tailwind. Use Tailwind only where the surrounding code already does (mostly `cn()`-based UI primitives in [src/components/ui/](src/components/ui/)).
-- Fonts: Plus Jakarta Sans (`--font-jakarta`) and DM Mono (`--font-mono`), loaded via `next/font/google` in [src/app/layout.tsx](src/app/layout.tsx). The app lang is `fr`.
+`<Sidebar>` in [src/components/dashboard/Sidebar.tsx](src/components/dashboard/Sidebar.tsx) collapses to 64px with hover-to-peek + click-to-pin. Each nav item has a **category-coloured icon** (Prospection → accent indigo, Portefeuille → info blue, Sinistres → danger red, Finance → warn orange, etc., mirroring the dashboard tile palette). Active items pop into a white pill with `var(--tier-1)` shadow. Métier items (`prospection`, `portefeuille`, `sinistres`, `finance`, `agents`) open dashboard modals via the `onOpenModal` prop; route items (`/dashboard`, `/rapports`, `/chat`, `/alertes`, `/parametres`, `/support`) use `<Link>`. The bell + user avatar at the bottom of the sidebar use the FloatingDock's visual identity (indigo avatar, tight bell badge) but still open Popovers backed by `NotificationsContent` / `UserMenuContent`.
 
-**Dialogs** wrap `@base-ui/react`'s `Dialog` primitive in [src/components/ui/dialog.tsx](src/components/ui/dialog.tsx). `DashboardModal` is a single dialog driven by `modalKey` — opening a tile sets the key; closing sets it to `null`. Do not create per-tile dialogs.
+**`<AppShell>`** ([src/components/dashboard/AppShell.tsx](src/components/dashboard/AppShell.tsx)) is the shared chrome wrapper for routes that don't need their own page-level state (currently `/alertes`, `/parametres`, `/support`). It owns the sidebar collapse + command palette + global `DashboardModal` + logout. `/dashboard` and `/rapports` still inline the same wiring directly because they own additional page-level state (period toggle, filter chips, etc.).
+
+**Modal content** for the seven tiles/agents is centralized in [src/lib/modal-data.ts](src/lib/modal-data.ts), keyed by `ModalKey` (`finance | vue360 | sinistres | prospection | portefeuille | agents | rapport`). The single `<DashboardModal>` in [src/components/dashboard/DashboardModal.tsx](src/components/dashboard/DashboardModal.tsx) renders content based on the active key and accepts an optional `onAction(key)` prop for the CTA — current default routes `rapport` and `vue360` to `/rapports`, others just close. To add a new modal: extend `ModalKey` in [src/lib/types.ts](src/lib/types.ts), add an entry to `modalData`, then reference the key from a `<TileCard>`, a sidebar `modalKey`, or the command palette.
+
+**`<FloatingDock>`** ([src/components/dashboard/FloatingDock.tsx](src/components/dashboard/FloatingDock.tsx)) is a bottom-right pill (84×48) that morphs into a 420×354 panel with a chat preview. Animation/dimensions/position are restored verbatim from commit `ca8b321`'s original Aperture FloatingDock; only the content swapped to chat. It consumes `useAgentConversation()` (see below) so the conversation it shows is **the same active thread** as `/chat`. Currently mounted on `/dashboard` and both `/rapports` pages; not on `/chat` (already a full chat surface), `/login`, or `/` (landing).
+
+**`<AgentConversationProvider>`** ([src/components/dashboard/AgentConversationProvider.tsx](src/components/dashboard/AgentConversationProvider.tsx)) is mounted at the root layout. It owns the conversation list, active id, in-flight stream state, error, active tool, and localStorage persistence under `orkestra.agent-test.conversations.v1`. Both `/chat` and `<FloatingDock>` consume it via `useAgentConversation()` — sending a message from the dock and then opening `/chat` shows the same thread. Memory state stays local to `/chat` (the page passes memories to `send()` per-call); `save_memory` tool proposals get drained into the global memory store by the provider. Shared types live in [src/components/dashboard/agent-types.ts](src/components/dashboard/agent-types.ts) (`Message`, `Conversation`, `ToolCall`, `ToolResult`, `AgentEvent`).
+
+**Dashboard data is backend-ready** — all hero/satellite/trois/tiles arrays for `/dashboard` live in [src/lib/dashboard-mock.ts](src/lib/dashboard-mock.ts) with typed interfaces (`HeroDataset`, `Period`, …). Hero data is keyed by period (`M` / `T` / `A`) so the HeroPanel toggle is a pure data swap. When `/api/dashboard` lands, replace these exports with a fetcher returning the same shapes — no component changes needed.
+
+**Agent boundary** — `src/agent/` is self-contained and must not import from `src/app/`, `src/components/`, or `src/lib/`. The dashboard UI must not import from `src/agent/` either. Both sides talk only through `/api/agent`. See [src/agent/README.md](src/agent/README.md).
+
+**Design tokens** live in [src/app/globals.css](src/app/globals.css):
+- `:root` declares `--bg`, `--surface`, `--surface-2/3`, `--text` thru `--text-4`, `--accent` (`#5856D6`) + `--accent-2/-tint/-tint-2`, the semantic colors (`--success`, `--warn`, `--danger`, `--info`, `--purple`) with `*-tint` variants, the per-category nav colors (`--nav-prospection`, `--nav-portefeuille`, …), and the elevation tokens (`--tier-1`, `--tier-2`, `--tier-press`).
+- `@theme inline { ... }` mirrors selected tokens as `--color-*` for Tailwind utility access.
+- Components heavily use **inline `style={{ ... }}`** with these CSS variables, not Tailwind utility classes. Match this style when editing existing components rather than refactoring to Tailwind. Use Tailwind only where the surrounding code already does (mostly `cn()`-based UI primitives in [src/components/ui/](src/components/ui/)).
+- Responsive helpers: `.dashboard-hero`, `.dashboard-tiles`, `.dashboard-kpis`, `.app-sidebar` (collapsed below 720px) — defined in `globals.css`. Prefer these to introducing new media queries.
+
+**Dialogs** wrap `@base-ui/react`'s `Dialog` primitive in [src/components/ui/dialog.tsx](src/components/ui/dialog.tsx). `DashboardModal` is the only application dialog driven by `modalKey` — opening a tile or sidebar item sets the key, closing sets it to `null`.
 
 ## Commit Convention
 
@@ -110,6 +140,31 @@ Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
 
 ## Conventions worth knowing
 
-- Components that own state or use hooks must start with `"use client"`. The root `/dashboard` page is a client component because it owns modal state — keep new stateful additions inside child client components rather than promoting the page if you can avoid it.
-- Copy is in French. Keep French strings when editing user-facing labels.
-- The repo is responsive (see the most recent commit) — `page-header-row`, `source-pills-row`, and `dashboard-main-padding` are responsive helper classes defined in `globals.css`. Use them rather than introducing new media queries when extending the dashboard header area.
+- Components that own state or use hooks must start with `"use client"`. The `/dashboard` page is a client component because it owns modal/sidebar/period state — keep new stateful additions inside child client components when you can, rather than promoting the page.
+- Copy is in **French**. Keep French strings when editing user-facing labels.
+- Sidebar collapse state is persisted in `localStorage` under the key `orkestra.sidebar.collapsed`. The same key is used by `/dashboard` and `/rapports/[id]` so the user's choice carries across routes.
+- The icon color for a sidebar nav item is set per-item via the `iconColor` field on the `NavItemData` entry in [src/components/dashboard/Sidebar.tsx](src/components/dashboard/Sidebar.tsx). To add a new item, point its `iconColor` at one of the `--nav-*` tokens in `globals.css`.
+- The hex-grid background animation (`hex-grid-bg`) on the login `BrandPanel` is driven by the `hexFloat` keyframes in `globals.css`. Don't recreate them inline.
+- The dashboard's hero `period` toggle (M/T/A) is a pure data swap against `heroByPeriod` in [src/lib/dashboard-mock.ts](src/lib/dashboard-mock.ts) — to change the chart's behaviour, edit the mock, not `HeroPanel`.
+- `<FloatingDock>` and `/chat` share conversation state via `<AgentConversationProvider>` at the root layout. Don't reintroduce local conversation state in either surface; extend the provider instead.
+
+## Routing
+
+- **Global route transition.** [src/app/template.tsx](src/app/template.tsx) wraps every page with a ~180ms opacity fade on navigation. `template.tsx` (not `layout.tsx`) is the Next.js convention for remount-on-route-change. Keep it short so it doesn't compound with per-section `initial/animate` choreography.
+- **Active state** in the sidebar is computed from `usePathname()` in [src/components/dashboard/Sidebar.tsx](src/components/dashboard/Sidebar.tsx) via the `isItemActive` helper. New routes that should highlight a nav item need a matching prefix branch added there.
+- **Logout** uses `router.replace("/login")`, never `router.push`. Replace clears the protected page from history so the browser back button can't return to it (matters today as documentation; matters more once real auth lands).
+- **Fullscreen pages without the sidebar shell** (currently only `/chat`) must render `<BackToApp />` from [src/components/shared/BackToApp.tsx](src/components/shared/BackToApp.tsx). It pins a floating "← Cockpit" pill top-left and uses `router.back()` when `window.history.length > 1`, else falls back to `/dashboard` so direct-loads still escape cleanly.
+- **In-shell back navigation** uses `<Link>` (e.g. `/rapports/[id]` → `/rapports`) rather than `router.back()` so the back affordance still works on direct-load / refresh of a detail page.
+- **Scroll restoration** is Next.js default; nothing to wire. Per-page filter state (e.g. `/rapports` chips, dashboard period toggle) is local React state and **does reset** on back-navigation — see edge cases below.
+
+### Edge cases
+
+| # | Behaviour | Where | Mitigation |
+|---|---|---|---|
+| 1 | Opening a tile modal doesn't change the URL. Browser back exits the page entirely instead of closing the modal. | All `<DashboardModal>` triggers | Tracked. Future: encode `ModalKey` as `?modal=…` so back closes and links are shareable. |
+| 2 | `/rapports` filter chips and the dashboard period toggle (`M/T/A`) are local React state — back-navigating from a detail view resets them. | [rapports/page.tsx](src/app/rapports/page.tsx), [dashboard/page.tsx](src/app/dashboard/page.tsx) | Tracked. Future: persist to URL query params. |
+| 3 | There is no auth; any URL (e.g. `/dashboard`) is reachable without going through `/login`. | All protected routes | Tracked. When auth lands, wrap protected routes in a server-side guard that redirects to `/login`. |
+| 4 | Sidebar collapse state in `localStorage` is shared across tabs of the same origin — toggling in tab A immediately affects tab B on next render. | Sidebar | Accepted: matches the user's "global preference" expectation. |
+| 5 | `<BackToApp />` on `/chat` falls back to `/dashboard` when history is empty. A user who deep-links `/chat` from a notification therefore always lands at `/dashboard` rather than the page they intended. | [BackToApp.tsx](src/components/shared/BackToApp.tsx) | Pass an explicit `fallback="/rapports"` (or any other route) at the usage site if a different landing is preferred. |
+| 6 | `router.back()` from `/chat` after navigating in from `/login` returns to `/login`, not `/dashboard`. | `/chat` | Accepted: matches the user's actual back-stack. |
+| 7 | The Plinth-style sidebar hover-peek re-renders every time the user mouses out (300ms grace timer). With many quick mouse-outs this can stutter — only relevant if the sidebar is animated heavily. | Sidebar | Accepted at current usage volume. |

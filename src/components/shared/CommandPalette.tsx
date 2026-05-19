@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import {
+  Home, BarChart3, MessageSquare, AlertTriangle,
   Target, FolderArchive, Flame, Wallet, Globe, Sparkles,
   Mail, AlertCircle, FileText, Settings, HelpCircle, LogOut,
   Search, CornerDownLeft, X,
@@ -15,7 +17,7 @@ type Action =
   | { type: "callback"; cb: () => void };
 
 type Command = {
-  group: "Domaines" | "Agents" | "Système";
+  group: "Navigation" | "Domaines" | "Agents" | "Système";
   label: string;
   desc?: string;
   Icon: typeof Target;
@@ -26,6 +28,42 @@ type Command = {
 
 function buildCommands(opts: { onLogout: () => void }): Command[] {
   return [
+    {
+      group: "Navigation",
+      label: "Vue 360",
+      desc: "Accueil cockpit — KPI consolidés",
+      Icon: Home,
+      iconColor: "var(--accent)",
+      iconBg: "var(--accent-tint)",
+      action: { type: "navigate", href: "/dashboard" },
+    },
+    {
+      group: "Navigation",
+      label: "Tous les rapports",
+      desc: "Index des rapports BrokerStar + Odoo",
+      Icon: BarChart3,
+      iconColor: "var(--accent)",
+      iconBg: "var(--accent-tint)",
+      action: { type: "navigate", href: "/rapports" },
+    },
+    {
+      group: "Navigation",
+      label: "Chat IA",
+      desc: "Assistant Orkestra plein écran",
+      Icon: MessageSquare,
+      iconColor: "var(--accent)",
+      iconBg: "var(--accent-tint)",
+      action: { type: "navigate", href: "/chat" },
+    },
+    {
+      group: "Navigation",
+      label: "Alertes",
+      desc: "Centre d'alertes opérationnelles",
+      Icon: AlertTriangle,
+      iconColor: "var(--danger)",
+      iconBg: "var(--danger-tint)",
+      action: { type: "navigate", href: "/alertes" },
+    },
     {
       group: "Domaines",
       label: "Prospection",
@@ -105,7 +143,7 @@ function buildCommands(opts: { onLogout: () => void }): Command[] {
       Icon: Settings,
       iconColor: "var(--text-3)",
       iconBg: "var(--surface-2)",
-      action: { type: "callback", cb: () => {} },
+      action: { type: "navigate", href: "/parametres" },
     },
     {
       group: "Système",
@@ -114,7 +152,7 @@ function buildCommands(opts: { onLogout: () => void }): Command[] {
       Icon: HelpCircle,
       iconColor: "var(--text-3)",
       iconBg: "var(--surface-2)",
-      action: { type: "callback", cb: () => {} },
+      action: { type: "navigate", href: "/support" },
     },
     {
       group: "Système",
@@ -141,6 +179,7 @@ export function CommandPalette({
   onOpenModal,
   onLogout,
 }: CommandPaletteProps) {
+  const router = useRouter();
   const [query, setQuery] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
@@ -187,6 +226,7 @@ export function CommandPalette({
     onClose();
     setTimeout(() => {
       if (cmd.action.type === "modal") onOpenModal(cmd.action.key);
+      else if (cmd.action.type === "navigate") router.push(cmd.action.href);
       else if (cmd.action.type === "callback") cmd.action.cb();
     }, 80);
   };
