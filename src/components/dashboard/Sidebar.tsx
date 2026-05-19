@@ -4,10 +4,10 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { motion, AnimatePresence, LayoutGroup } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Home, Target, FolderArchive, Flame, Wallet, Globe,
-  Sparkles, MessageSquare, AlertTriangle, Settings, HelpCircle,
+  MessageSquare, AlertTriangle, Settings, HelpCircle,
   ChevronLeft, ChevronRight, Search, Bell, Menu,
   type LucideIcon,
 } from "lucide-react";
@@ -34,7 +34,7 @@ type NavItemData = {
   badgeTone?: "neutral" | "warn" | "danger";
 };
 
-type PopupTab = "profile" | "notif";
+type OpenPopup = "profile" | "notif";
 
 const sections: { title: string; items: NavItemData[] }[] = [
   {
@@ -58,7 +58,6 @@ const sections: { title: string; items: NavItemData[] }[] = [
     items: [
       { Icon: MessageSquare,  label: "Chat IA",  iconColor: "var(--nav-chat)",    href: "/chat",     badge: "3", badgeTone: "warn" },
       { Icon: AlertTriangle,  label: "Alertes",  iconColor: "var(--nav-alertes)", href: "/alertes", badge: "5", badgeTone: "danger" },
-      { Icon: Sparkles,       label: "Agents",   iconColor: "var(--nav-agents)",  modalKey: "agents", badge: "3", badgeTone: "neutral" },
     ],
   },
   {
@@ -74,14 +73,13 @@ const EXPANDED_W = 248;
 const COLLAPSED_W = 64;
 const ICON_BTN = 36;
 const BREAKPOINT_MOBILE = 720;
-/* Popup geometry — same in both tabs so they are visually identical.
- * Height clamps so short viewports get a tighter panel without breaking layout. */
 const POPUP_INSET = 8;
 const POPUP_WIDTH = 296;
-const POPUP_HEIGHT_MAX = 312;
-const POPUP_VIEWPORT_RESERVE = 200; /* header + search + bottom row + margin */
-const POPUP_TABBAR_H = 42;
-const POPUP_BOTTOM_OFFSET = 58;
+const POPUP_HEIGHT_MAX = 340;
+const POPUP_VIEWPORT_RESERVE = 200;
+/* Bottom bar heights: expanded row is taller than two stacked icons */
+const POPUP_BOTTOM_OFFSET_EXPANDED = 74;
+const POPUP_BOTTOM_OFFSET_COLLAPSED = 96;
 
 interface TooltipState { label: string; x: number; y: number }
 
@@ -328,8 +326,7 @@ export function Sidebar({
   const [isMobile, setIsMobile] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
-  const [popupOpen, setPopupOpen] = useState(false);
-  const [popupTab, setPopupTab] = useState<PopupTab>("profile");
+  const [openPopup, setOpenPopup] = useState<OpenPopup | null>(null);
 
   const sidebarRef = useRef<HTMLElement>(null);
   const popupRef = useRef<HTMLDivElement>(null);
@@ -349,7 +346,7 @@ export function Sidebar({
   // Close drawer + popup on route change
   useEffect(() => {
     setDrawerOpen(false);
-    setPopupOpen(false);
+    setOpenPopup(null);
   }, [pathname]);
 
   /* Lock background scroll while the mobile drawer is open. Toggling a class
@@ -366,7 +363,7 @@ export function Sidebar({
 
   // Close popup if sidebar gets collapsed (popup lives inside it and would clip)
   useEffect(() => {
-    if (collapsed && !isMobile) setPopupOpen(false);
+    if (collapsed && !isMobile) setOpenPopup(null);
   }, [collapsed, isMobile]);
 
   // Outside click + Escape for popup. Capture-phase click listener so the
@@ -375,7 +372,7 @@ export function Sidebar({
   // else. The popup itself, its trigger, and the mobile drawer backdrop are
   // all allowed through so their own handlers can run normally.
   useEffect(() => {
-    if (!popupOpen) return;
+    if (!openPopup) return;
     const onClick = (e: MouseEvent) => {
       const t = e.target as Node;
       if (popupRef.current?.contains(t)) return;
@@ -385,10 +382,10 @@ export function Sidebar({
       e.preventDefault();
       e.stopPropagation();
       e.stopImmediatePropagation();
-      setPopupOpen(false);
+      setOpenPopup(null);
     };
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setPopupOpen(false);
+      if (e.key === "Escape") setOpenPopup(null);
     };
     document.addEventListener("click", onClick, true);
     document.addEventListener("keydown", onKey);
@@ -396,7 +393,7 @@ export function Sidebar({
       document.removeEventListener("click", onClick, true);
       document.removeEventListener("keydown", onKey);
     };
-  }, [popupOpen]);
+  }, [openPopup]);
 
   /** Desktop: open iff not collapsed. Mobile: open iff drawer is open. */
   const isOpen = isMobile ? drawerOpen : !collapsed;
@@ -419,26 +416,25 @@ export function Sidebar({
     [pathname],
   );
 
-  /** Trigger logic: same tab twice closes; different tab switches; collapsed expands first. */
-  const handlePopupTrigger = (tab: PopupTab) => {
+  /** Trigger: same popup closes; different popup switches; collapsed expands first. */
+  const handlePopupTrigger = (popup: OpenPopup) => {
     hideTip();
-    if (popupOpen && popupTab === tab) {
-      setPopupOpen(false);
+    if (openPopup === popup) {
+      setOpenPopup(null);
       return;
     }
     if (!isMobile && collapsed) {
       onToggle();
     }
-    setPopupTab(tab);
-    setPopupOpen(true);
+    setOpenPopup(popup);
   };
 
-  const closePopup = useCallback(() => setPopupOpen(false), []);
+  const closePopup = useCallback(() => setOpenPopup(null), []);
 
   /** Toggle: closes popup first to avoid leaving an orphan panel inside a collapsing sidebar. */
   const handleSidebarToggle = () => {
     hideTip();
-    setPopupOpen(false);
+    setOpenPopup(null);
     if (isMobile) {
       setDrawerOpen(false);
     } else {
@@ -529,9 +525,7 @@ export function Sidebar({
               exit={{ opacity: 0 }}
               transition={{ duration: 0.18 }}
               onClick={() => {
-                // Layered dismiss: close the popup first if it's open,
-                // then close the drawer on the next click.
-                if (popupOpen) setPopupOpen(false);
+                if (openPopup) setOpenPopup(null);
                 else setDrawerOpen(false);
               }}
               style={{
@@ -565,8 +559,8 @@ export function Sidebar({
         <div style={{
           display: "flex",
           alignItems: "center",
-          height: 52,
-          padding: "0 0.55rem",
+          height: 58,
+          padding: "0 0.6rem",
           gap: "0.45rem",
           flexShrink: 0,
           justifyContent: isOpen ? "space-between" : "center",
@@ -574,16 +568,18 @@ export function Sidebar({
           {isOpen && (
             <>
               <div style={{
-                width: ICON_BTN, height: ICON_BTN,
+                width: 40, height: 40,
                 display: "flex", alignItems: "center", justifyContent: "center",
                 flexShrink: 0,
               }}>
-                <svg viewBox="0 0 60 70" fill="none" style={{ width: 22, height: 22 }}>
+                <svg viewBox="0 0 60 70" fill="none" style={{ width: 30, height: 30 }}>
                   <polygon points="30,2 58,17.5 58,52.5 30,68 2,52.5 2,17.5"
-                    fill="none" stroke="var(--accent)" strokeWidth="4" />
+                    fill="none" stroke="var(--accent)" strokeWidth="3.5" />
                   <polygon points="30,12 48,22.5 48,47.5 30,58 12,47.5 12,22.5"
-                    fill="var(--accent)" opacity="0.4" />
-                  <polygon points="30,22 38,27 38,43 30,48 22,43 22,27"
+                    fill="var(--accent)" opacity="0.22" />
+                  <polygon points="30,20 40,26 40,44 30,50 20,44 20,26"
+                    fill="var(--accent)" opacity="0.55" />
+                  <polygon points="30,28 36,31.5 36,38.5 30,42 24,38.5 24,31.5"
                     fill="var(--accent)" />
                 </svg>
               </div>
@@ -595,14 +591,14 @@ export function Sidebar({
                 whiteSpace: "nowrap",
               }}>
                 <div style={{
-                  fontSize: "0.7rem", fontWeight: 800,
-                  color: "var(--accent)", letterSpacing: "1.8px",
+                  fontSize: "0.92rem", fontWeight: 900,
+                  color: "var(--accent)", letterSpacing: "2.4px",
                   textTransform: "uppercase",
                 }}>Malyz</div>
                 <div style={{
-                  fontSize: "0.52rem", color: "var(--text-4)",
-                  letterSpacing: "0.6px", textTransform: "uppercase",
-                  marginTop: "2px",
+                  fontSize: "0.55rem", color: "var(--text-4)",
+                  letterSpacing: "0.7px", textTransform: "uppercase",
+                  marginTop: "3px", fontWeight: 500,
                 }}>Consulting Sàrl</div>
               </div>
             </>
@@ -725,250 +721,280 @@ export function Sidebar({
           ))}
         </nav>
 
-        {/* Bottom: bell + avatar (compact, right-aligned when expanded) */}
-        <div
-          style={{
-            padding: "0.55rem 0.55rem 0.75rem",
-            borderTop: "1px solid var(--border)",
-            display: "flex",
-            flexDirection: isOpen ? "row" : "column",
-            alignItems: "center",
-            justifyContent: isOpen ? "flex-end" : "center",
-            gap: "0.4rem",
-            flexShrink: 0,
-          }}
-        >
-          <button
-            type="button"
-            data-popup-trigger="notif"
-            onClick={() => handlePopupTrigger("notif")}
-            onMouseEnter={(e) => {
-              if (popupOpen && popupTab === "notif") return;
-              e.currentTarget.style.transform = "translateY(-1px)";
-              if (!isOpen) showTip(`Alertes · ${unreadCount}`, e.currentTarget);
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = "translateY(0)";
-              hideTip();
-            }}
-            aria-label="Alertes"
-            aria-expanded={popupOpen && popupTab === "notif"}
+        {/* Bottom: user row + bell (expanded) | stacked icons (collapsed) */}
+        {isOpen ? (
+          <div
             style={{
-              position: "relative",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              width: ICON_BTN, height: ICON_BTN,
+              padding: "0.5rem 0.6rem 0.7rem",
+              borderTop: "1px solid var(--border)",
+              display: "flex",
+              alignItems: "center",
+              gap: "0.4rem",
               flexShrink: 0,
-              background: popupOpen && popupTab === "notif" ? "var(--surface-3)" : "var(--surface)",
-              border: "none", borderRadius: "9px",
-              color: "var(--text-2)",
-              cursor: "pointer",
-              boxShadow: "var(--tier-1)",
-              transition: "transform 0.22s ease, background 0.18s",
             }}
           >
-            <Bell size={16} strokeWidth={2.25} />
-            <span style={{
-              position: "absolute", top: 3, right: 3,
-              minWidth: 14, height: 14,
-              padding: "0 3px",
-              borderRadius: "7px",
-              background: "var(--danger)",
-              color: "#FFFFFF",
-              fontSize: "0.58rem", fontWeight: 700,
-              fontVariantNumeric: "tabular-nums",
-              lineHeight: 1,
-              display: "flex", alignItems: "center", justifyContent: "center",
-              border: "1.5px solid var(--surface)",
-            }}>{unreadCount}</span>
-          </button>
+            {/* User info button */}
+            <button
+              type="button"
+              data-popup-trigger="profile"
+              onClick={() => handlePopupTrigger("profile")}
+              aria-label="Profil"
+              aria-expanded={openPopup === "profile"}
+              onMouseEnter={(e) => {
+                if (openPopup === "profile") return;
+                (e.currentTarget as HTMLElement).style.background = "var(--surface-3)";
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLElement).style.background = openPopup === "profile" ? "var(--surface-3)" : "transparent";
+              }}
+              style={{
+                flex: 1,
+                display: "flex",
+                alignItems: "center",
+                gap: "0.6rem",
+                padding: "0.4rem 0.45rem",
+                background: openPopup === "profile" ? "var(--surface-3)" : "transparent",
+                border: "none",
+                borderRadius: "10px",
+                cursor: "pointer",
+                fontFamily: "inherit",
+                textAlign: "left",
+                transition: "background 0.16s",
+                minWidth: 0,
+              }}
+            >
+              <span style={{ position: "relative", flexShrink: 0 }}>
+                <span style={{
+                  width: 30, height: 30,
+                  background: "var(--accent)",
+                  color: "#FFFFFF",
+                  borderRadius: "50%",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  fontFamily: "var(--font-mono)",
+                  fontSize: "0.68rem", fontWeight: 700,
+                  letterSpacing: "0.02em",
+                  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.22), 0 2px 6px rgba(88,86,214,0.35)",
+                }}>TM</span>
+                <span aria-hidden style={{
+                  position: "absolute",
+                  bottom: 1, right: 1,
+                  width: 7, height: 7,
+                  borderRadius: "50%",
+                  background: "var(--success)",
+                  border: "1.5px solid var(--surface-2)",
+                }} />
+              </span>
+              <div style={{ minWidth: 0, lineHeight: 1.2 }}>
+                <div style={{
+                  fontSize: "0.78rem", fontWeight: 600,
+                  color: "var(--text)",
+                  letterSpacing: "-0.01em",
+                  whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
+                }}>Thomas Müller</div>
+                <div style={{
+                  fontSize: "0.6rem",
+                  color: "var(--text-3)",
+                  whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
+                  marginTop: "1px",
+                }}>thomas@muller.ch</div>
+              </div>
+            </button>
 
-          <button
-            type="button"
-            data-popup-trigger="profile"
-            onClick={() => handlePopupTrigger("profile")}
-            onMouseEnter={(e) => {
-              if (popupOpen && popupTab === "profile") return;
-              e.currentTarget.style.transform = "translateY(-1px)";
-              if (!isOpen) showTip("Thomas", e.currentTarget);
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = "translateY(0)";
-              hideTip();
-            }}
-            aria-label="Profil"
-            aria-expanded={popupOpen && popupTab === "profile"}
+            {/* Bell button */}
+            <button
+              type="button"
+              data-popup-trigger="notif"
+              onClick={() => handlePopupTrigger("notif")}
+              aria-label="Notifications"
+              aria-expanded={openPopup === "notif"}
+              onMouseEnter={(e) => {
+                if (openPopup === "notif") return;
+                (e.currentTarget as HTMLElement).style.background = "var(--surface-3)";
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLElement).style.background = openPopup === "notif" ? "var(--surface-3)" : "var(--surface)";
+              }}
+              style={{
+                position: "relative",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                width: ICON_BTN, height: ICON_BTN,
+                flexShrink: 0,
+                background: openPopup === "notif" ? "var(--surface-3)" : "var(--surface)",
+                border: "none", borderRadius: "9px",
+                color: "var(--text-2)",
+                cursor: "pointer",
+                boxShadow: "var(--tier-1)",
+                transition: "background 0.16s",
+              }}
+            >
+              <Bell size={16} strokeWidth={2.25} />
+              {unreadCount > 0 && (
+                <span aria-hidden style={{
+                  position: "absolute", top: 4, right: 4,
+                  minWidth: 13, height: 13,
+                  padding: "0 2.5px",
+                  borderRadius: "6.5px",
+                  background: "var(--danger)",
+                  color: "#FFFFFF",
+                  fontSize: "0.56rem", fontWeight: 700,
+                  fontVariantNumeric: "tabular-nums",
+                  lineHeight: 1,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  border: "1.5px solid var(--surface-2)",
+                }}>{unreadCount}</span>
+              )}
+            </button>
+          </div>
+        ) : (
+          <div
             style={{
-              display: "flex", alignItems: "center", justifyContent: "center",
-              width: ICON_BTN, height: ICON_BTN,
+              padding: "0.55rem 0 0.75rem",
+              borderTop: "1px solid var(--border)",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: "0.4rem",
               flexShrink: 0,
-              background: popupOpen && popupTab === "profile" ? "var(--surface-3)" : "var(--surface)",
-              border: "none", borderRadius: "9px",
-              cursor: "pointer",
-              fontFamily: "inherit",
-              boxShadow: "var(--tier-1)",
-              transition: "transform 0.22s ease, background 0.18s",
-              padding: 0,
             }}
           >
-            <span style={{
-              width: 26, height: 26,
-              background: "var(--accent)",
-              color: "#FFFFFF",
-              borderRadius: "50%",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              fontFamily: "var(--font-mono)",
-              fontSize: "0.7rem", fontWeight: 700,
-              letterSpacing: "0.02em",
-              boxShadow: "inset 0 1px 0 rgba(255,255,255,0.22), 0 1px 2px rgba(0,0,0,0.1)",
-            }}>TM</span>
-          </button>
-        </div>
+            <button
+              type="button"
+              data-popup-trigger="notif"
+              onClick={() => handlePopupTrigger("notif")}
+              onMouseEnter={(e) => {
+                const wrap = e.currentTarget.querySelector("[data-icon-wrap]") as HTMLElement | null;
+                if (wrap) wrap.style.background = openPopup === "notif" ? "var(--surface-3)" : "var(--surface-3)";
+                showTip(`Notifications · ${unreadCount}`, e.currentTarget);
+              }}
+              onMouseLeave={(e) => {
+                const wrap = e.currentTarget.querySelector("[data-icon-wrap]") as HTMLElement | null;
+                if (wrap) wrap.style.background = openPopup === "notif" ? "var(--surface)" : "transparent";
+                hideTip();
+              }}
+              aria-label="Notifications"
+              style={{
+                position: "relative",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                background: "transparent", border: "none",
+                cursor: "pointer", padding: 0,
+              }}
+            >
+              <span
+                data-icon-wrap
+                style={{
+                  width: ICON_BTN, height: ICON_BTN,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  background: openPopup === "notif" ? "var(--surface)" : "transparent",
+                  borderRadius: "9px",
+                  boxShadow: openPopup === "notif" ? "var(--tier-1)" : "none",
+                  transition: "background 0.16s, box-shadow 0.16s",
+                }}
+              >
+                <Bell size={18} strokeWidth={2.1} color="var(--text-2)" />
+              </span>
+              {unreadCount > 0 && (
+                <span aria-hidden style={{
+                  position: "absolute", top: 5, right: 5,
+                  width: 7, height: 7, borderRadius: "50%",
+                  background: "var(--danger)",
+                  border: "1.5px solid var(--surface-2)",
+                }} />
+              )}
+            </button>
 
-        {/* Unified tabbed popup — anchored inside the sidebar */}
+            <button
+              type="button"
+              data-popup-trigger="profile"
+              onClick={() => handlePopupTrigger("profile")}
+              onMouseEnter={(e) => {
+                const wrap = e.currentTarget.querySelector("[data-icon-wrap]") as HTMLElement | null;
+                if (wrap) wrap.style.background = "var(--surface-3)";
+                showTip("Thomas Müller", e.currentTarget);
+              }}
+              onMouseLeave={(e) => {
+                const wrap = e.currentTarget.querySelector("[data-icon-wrap]") as HTMLElement | null;
+                if (wrap) wrap.style.background = openPopup === "profile" ? "var(--surface)" : "transparent";
+                hideTip();
+              }}
+              aria-label="Profil"
+              style={{
+                display: "flex", alignItems: "center", justifyContent: "center",
+                background: "transparent", border: "none",
+                cursor: "pointer", padding: 0,
+              }}
+            >
+              <span
+                data-icon-wrap
+                style={{
+                  width: ICON_BTN, height: ICON_BTN,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  background: openPopup === "profile" ? "var(--surface)" : "transparent",
+                  borderRadius: "9px",
+                  boxShadow: openPopup === "profile" ? "var(--tier-1)" : "none",
+                  position: "relative",
+                  transition: "background 0.16s, box-shadow 0.16s",
+                }}
+              >
+                <span style={{
+                  width: 26, height: 26,
+                  background: "var(--accent)",
+                  color: "#FFFFFF",
+                  borderRadius: "50%",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  fontFamily: "var(--font-mono)",
+                  fontSize: "0.68rem", fontWeight: 700,
+                  letterSpacing: "0.02em",
+                  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.22)",
+                }}>TM</span>
+              </span>
+            </button>
+          </div>
+        )}
+
+        {/* Separate popups — each opens directly from its own trigger, no tabs */}
         <AnimatePresence>
-          {popupOpen && isOpen && (
+          {openPopup !== null && isOpen && (
             <motion.div
               ref={popupRef}
-              initial={{ opacity: 0, y: 12, scale: 0.98 }}
+              key="popup-panel"
+              initial={{ opacity: 0, y: 10, scale: 0.97 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 8, scale: 0.98 }}
-              transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+              exit={{ opacity: 0, y: 6, scale: 0.97 }}
+              transition={{ duration: 0.19, ease: [0.22, 1, 0.36, 1] }}
               style={{
                 position: "absolute",
                 left: POPUP_INSET,
                 width: `min(${POPUP_WIDTH}px, calc(100vw - 16px))`,
-                bottom: POPUP_BOTTOM_OFFSET,
+                bottom: POPUP_BOTTOM_OFFSET_EXPANDED,
                 height: `min(${POPUP_HEIGHT_MAX}px, calc(100vh - ${POPUP_VIEWPORT_RESERVE}px))`,
                 background: "var(--surface)",
                 border: "1px solid var(--border)",
-                borderRadius: 12,
+                borderRadius: 14,
                 boxShadow:
-                  "0 20px 50px -16px rgba(15,23,42,0.28), 0 6px 16px -8px rgba(15,23,42,0.12)",
+                  "0 24px 56px -16px rgba(15,23,42,0.30), 0 8px 20px -8px rgba(15,23,42,0.12), 0 0 0 1px rgba(0,0,0,0.03)",
                 overflow: "hidden",
                 display: "flex",
                 flexDirection: "column",
                 zIndex: 30,
-                transformOrigin: "bottom right",
+                transformOrigin: "bottom left",
               }}
             >
-              <LayoutGroup id="sidebar-popup-tabs">
-                <div style={{
-                  display: "grid",
-                  gridTemplateColumns: "1fr 1fr",
-                  padding: "0.18rem 0.22rem",
-                  gap: "0.15rem",
-                  borderBottom: "1px solid var(--border)",
-                  height: POPUP_TABBAR_H,
-                  flexShrink: 0,
-                }}>
-                  {(["notif", "profile"] as PopupTab[]).map((t) => {
-                    const active = popupTab === t;
-                    const label = t === "profile" ? "Profil" : "Alertes";
-                    return (
-                      <button
-                        key={t}
-                        type="button"
-                        onClick={() => setPopupTab(t)}
-                        style={{
-                          position: "relative",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          gap: "0.35rem",
-                          height: "100%",
-                          background: "transparent",
-                          border: "none",
-                          borderRadius: 6,
-                          fontFamily: "inherit",
-                          fontSize: "0.68rem",
-                          fontWeight: active ? 600 : 500,
-                          color: active ? "var(--text)" : "var(--text-3)",
-                          cursor: "pointer",
-                          transition: "color 0.18s",
-                        }}
-                        onMouseEnter={(e) => {
-                          if (!active) e.currentTarget.style.color = "var(--text-2)";
-                        }}
-                        onMouseLeave={(e) => {
-                          if (!active) e.currentTarget.style.color = "var(--text-3)";
-                        }}
-                      >
-                        {active && (
-                          <motion.span
-                            layoutId="popup-active-tab"
-                            style={{
-                              position: "absolute",
-                              inset: 0,
-                              background: "var(--surface-2)",
-                              borderRadius: 6,
-                              zIndex: 0,
-                            }}
-                            transition={{ duration: 0.26, ease: [0.22, 1, 0.36, 1] }}
-                          />
-                        )}
-                        <span style={{
-                          position: "relative", zIndex: 1,
-                          display: "inline-flex", alignItems: "center",
-                          gap: "0.4rem",
-                        }}>
-                          {t === "profile" ? (
-                            <span style={{
-                              width: 14, height: 14,
-                              borderRadius: "100px",
-                              background: "var(--accent)",
-                              color: "#FFFFFF",
-                              display: "flex",
-                              alignItems: "center", justifyContent: "center",
-                              fontFamily: "var(--font-mono)",
-                              fontSize: "0.46rem", fontWeight: 700,
-                              letterSpacing: "0.02em",
-                              flexShrink: 0,
-                            }}>TM</span>
-                          ) : (
-                            <span style={{ position: "relative", display: "inline-flex" }}>
-                              <Bell size={12} strokeWidth={2.25} />
-                              <span aria-hidden style={{
-                                position: "absolute",
-                                top: -3, right: -5,
-                                minWidth: 10, height: 10,
-                                padding: "0 2px",
-                                borderRadius: "5px",
-                                background: "var(--danger)",
-                                color: "#FFFFFF",
-                                fontSize: "0.44rem", fontWeight: 700,
-                                lineHeight: 1,
-                                display: "flex",
-                                alignItems: "center", justifyContent: "center",
-                                border: "1.25px solid var(--surface)",
-                              }}>{unreadCount}</span>
-                            </span>
-                          )}
-                          {label}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </LayoutGroup>
-
-              <motion.div
-                key={popupTab}
-                initial={{ opacity: 0, y: 4 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
-                style={{
-                  flex: 1,
-                  minHeight: 0,
-                  display: "flex",
-                  flexDirection: "column",
-                }}
-              >
-                {popupTab === "profile" ? (
-                  <UserMenuContent onLogout={onLogout} onClose={closePopup} bare />
-                ) : (
-                  <NotificationsContent onClose={closePopup} bare />
-                )}
-              </motion.div>
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={openPopup}
+                  initial={{ opacity: 0, y: 4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -4 }}
+                  transition={{ duration: 0.15, ease: [0.22, 1, 0.36, 1] }}
+                  style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}
+                >
+                  {openPopup === "profile" ? (
+                    <UserMenuContent onLogout={onLogout} onClose={closePopup} bare />
+                  ) : (
+                    <NotificationsContent onClose={closePopup} bare />
+                  )}
+                </motion.div>
+              </AnimatePresence>
             </motion.div>
           )}
         </AnimatePresence>
