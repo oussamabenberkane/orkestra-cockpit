@@ -223,7 +223,7 @@ function TroisRow({
             fontSize: "0.78rem", fontWeight: 600,
             cursor: "pointer",
             transition: "background 0.15s, transform 0.12s",
-            boxShadow: "0 1px 2px rgba(88,86,214,0.22)",
+            boxShadow: "0 1px 2px rgba(0,122,255,0.22)",
             whiteSpace: "nowrap",
           }}
           onMouseEnter={(e) => (e.currentTarget.style.background = "var(--accent-2)")}

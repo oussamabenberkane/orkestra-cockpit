@@ -71,10 +71,10 @@ const T = {
   text2: "#424245",
   text3: "#6E6E73",
   text4: "#86868B",
-  accent: "#5856D6",
-  accent2: "#4441C8",
-  accentTint: "rgba(88,86,214,0.16)",
-  accentTint2: "rgba(88,86,214,0.10)",
+  accent: "#007AFF",
+  accent2: "#0062CC",
+  accentTint: "rgba(0,122,255,0.16)",
+  accentTint2: "rgba(0,122,255,0.10)",
   success: "#34A853",
   successTint: "rgba(52,168,83,0.10)",
   warn: "#FF9F0A",
@@ -88,11 +88,11 @@ const T = {
     "inset 0 1px 0 rgba(255,255,255,1), 0 0 0 1px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.05), 0 6px 16px -10px rgba(0,0,0,0.12)",
   tier2:
     "inset 0 1px 0 rgba(255,255,255,1), 0 0 0 1px rgba(0,0,0,0.06), 0 2px 4px rgba(0,0,0,0.06), 0 16px 32px -12px rgba(0,0,0,0.18)",
-  gradient: "linear-gradient(to bottom, #5856D6, #4441C8)",
+  gradient: "linear-gradient(to bottom, #007AFF, #0062CC)",
   gradientShadow:
-    "inset 0 1px 0 rgba(255,255,255,0.25), 0 0 0 1px rgba(68,65,200,0.30), 0 4px 14px -4px rgba(88,86,214,0.40)",
+    "inset 0 1px 0 rgba(255,255,255,0.25), 0 0 0 1px rgba(0,98,204,0.30), 0 4px 14px -4px rgba(0,122,255,0.40)",
   gradientShadowHover:
-    "inset 0 1px 0 rgba(255,255,255,0.25), 0 0 0 1px rgba(68,65,200,0.30), 0 8px 20px -4px rgba(88,86,214,0.50)",
+    "inset 0 1px 0 rgba(255,255,255,0.25), 0 0 0 1px rgba(0,98,204,0.30), 0 8px 20px -4px rgba(0,122,255,0.50)",
 };
 
 /* ─── shared per-message action button style ─── */
@@ -929,7 +929,7 @@ export default function AgentTestPage() {
            "loading" without becoming an attention sink. */
         @keyframes agent-pulse {
           0%, 100% { box-shadow: 0 0 0 4px ${T.accentTint2}; }
-          50% { box-shadow: 0 0 0 6px rgba(88,86,214,0.04); }
+          50% { box-shadow: 0 0 0 6px rgba(0,122,255,0.04); }
         }
 
         /* Respect prefers-reduced-motion — strip our motion-heavy moments. */
@@ -3129,7 +3129,7 @@ function UserMessage({
             wordBreak: "break-word",
             letterSpacing: "-0.005em",
             boxShadow:
-              "inset 0 1px 0 rgba(255,255,255,0.20), 0 0 0 1px rgba(68,65,200,0.25), 0 8px 20px -10px rgba(88,86,214,0.40)",
+              "inset 0 1px 0 rgba(255,255,255,0.20), 0 0 0 1px rgba(0,98,204,0.25), 0 8px 20px -10px rgba(0,122,255,0.40)",
           }}
         >
           {message.content}

@@ -325,7 +325,7 @@ function ModalFooter({
           gap: "0.4rem",
           whiteSpace: "nowrap",
           boxShadow:
-            "inset 0 1px 0 rgba(255,255,255,0.2), 0 1px 2px rgba(88,86,214,0.22), 0 6px 16px -8px rgba(88,86,214,0.5)",
+            "inset 0 1px 0 rgba(255,255,255,0.2), 0 1px 2px rgba(0,122,255,0.22), 0 6px 16px -8px rgba(0,122,255,0.5)",
           transition: "transform 0.15s ease, filter 0.15s",
         }}
         onMouseDown={(e) => (e.currentTarget.style.transform = "scale(0.985)")}

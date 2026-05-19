@@ -152,7 +152,7 @@ export const troisItems: TroisItem[] = [
 export const tiles: TileEntry[] = [
   {
     Icon: Target, iconColor: "var(--accent)", iconBg: "var(--accent-tint)",
-    glowColor: "rgba(88,86,214,0.18)",
+    glowColor: "rgba(0,122,255,0.18)",
     title: "Prospection", metric: "18", unit: "%",
     caption: "Taux de conversion · 12 prospects actifs",
     alert: "3 relances dues", alertTone: "warn",
@@ -187,7 +187,7 @@ export const tiles: TileEntry[] = [
   },
   {
     Icon: Globe, iconColor: "var(--accent)", iconBg: "var(--accent-tint)",
-    glowColor: "rgba(88,86,214,0.18)",
+    glowColor: "rgba(0,122,255,0.18)",
     title: "Vue d'ensemble", metric: "68", unit: "%",
     caption: "Marge consolidée · vision combinée",
     alert: "+4 pt vs marché CH", alertTone: "good",
@@ -196,7 +196,7 @@ export const tiles: TileEntry[] = [
   },
   {
     Icon: Sparkles, iconColor: "var(--accent)", iconBg: "var(--accent-tint)",
-    glowColor: "rgba(88,86,214,0.18)",
+    glowColor: "rgba(0,122,255,0.18)",
     title: "Agents IA", metric: "3", unit: "",
     caption: "Actions préparées · prêtes à valider",
     alert: "Validation requise", alertTone: "neutral",

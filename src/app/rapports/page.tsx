@@ -50,7 +50,7 @@ const METIER_META: Record<Metier, {
 }> = {
   prospection: {
     label: "Prospection", Icon: Target,
-    color: "var(--accent)", bg: "var(--accent-tint)", glow: "rgba(88,86,214,0.18)",
+    color: "var(--accent)", bg: "var(--accent-tint)", glow: "rgba(0,122,255,0.18)",
   },
   portefeuille: {
     label: "Portefeuille", Icon: FolderArchive,
@@ -744,7 +744,7 @@ export default function RapportsPage() {
                   background: "var(--accent)", color: "#fff", border: "none",
                   borderRadius: "9px", cursor: "pointer", fontFamily: "inherit",
                   fontSize: "0.82rem", fontWeight: 600,
-                  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.25), 0 0 0 1px rgba(68,65,200,0.30), 0 4px 14px -4px rgba(88,86,214,0.40)",
+                  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.25), 0 0 0 1px rgba(0,98,204,0.30), 0 4px 14px -4px rgba(0,122,255,0.40)",
                 }}
               >
                 Réinitialiser

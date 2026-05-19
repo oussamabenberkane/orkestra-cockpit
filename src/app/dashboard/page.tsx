@@ -150,7 +150,7 @@ export default function DashboardPage() {
           padding: "clamp(0.95rem, 2.5vw, 1.35rem) clamp(1rem, 3vw, 1.5rem)",
           color: "#FFFFFF",
           marginBottom: "clamp(0.6rem, 1.5vw, 0.85rem)",
-          boxShadow: "0 12px 30px -14px rgba(88,86,214,0.55)",
+          boxShadow: "0 12px 30px -14px rgba(0,122,255,0.55)",
           overflow: "hidden",
         }}>
           <div className="dashboard-action-banner__eyebrow" style={{

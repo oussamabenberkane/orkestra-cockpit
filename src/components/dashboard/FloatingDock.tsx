@@ -740,7 +740,7 @@ function DockComposer({
             flexShrink: 0,
             transition: "background 0.18s, color 0.18s",
             boxShadow: canSend
-              ? "inset 0 1px 0 rgba(255,255,255,0.25), 0 0 0 1px rgba(68,65,200,0.30), 0 4px 12px -4px rgba(88,86,214,0.40)"
+              ? "inset 0 1px 0 rgba(255,255,255,0.25), 0 0 0 1px rgba(0,98,204,0.30), 0 4px 12px -4px rgba(0,122,255,0.40)"
               : "none",
             fontFamily: "inherit",
           }}

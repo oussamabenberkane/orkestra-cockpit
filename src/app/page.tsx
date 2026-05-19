@@ -216,18 +216,18 @@ function TopNav() {
             borderRadius: 10,
             textDecoration: "none",
             boxShadow:
-              "inset 0 1px 0 rgba(255,255,255,0.25), 0 0 0 1px rgba(68,65,200,0.30), 0 4px 14px -4px rgba(88,86,214,0.40)",
+              "inset 0 1px 0 rgba(255,255,255,0.25), 0 0 0 1px rgba(0,98,204,0.30), 0 4px 14px -4px rgba(0,122,255,0.40)",
             transition: "transform 0.22s ease, box-shadow 0.22s ease",
           }}
           onMouseEnter={(e) => {
             e.currentTarget.style.transform = "translateY(-1px)";
             e.currentTarget.style.boxShadow =
-              "inset 0 1px 0 rgba(255,255,255,0.25), 0 0 0 1px rgba(68,65,200,0.30), 0 8px 20px -4px rgba(88,86,214,0.50)";
+              "inset 0 1px 0 rgba(255,255,255,0.25), 0 0 0 1px rgba(0,98,204,0.30), 0 8px 20px -4px rgba(0,122,255,0.50)";
           }}
           onMouseLeave={(e) => {
             e.currentTarget.style.transform = "translateY(0)";
             e.currentTarget.style.boxShadow =
-              "inset 0 1px 0 rgba(255,255,255,0.25), 0 0 0 1px rgba(68,65,200,0.30), 0 4px 14px -4px rgba(88,86,214,0.40)";
+              "inset 0 1px 0 rgba(255,255,255,0.25), 0 0 0 1px rgba(0,98,204,0.30), 0 4px 14px -4px rgba(0,122,255,0.40)";
           }}
         >
           Se connecter
@@ -262,7 +262,7 @@ function Hero({
           height: 520,
           borderRadius: "50%",
           background:
-            "radial-gradient(circle at center, rgba(88,86,214,0.16), rgba(88,86,214,0) 65%)",
+            "radial-gradient(circle at center, rgba(0,122,255,0.16), rgba(0,122,255,0) 65%)",
           filter: "blur(20px)",
           pointerEvents: "none",
         }}
@@ -393,18 +393,18 @@ function Hero({
                 borderRadius: 12,
                 textDecoration: "none",
                 boxShadow:
-                  "inset 0 1px 0 rgba(255,255,255,0.25), 0 0 0 1px rgba(68,65,200,0.30), 0 10px 28px -8px rgba(88,86,214,0.50)",
+                  "inset 0 1px 0 rgba(255,255,255,0.25), 0 0 0 1px rgba(0,98,204,0.30), 0 10px 28px -8px rgba(0,122,255,0.50)",
                 transition: "transform 0.22s ease, box-shadow 0.22s ease",
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.transform = "translateY(-1px)";
                 e.currentTarget.style.boxShadow =
-                  "inset 0 1px 0 rgba(255,255,255,0.25), 0 0 0 1px rgba(68,65,200,0.30), 0 16px 36px -10px rgba(88,86,214,0.60)";
+                  "inset 0 1px 0 rgba(255,255,255,0.25), 0 0 0 1px rgba(0,98,204,0.30), 0 16px 36px -10px rgba(0,122,255,0.60)";
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.transform = "translateY(0)";
                 e.currentTarget.style.boxShadow =
-                  "inset 0 1px 0 rgba(255,255,255,0.25), 0 0 0 1px rgba(68,65,200,0.30), 0 10px 28px -8px rgba(88,86,214,0.50)";
+                  "inset 0 1px 0 rgba(255,255,255,0.25), 0 0 0 1px rgba(0,98,204,0.30), 0 10px 28px -8px rgba(0,122,255,0.50)";
               }}
             >
               Accéder au cockpit
