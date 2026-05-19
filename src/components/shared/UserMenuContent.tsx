@@ -22,7 +22,7 @@ export function UserMenuContent({ onLogout, bare = false, onClose }: UserMenuCon
     onClick?: () => void;
     sub?: string;
   }> = [
-    { Icon: User, label: "Mon profil", sub: "Préférences personnelles" },
+    { Icon: User, label: "Mon profil", sub: "Préférences personnelles", onClick: () => nav("/parametres") },
     { Icon: Settings, label: "Paramètres", sub: "Workspace, agents", onClick: () => nav("/parametres") },
     { Icon: Moon, label: "Apparence", sub: "Auto · clair · sombre" },
     { Icon: HelpCircle, label: "Aide & support", sub: "Documentation, contact", onClick: () => nav("/support") },

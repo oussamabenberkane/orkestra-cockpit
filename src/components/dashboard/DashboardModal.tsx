@@ -4,12 +4,13 @@ import * as React from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import type {
   ModalKey,
+  ModalData,
   ModalSection,
   KvRow,
   ActionItem,
   StatusRow,
 } from "@/lib/types";
-import { modalData } from "@/lib/modal-data";
+import { modalData as staticModalData } from "@/lib/modal-data";
 import { motion } from "framer-motion";
 import {
   X,
@@ -30,6 +31,7 @@ interface DashboardModalProps {
   modalKey: ModalKey | null;
   onClose: () => void;
   onAction?: (key: ModalKey) => void;
+  modalData?: Record<ModalKey, ModalData>;
 }
 
 const sectionTag: Record<ModalKey, { label: string; tone: string; bg: string }> = {
@@ -57,6 +59,7 @@ export default function DashboardModal({
   modalKey,
   onClose,
   onAction,
+  modalData,
 }: DashboardModalProps) {
   /* Keep the last key during the close animation so content doesn't flicker. */
   const [lastKey, setLastKey] = React.useState<ModalKey | null>(modalKey);
@@ -65,7 +68,8 @@ export default function DashboardModal({
   }, [modalKey]);
 
   const effectiveKey = modalKey ?? lastKey;
-  const data = effectiveKey ? modalData[effectiveKey] : null;
+  const source = modalData ?? staticModalData;
+  const data: ModalData | null = effectiveKey ? source[effectiveKey] : null;
   if (!data || !effectiveKey) return null;
 
   const tag = sectionTag[effectiveKey];

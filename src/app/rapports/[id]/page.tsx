@@ -44,7 +44,7 @@ export default function RapportDetailPage() {
       <Sidebar
         collapsed={collapsed}
         onToggle={toggleSidebar}
-        onLogout={() => router.replace("/login")}
+        onLogout={async () => { const { supabase } = await import("@/lib/supabase"); await supabase.auth.signOut(); router.replace("/login"); }}
         onOpenPalette={() => {}}
       />
 

@@ -1,62 +1,36 @@
-"use client";
-
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { ArrowDown, ArrowUp, Circle, Minus } from "lucide-react";
-import type { ModalKey } from "@/lib/types";
-import { Sidebar } from "@/components/dashboard/Sidebar";
-import DashboardModal from "@/components/dashboard/DashboardModal";
-import { FloatingDock } from "@/components/dashboard/FloatingDock";
-import { CommandPalette } from "@/components/shared/CommandPalette";
-import { HeroPanel } from "@/components/dashboard/HeroPanel";
-import { SatelliteKPI, type Satellite } from "@/components/dashboard/SatelliteKPI";
-import { TroisChoses } from "@/components/dashboard/TroisChoses";
-import { TileCard, type TileEntry } from "@/components/dashboard/TileCard";
 import {
-  heroByPeriod,
-  satellites,
-  troisItems,
-  tiles,
-  sourceBadges,
-  type Period,
-} from "@/lib/dashboard-mock";
+  fetchHeroData,
+  fetchSatelliteValues,
+  fetchAgentTaskRows,
+  fetchTileMetrics,
+  fetchModalValues,
+  fetchUnreadAlertesCount,
+} from "@/lib/dashboard-data";
+import { heroByPeriod } from "@/lib/dashboard-mock";
+import { getModalData } from "@/lib/modal-data";
+import DashboardClient from "./DashboardClient";
 
-const SIDEBAR_KEY = "orkestra.sidebar.collapsed";
+export default async function DashboardPage() {
+  const [heroM, heroT, heroA, satelliteValues, agentTaskRows, tileMetrics, modalValues, unreadCount] =
+    await Promise.all([
+      fetchHeroData("M"),
+      fetchHeroData("T"),
+      fetchHeroData("A"),
+      fetchSatelliteValues(),
+      fetchAgentTaskRows(),
+      fetchTileMetrics(),
+      fetchModalValues(),
+      fetchUnreadAlertesCount(),
+    ]);
 
-export default function DashboardPage() {
-  const router = useRouter();
-  const [modalKey, setModalKey] = useState<ModalKey | null>(null);
-  const [collapsed, setCollapsed] = useState(false);
-  const [paletteOpen, setPaletteOpen] = useState(false);
-  const [period, setPeriod] = useState<Period>("M");
-  const [hydrated, setHydrated] = useState(false);
-
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem(SIDEBAR_KEY);
-      if (stored === "true") setCollapsed(true);
-    } catch {}
-    setHydrated(true);
-  }, []);
-
-  const toggleSidebar = () => {
-    setCollapsed((prev) => {
-      const next = !prev;
-      try { localStorage.setItem(SIDEBAR_KEY, String(next)); } catch {}
-      return next;
-    });
+  // Fall back to mock data when DB views return empty (seed agents not yet run)
+  const initialHero = {
+    M: heroM.data.length > 0 ? heroM : heroByPeriod.M,
+    T: heroT.data.length > 0 ? heroT : heroByPeriod.T,
+    A: heroA.data.length > 0 ? heroA : heroByPeriod.A,
   };
 
-  const onOpen  = (k: ModalKey) => setModalKey(k);
-  const onClose = () => setModalKey(null);
-  /** Smart CTA defaults — modals with a related route navigate; others just close. */
-  const handleModalAction = (k: ModalKey) => {
-    if (k === "rapport" || k === "vue360") router.push("/rapports");
-  };
-  // Use replace so the back button cannot return to the (now logged-out) dashboard.
-  const onLogout = () => router.replace("/login");
-
-  const hero = heroByPeriod[period];
+  const liveModalData = getModalData(modalValues);
 
   return (
     <div
@@ -248,173 +222,5 @@ export default function DashboardPage() {
 
       <FloatingDock />
     </div>
-  );
-}
-
-/** Compact KPI cell used on mobile/tablet (≤1024px) in place of the
- *  side-by-side <SatelliteKPI> column. Three of these sit in a single
- *  row under the hero: small label, mono value+unit, delta indicator. */
-function CompactStat({ kpi, onOpen }: { kpi: Satellite; onOpen: (k: ModalKey) => void }) {
-  const t = kpi.trend.trim();
-  const dir = t.startsWith("+")
-    ? "up"
-    : (t.startsWith("-") || t.startsWith("−"))
-      ? "down"
-      : "flat";
-  const Icon = dir === "up" ? ArrowUp : dir === "down" ? ArrowDown : Minus;
-  const color =
-    dir === "up"   ? "var(--success)"
-    : dir === "down" ? "var(--danger)"
-    : "var(--text-3)";
-  return (
-    <button
-      type="button"
-      onClick={() => onOpen(kpi.modalKey)}
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        gap: "0.25rem",
-        padding: "0.6rem 0.6rem",
-        background: "var(--surface)",
-        border: "1px solid var(--border)",
-        borderRadius: 10,
-        boxShadow: "var(--tier-1)",
-        cursor: "pointer",
-        fontFamily: "inherit",
-        color: "inherit",
-        textAlign: "left",
-        minHeight: 76,
-        minWidth: 0,
-      }}
-    >
-      <span style={{
-        fontSize: "0.6rem",
-        fontWeight: 500,
-        color: "var(--text-3)",
-        overflow: "hidden",
-        textOverflow: "ellipsis",
-        whiteSpace: "nowrap",
-        maxWidth: "100%",
-      }}>{kpi.label}</span>
-      <span style={{
-        fontFamily: "var(--font-mono)",
-        fontSize: "1.05rem",
-        fontWeight: 700,
-        color: "var(--text)",
-        lineHeight: 1,
-        fontVariantNumeric: "tabular-nums",
-        letterSpacing: "-0.02em",
-      }}>
-        {kpi.value}
-        {kpi.unit && (
-          <span style={{
-            fontSize: "0.58em",
-            color: "var(--text-3)",
-            marginLeft: 1,
-            fontWeight: 500,
-          }}>{kpi.unit}</span>
-        )}
-      </span>
-      <span style={{
-        display: "inline-flex",
-        alignItems: "center",
-        gap: "0.15rem",
-        fontSize: "0.62rem",
-        fontWeight: 700,
-        color,
-        whiteSpace: "nowrap",
-      }}>
-        <Icon size={10} strokeWidth={2.5} />
-        {kpi.trend}
-      </span>
-    </button>
-  );
-}
-
-/** Compact stat-tile used only on mobile (≤640px). Icon + title + metric,
- *  ~96px tall, fits two-up at 320px. Desktop continues to use <TileCard>. */
-function CubeTile({ tile, onOpen }: { tile: TileEntry; onOpen: (k: ModalKey) => void }) {
-  const Icon = tile.Icon;
-  return (
-    <button
-      onClick={() => onOpen(tile.modalKey)}
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "flex-start",
-        gap: "0.4rem",
-        padding: "0.7rem 0.8rem 0.75rem",
-        background: "var(--surface)",
-        border: "1px solid var(--border)",
-        borderRadius: 10,
-        boxShadow: "var(--tier-1)",
-        cursor: "pointer",
-        fontFamily: "inherit",
-        color: "inherit",
-        textAlign: "left",
-        minHeight: 96,
-        width: "100%",
-      }}
-    >
-      <span style={{
-        width: 26, height: 26,
-        background: tile.iconBg,
-        color: tile.iconColor,
-        borderRadius: 7,
-        display: "flex", alignItems: "center", justifyContent: "center",
-        flexShrink: 0,
-      }}>
-        <Icon size={13} strokeWidth={2} />
-      </span>
-      <span style={{
-        fontSize: "0.72rem",
-        color: "var(--text-3)",
-        fontWeight: 500,
-        overflow: "hidden",
-        textOverflow: "ellipsis",
-        whiteSpace: "nowrap",
-        width: "100%",
-      }}>{tile.title}</span>
-      <span style={{
-        fontFamily: "var(--font-mono)",
-        fontSize: "1.2rem",
-        fontWeight: 700,
-        color: "var(--text)",
-        fontVariantNumeric: "tabular-nums",
-        letterSpacing: "-0.02em",
-        lineHeight: 1,
-      }}>
-        {tile.metric}
-        {tile.unit && (
-          <span style={{
-            fontSize: "0.55em",
-            color: "var(--text-3)",
-            marginLeft: 2,
-            fontWeight: 500,
-          }}>{tile.unit}</span>
-        )}
-      </span>
-    </button>
-  );
-}
-
-function Footer() {
-  return (
-    <footer style={{
-      marginTop: "2.5rem",
-      paddingTop: "1.25rem",
-      borderTop: "1px solid var(--border)",
-      display: "flex",
-      justifyContent: "space-between",
-      gap: "0.85rem",
-      rowGap: "0.5rem",
-      fontSize: "clamp(0.68rem, 1.6vw, 0.74rem)",
-      color: "var(--text-3)",
-      flexWrap: "wrap",
-    }}>
-      <span>© 2026 Cabinet Müller &amp; Associés SA · Zürich</span>
-      <span>Sync BrokerStar 3 min · Odoo 5 min</span>
-      <span>LPD Art.16 · Infomaniak CH</span>
-    </footer>
   );
 }
