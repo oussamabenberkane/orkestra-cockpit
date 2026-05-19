@@ -84,6 +84,10 @@ function PeriodToggle({ value, onChange }: { value: Period; onChange: (p: Period
       borderRadius: "8px",
       padding: "2px",
       position: "relative",
+      /* When the header row wraps on narrow widths, this keeps the toggle
+         right-aligned on its own line. No effect on desktop, where the
+         parent's space-between already places it at the end. */
+      marginLeft: "auto",
     }}>
       <span aria-hidden style={{
         position: "absolute",

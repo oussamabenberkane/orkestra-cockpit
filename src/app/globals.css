@@ -212,6 +212,17 @@ html, body {
   max-width: 100vw;
 }
 
+/* Body scroll lock — applied by Sidebar.tsx when the mobile drawer is open.
+ * Locks both <html> and <body> so background pages can't scroll behind the
+ * drawer. Targets both elements + disables touch panning for iOS Safari. */
+html.scroll-locked,
+html.scroll-locked body {
+  overflow: hidden !important;
+  height: 100% !important;
+  touch-action: none;
+  overscroll-behavior: none;
+}
+
 /* ── Dashboard responsive helpers ────────────────────────────
  * Breakpoints used throughout the dashboard:
  *   320  → smallest mobile (default styles)

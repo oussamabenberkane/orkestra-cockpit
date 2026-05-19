@@ -351,18 +351,15 @@ export function Sidebar({
     setPopupOpen(false);
   }, [pathname]);
 
-  /* Lock body scroll while the mobile drawer is open. Prevents any underlying
-   * page scroll from being able to shift the drawer visually, and matches the
-   * conventional behavior of a modal drawer. */
+  /* Lock background scroll while the mobile drawer is open. Toggling a class
+   * on <html> (rather than mutating body inline styles) locks both the html
+   * and body scroll containers, survives re-renders, and works on iOS Safari
+   * where body-only locks leak through. See `.scroll-locked` in globals.css. */
   useEffect(() => {
     if (!isMobile || !drawerOpen) return;
-    const prevOverflow = document.body.style.overflow;
-    const prevTouchAction = document.body.style.touchAction;
-    document.body.style.overflow = "hidden";
-    document.body.style.touchAction = "none";
+    document.documentElement.classList.add("scroll-locked");
     return () => {
-      document.body.style.overflow = prevOverflow;
-      document.body.style.touchAction = prevTouchAction;
+      document.documentElement.classList.remove("scroll-locked");
     };
   }, [isMobile, drawerOpen]);
 
@@ -371,26 +368,31 @@ export function Sidebar({
     if (collapsed && !isMobile) setPopupOpen(false);
   }, [collapsed, isMobile]);
 
-  // Outside click + Escape for popup
+  // Outside click + Escape for popup. Capture-phase click listener so the
+  // dismissing click never reaches the underlying element (a nav <Link>, a
+  // tile, etc.) — outside-click should *only* close the popup and nothing
+  // else. The popup itself, its trigger, and the mobile drawer backdrop are
+  // all allowed through so their own handlers can run normally.
   useEffect(() => {
     if (!popupOpen) return;
-    const onMouseDown = (e: MouseEvent) => {
+    const onClick = (e: MouseEvent) => {
       const t = e.target as Node;
       if (popupRef.current?.contains(t)) return;
-      const triggerEl = (t as HTMLElement).closest?.("[data-popup-trigger]");
-      if (triggerEl) return;
-      // Mobile drawer backdrop handles its own click → close popup only first,
-      // then close drawer on the next click. Don't dismiss from here.
-      if ((t as HTMLElement).closest?.("[data-drawer-backdrop]")) return;
+      const el = t as HTMLElement;
+      if (el.closest?.("[data-popup-trigger]")) return;
+      if (el.closest?.("[data-drawer-backdrop]")) return;
+      e.preventDefault();
+      e.stopPropagation();
+      e.stopImmediatePropagation();
       setPopupOpen(false);
     };
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") setPopupOpen(false);
     };
-    document.addEventListener("mousedown", onMouseDown);
+    document.addEventListener("click", onClick, true);
     document.addEventListener("keydown", onKey);
     return () => {
-      document.removeEventListener("mousedown", onMouseDown);
+      document.removeEventListener("click", onClick, true);
       document.removeEventListener("keydown", onKey);
     };
   }, [popupOpen]);
