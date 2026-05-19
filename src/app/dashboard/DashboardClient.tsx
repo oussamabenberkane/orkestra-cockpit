@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowDown, ArrowUp, Circle, Minus, Mail, AlertCircle, FileText, type LucideIcon } from "lucide-react";
-import type { ModalKey } from "@/lib/types";
+import type { ModalKey, ModalData } from "@/lib/types";
 import { Sidebar } from "@/components/dashboard/Sidebar";
 import DashboardModal from "@/components/dashboard/DashboardModal";
 import { FloatingDock } from "@/components/dashboard/FloatingDock";
@@ -20,7 +20,7 @@ import {
   type Period,
   type HeroDataset,
 } from "@/lib/dashboard-mock";
-import type { SatelliteValues, AgentTaskRow } from "@/lib/dashboard-data";
+import type { SatelliteValues, AgentTaskRow, TileMetrics } from "@/lib/dashboard-data";
 import { Percent, Wallet, Users } from "lucide-react";
 
 const SIDEBAR_KEY = "orkestra.sidebar.collapsed";
@@ -120,12 +120,67 @@ function mergeSatellites(vals: SatelliteValues | null): Satellite[] {
   ];
 }
 
+// ── Live tile builder ─────────────────────────────────────────────────────────
+
+function buildLiveTiles(metrics: TileMetrics): TileEntry[] {
+  const live = [...tiles];
+  const { prospection: p, portefeuille: po, sinistres: s, finance: f } = metrics;
+
+  if (p) {
+    live[0] = {
+      ...tiles[0],
+      metric: String(Math.round(p.taux_conversion_pct)),
+      unit: "%",
+      caption: `${p.total_prospects} prospects actifs`,
+      alert: p.relances_dues > 0 ? `${p.relances_dues} relances dues` : "",
+      alertTone: p.relances_dues > 0 ? "warn" : "neutral",
+    };
+  }
+  if (po) {
+    const primesK = Math.round(po.primes_totales / 1000);
+    live[1] = {
+      ...tiles[1],
+      metric: String(po.contrats_actifs),
+      unit: "",
+      caption: `${primesK} K CHF de primes`,
+      alert: `${po.renouvellements_j30} renouv. J-30`,
+      alertTone: "neutral",
+    };
+  }
+  if (s) {
+    live[2] = {
+      ...tiles[2],
+      metric: String(s.dossiers_ouverts),
+      unit: "",
+      caption: `ratio ${Math.round(s.ratio_sinistralite_pct)}% CA`,
+      alert: s.sinistre_urgent_ref ? `${s.sinistre_urgent_ref} · ${s.plus_ancien_jours} j` : "",
+      alertTone: "danger",
+    };
+  }
+  if (f) {
+    const encaisseK = Math.round(f.encaisse_mois / 1000);
+    const commissionsK = Math.round(f.commissions_actives / 1000);
+    live[3] = {
+      ...tiles[3],
+      metric: encaisseK >= 0 ? `+${encaisseK}` : String(encaisseK),
+      unit: "K",
+      caption: `commissions ${commissionsK} K`,
+      alert: f.nb_impayes > 0 ? `${f.nb_impayes} impayés` : "",
+      alertTone: f.nb_impayes > 0 ? "warn" : "neutral",
+    };
+  }
+  return live;
+}
+
 // ── Props ─────────────────────────────────────────────────────────────────────
 
 export interface DashboardClientProps {
   initialHero: Record<Period, HeroDataset>;
   satelliteValues: SatelliteValues | null;
   agentTaskRows: AgentTaskRow[];
+  tileMetrics: TileMetrics | null;
+  modalData: Record<ModalKey, ModalData>;
+  unreadCount: number;
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -134,6 +189,9 @@ export default function DashboardClient({
   initialHero,
   satelliteValues,
   agentTaskRows,
+  tileMetrics,
+  modalData,
+  unreadCount,
 }: DashboardClientProps) {
   const router = useRouter();
   const [modalKey, setModalKey] = useState<ModalKey | null>(null);
@@ -172,6 +230,10 @@ export default function DashboardClient({
     () => agentTaskRows.length > 0 ? agentTaskRows.map(taskRowToTroisItem) : mockTroisItems,
     [agentTaskRows],
   );
+  const liveTiles = useMemo(
+    () => tileMetrics ? buildLiveTiles(tileMetrics) : tiles,
+    [tileMetrics],
+  );
 
   return (
     <div
@@ -189,6 +251,7 @@ export default function DashboardClient({
         onLogout={onLogout}
         onOpenPalette={() => setPaletteOpen(true)}
         onOpenModal={onOpen}
+        serverUnreadCount={unreadCount}
       />
 
       <main
@@ -319,12 +382,12 @@ export default function DashboardClient({
           marginBottom: "clamp(0.6rem, 1.5vw, 0.85rem)",
         }}>Domaines</div>
         <div className="dashboard-tiles dashboard-tiles-desktop">
-          {tiles.map((t) => (
+          {liveTiles.map((t) => (
             <TileCard key={t.title} tile={t} onOpen={onOpen} />
           ))}
         </div>
         <div className="dashboard-tiles-mobile" aria-hidden={false}>
-          {tiles.map((t) => (
+          {liveTiles.map((t) => (
             <CubeTile key={t.title} tile={t} onOpen={onOpen} />
           ))}
         </div>
@@ -337,6 +400,7 @@ export default function DashboardClient({
         modalKey={modalKey}
         onClose={onClose}
         onAction={handleModalAction}
+        modalData={modalData}
       />
 
       <CommandPalette

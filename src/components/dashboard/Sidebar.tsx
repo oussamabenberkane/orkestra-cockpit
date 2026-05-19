@@ -22,6 +22,8 @@ interface SidebarProps {
   onLogout: () => void;
   onOpenPalette: () => void;
   onOpenModal?: (key: ModalKey) => void;
+  /** Server-fetched alertes unread count — overrides the in-memory notification count when provided. */
+  serverUnreadCount?: number;
 }
 
 type NavItemData = {
@@ -316,9 +318,10 @@ function NavItem({
 }
 
 export function Sidebar({
-  collapsed, onToggle, onLogout, onOpenPalette, onOpenModal,
+  collapsed, onToggle, onLogout, onOpenPalette, onOpenModal, serverUnreadCount,
 }: SidebarProps) {
-  const { unreadCount } = useNotifications();
+  const { unreadCount: notifCount } = useNotifications();
+  const unreadCount = serverUnreadCount ?? notifCount;
   const pathname = usePathname() ?? "";
   const [tooltip, setTooltip] = useState<TooltipState | null>(null);
   const [mounted, setMounted] = useState(false);

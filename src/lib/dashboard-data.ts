@@ -104,6 +104,96 @@ export async function fetchAgentTaskRows(): Promise<AgentTaskRow[]> {
   return (data ?? []) as AgentTaskRow[];
 }
 
+// ── Tile metrics ─────────────────────────────────────────────────────────────
+
+export type TileMetrics = {
+  prospection: {
+    taux_conversion_pct: number;
+    total_prospects: number;
+    relances_dues: number;
+  } | null;
+  portefeuille: {
+    contrats_actifs: number;
+    primes_totales: number;
+    renouvellements_j30: number;
+  } | null;
+  sinistres: {
+    dossiers_ouverts: number;
+    ratio_sinistralite_pct: number;
+    sinistre_urgent_ref: string | null;
+    plus_ancien_jours: number;
+  } | null;
+  finance: {
+    encaisse_mois: number;
+    commissions_actives: number;
+    nb_impayes: number;
+  } | null;
+};
+
+export async function fetchTileMetrics(): Promise<TileMetrics> {
+  const [prospection, portefeuille, sinistres, finance] = await Promise.all([
+    supabase.from("v_tile_prospection").select("*").single(),
+    supabase.from("v_tile_portefeuille").select("*").single(),
+    supabase.from("v_tile_sinistres").select("*").single(),
+    supabase.from("v_tile_finance").select("*").single(),
+  ]);
+  return {
+    prospection: prospection.data as TileMetrics["prospection"],
+    portefeuille: portefeuille.data as TileMetrics["portefeuille"],
+    sinistres: sinistres.data as TileMetrics["sinistres"],
+    finance: finance.data as TileMetrics["finance"],
+  };
+}
+
+// ── Modal values ──────────────────────────────────────────────────────────────
+
+export type ModalValues = {
+  satellites: {
+    marge_pct: number;
+    cashflow_net: number;
+    retention_pct: number;
+    impayes_montant: number;
+  } | null;
+  finance: {
+    commissions_actives: number;
+    encaisse_mois: number;
+    nb_impayes: number;
+  } | null;
+  sinistres: {
+    dossiers_ouverts: number;
+    ratio_sinistralite_pct: number;
+    sinistre_urgent_ref: string | null;
+    plus_ancien_jours: number;
+  } | null;
+  prospection: {
+    taux_conversion_pct: number;
+    total_prospects: number;
+    relances_dues: number;
+  } | null;
+  portefeuille: {
+    contrats_actifs: number;
+    primes_totales: number;
+    renouvellements_j30: number;
+  } | null;
+};
+
+export async function fetchModalValues(): Promise<ModalValues> {
+  const [sat, finance, sinistres, prospection, portefeuille] = await Promise.all([
+    supabase.from("v_satellites").select("*").single(),
+    supabase.from("v_tile_finance").select("*").single(),
+    supabase.from("v_tile_sinistres").select("*").single(),
+    supabase.from("v_tile_prospection").select("*").single(),
+    supabase.from("v_tile_portefeuille").select("*").single(),
+  ]);
+  return {
+    satellites: sat.data as ModalValues["satellites"],
+    finance: finance.data as ModalValues["finance"],
+    sinistres: sinistres.data as ModalValues["sinistres"],
+    prospection: prospection.data as ModalValues["prospection"],
+    portefeuille: portefeuille.data as ModalValues["portefeuille"],
+  };
+}
+
 // ── Alertes ───────────────────────────────────────────────────────────────────
 
 export async function fetchAlertes() {

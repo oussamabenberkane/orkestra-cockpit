@@ -1,4 +1,5 @@
 import type { ModalData, ModalKey } from "./types";
+import type { ModalValues } from "./dashboard-data";
 
 /* Modal content. Each entry is a flat array of typed sections — the
  * DashboardModal renderer picks a dedicated, responsive component per
@@ -205,3 +206,95 @@ export const modalData: Record<ModalKey, ModalData> = {
     cta: "Envoyer aux associés",
   },
 };
+
+/**
+ * Returns modal data with KV-row values replaced by live Supabase values.
+ * Falls back to the static `modalData` when `vals` is null or a view returns no data.
+ * Only `value` strings in kv-list rows are replaced; titles, bodies, CTAs are static.
+ */
+export function getModalData(vals: ModalValues | null): Record<ModalKey, ModalData> {
+  if (!vals) return modalData;
+
+  const { satellites: sat, finance: fin, prospection: pros, portefeuille: port } = vals;
+
+  const fmtCHF = (n: number) =>
+    `${Math.round(n).toLocaleString("fr-CH")} CHF`;
+  const fmtPct = (n: number) => `${Math.round(n)} %`;
+  const fmtCashflowCHF = (n: number) =>
+    `${n >= 0 ? "+" : ""}${Math.round(n).toLocaleString("fr-CH")} CHF`;
+  const fmtCashflowK = (n: number) =>
+    `${n >= 0 ? "+" : ""}${Math.round(n / 1000)} K CHF`;
+
+  const financeModal: ModalData = !fin && !sat ? modalData.finance : {
+    ...modalData.finance,
+    sections: [
+      {
+        kind: "kv-list" as const,
+        subtitle: "Sources combinées — BrokerStar + Odoo",
+        rows: [
+          { source: "BrokerStar", label: "Commissions encaissées", value: fin ? fmtCHF(fin.commissions_actives) : "11 200 CHF" },
+          { source: "BrokerStar", label: "Primes en attente",       value: "4 800 CHF" },
+          { source: "Odoo",       label: "Charges fixes juin",      value: "8 400 CHF" },
+          { source: "Odoo",       label: "Impayés clients",         value: sat ? fmtCHF(sat.impayes_montant) : "3 200 CHF" },
+          { combined: true,       label: "Marge nette réelle",      value: sat ? fmtPct(sat.marge_pct) : "68 %" },
+          { combined: true,       label: "Cash-flow net",           value: sat ? fmtCashflowCHF(sat.cashflow_net) : "+18 400 CHF" },
+        ],
+      },
+    ],
+  };
+
+  const vue360Modal: ModalData = !sat ? modalData.vue360 : {
+    ...modalData.vue360,
+    sections: [
+      {
+        kind: "kv-list" as const,
+        subtitle: "BrokerStar + Odoo — Vue globale",
+        rows: [
+          { label: "CA mensuel consolidé",     value: "92 400 CHF" },
+          { label: "Marge nette réelle",       value: fmtPct(sat.marge_pct) },
+          { label: "Taux de rétention",        value: fmtPct(sat.retention_pct) },
+          { label: "Cash-flow prévisionnel",   value: fmtCashflowK(sat.cashflow_net) },
+        ],
+      },
+      ...modalData.vue360.sections.slice(1),
+    ],
+  };
+
+  const prospectionModal: ModalData = !pros ? modalData.prospection : {
+    ...modalData.prospection,
+    sections: [
+      modalData.prospection.sections[0],
+      {
+        kind: "kv-list" as const,
+        rows: [
+          { label: "Taux de conversion", value: fmtPct(pros.taux_conversion_pct) },
+          { label: "Moyenne marché",     value: "24 %" },
+        ],
+      },
+      ...modalData.prospection.sections.slice(2),
+    ],
+  };
+
+  const portefeuilleModal: ModalData = !port ? modalData.portefeuille : {
+    ...modalData.portefeuille,
+    sections: [
+      modalData.portefeuille.sections[0],
+      {
+        kind: "kv-list" as const,
+        subtitle: "Renouvellements J-30",
+        rows: [
+          { label: "Contrats concernés", value: String(port.renouvellements_j30) },
+          { label: "Primes concernées",  value: "18 400 CHF" },
+        ],
+      },
+    ],
+  };
+
+  return {
+    ...modalData,
+    finance:      financeModal,
+    vue360:       vue360Modal,
+    prospection:  prospectionModal,
+    portefeuille: portefeuilleModal,
+  };
+}

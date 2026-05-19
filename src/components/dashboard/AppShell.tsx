@@ -6,6 +6,7 @@ import type { ModalKey } from "@/lib/types";
 import { Sidebar } from "@/components/dashboard/Sidebar";
 import DashboardModal from "@/components/dashboard/DashboardModal";
 import { CommandPalette } from "@/components/shared/CommandPalette";
+import { supabase } from "@/lib/supabase";
 
 const SIDEBAR_KEY = "orkestra.sidebar.collapsed";
 
@@ -36,6 +37,7 @@ export function AppShell({ children, mainStyle }: AppShellProps) {
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [modalKey, setModalKey] = useState<ModalKey | null>(null);
   const [hydrated, setHydrated] = useState(false);
+  const [unreadCount, setUnreadCount] = useState<number | undefined>(undefined);
 
   useEffect(() => {
     try {
@@ -43,6 +45,14 @@ export function AppShell({ children, mainStyle }: AppShellProps) {
       if (stored === "true") setCollapsed(true);
     } catch {}
     setHydrated(true);
+  }, []);
+
+  useEffect(() => {
+    void supabase
+      .from("alertes")
+      .select("*", { count: "exact", head: true })
+      .eq("lu", false)
+      .then(({ count }) => { if (count !== null) setUnreadCount(count); });
   }, []);
 
   const toggleSidebar = () => {
@@ -78,6 +88,7 @@ export function AppShell({ children, mainStyle }: AppShellProps) {
         onLogout={onLogout}
         onOpenPalette={() => setPaletteOpen(true)}
         onOpenModal={openModal}
+        serverUnreadCount={unreadCount}
       />
 
       <main
