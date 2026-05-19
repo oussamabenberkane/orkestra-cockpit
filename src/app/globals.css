@@ -250,22 +250,19 @@ html, body {
   gap: clamp(0.6rem, 1.5vw, 0.85rem);
 }
 
-/* Tablet / small desktop: hero stacks, tiles drop to 2-col */
+/* Tablet / small desktop: hero stacks, tiles drop to 2-col. The
+   KPI column is hidden at this width (replaced by .kpi-strip-compact
+   below the hero) so its grid rules are unnecessary here. */
 @media (max-width: 1024px) {
   .dashboard-hero  { grid-template-columns: 1fr; }
   .dashboard-tiles { grid-template-columns: repeat(2, 1fr); }
   .dashboard-kpis  { grid-template-columns: repeat(2, 1fr); }
-  .dashboard-kpis-stack {
-    grid-template-rows: none;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
 }
 
-/* Small tablet → mobile: tiles drop to 1-col, KPIs stack vertically */
+/* Small tablet → mobile: tiles drop to 1-col */
 @media (max-width: 640px) {
   .dashboard-tiles { grid-template-columns: 1fr; }
   .dashboard-kpis  { grid-template-columns: 1fr; }
-  .dashboard-kpis-stack { grid-template-columns: 1fr; }
 }
 
 /* Mobile: sidebar becomes a slide-over drawer (handled by Sidebar.tsx).
@@ -367,6 +364,23 @@ html, body {
    breathes more, even as each section gets more compact internally. */
 @media (max-width: 640px) {
   .dash-section { margin-bottom: 2.5rem !important; }
+}
+
+/* ── Chart + KPI — compact strip layout at ≤1024px ────────────────
+   Desktop keeps the side-by-side hero + 3-up <SatelliteKPI> column.
+   Below 1024px the full KPI column is hidden and three compact stat
+   cells (small label · mono value · delta) sit in a single row under
+   the hero — always visible, no scroll, smallest vertical footprint. */
+.kpi-strip-compact { display: none; }
+
+@media (max-width: 1024px) {
+  .chart-desktop-only { display: none !important; }
+  .kpi-strip-compact {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.45rem;
+    margin-top: 0.6rem;
+  }
 }
 
 /* Mobile cube grid — small stat tiles for the Domaines section.

@@ -2,14 +2,14 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Circle } from "lucide-react";
+import { ArrowDown, ArrowUp, Circle, Minus } from "lucide-react";
 import type { ModalKey } from "@/lib/types";
 import { Sidebar } from "@/components/dashboard/Sidebar";
 import DashboardModal from "@/components/dashboard/DashboardModal";
 import { FloatingDock } from "@/components/dashboard/FloatingDock";
 import { CommandPalette } from "@/components/shared/CommandPalette";
 import { HeroPanel } from "@/components/dashboard/HeroPanel";
-import { SatelliteKPI } from "@/components/dashboard/SatelliteKPI";
+import { SatelliteKPI, type Satellite } from "@/components/dashboard/SatelliteKPI";
 import { TroisChoses } from "@/components/dashboard/TroisChoses";
 import { TileCard, type TileEntry } from "@/components/dashboard/TileCard";
 import {
@@ -176,7 +176,11 @@ export default function DashboardPage() {
           <TroisChoses items={troisItems} onOpen={onOpen} />
         </div>
 
-        {/* ─── Hero + satellite KPIs ───────────────────────────────── */}
+        {/* ─── Hero + satellite KPIs ───────────────────────────────────
+         * Desktop (>1024px): hero side-by-side with the 3-up KPI column.
+         * Mobile / tablet (≤1024px): hero on top, compact 3-up stat strip
+         * below — small label, mono value, delta arrow. The KPI column
+         * is hidden via CSS at this width; the strip is hidden above it. */}
         <div className="dashboard-hero dash-section" style={{ marginBottom: "clamp(1.5rem, 3.5vw, 2.25rem)" }}>
           <HeroPanel
             title={hero.title}
@@ -190,9 +194,14 @@ export default function DashboardPage() {
             period={period}
             onPeriodChange={setPeriod}
           />
-          <div className="dashboard-kpis-stack">
+          <div className="dashboard-kpis-stack chart-desktop-only">
             {satellites.map((s) => (
               <SatelliteKPI key={s.label} kpi={s} onOpen={onOpen} />
+            ))}
+          </div>
+          <div className="kpi-strip-compact">
+            {satellites.map((s) => (
+              <CompactStat key={s.label} kpi={s} onOpen={onOpen} />
             ))}
           </div>
         </div>
@@ -239,6 +248,86 @@ export default function DashboardPage() {
 
       <FloatingDock />
     </div>
+  );
+}
+
+/** Compact KPI cell used on mobile/tablet (≤1024px) in place of the
+ *  side-by-side <SatelliteKPI> column. Three of these sit in a single
+ *  row under the hero: small label, mono value+unit, delta indicator. */
+function CompactStat({ kpi, onOpen }: { kpi: Satellite; onOpen: (k: ModalKey) => void }) {
+  const t = kpi.trend.trim();
+  const dir = t.startsWith("+")
+    ? "up"
+    : (t.startsWith("-") || t.startsWith("−"))
+      ? "down"
+      : "flat";
+  const Icon = dir === "up" ? ArrowUp : dir === "down" ? ArrowDown : Minus;
+  const color =
+    dir === "up"   ? "var(--success)"
+    : dir === "down" ? "var(--danger)"
+    : "var(--text-3)";
+  return (
+    <button
+      type="button"
+      onClick={() => onOpen(kpi.modalKey)}
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: "0.25rem",
+        padding: "0.6rem 0.6rem",
+        background: "var(--surface)",
+        border: "1px solid var(--border)",
+        borderRadius: 10,
+        boxShadow: "var(--tier-1)",
+        cursor: "pointer",
+        fontFamily: "inherit",
+        color: "inherit",
+        textAlign: "left",
+        minHeight: 76,
+        minWidth: 0,
+      }}
+    >
+      <span style={{
+        fontSize: "0.6rem",
+        fontWeight: 500,
+        color: "var(--text-3)",
+        overflow: "hidden",
+        textOverflow: "ellipsis",
+        whiteSpace: "nowrap",
+        maxWidth: "100%",
+      }}>{kpi.label}</span>
+      <span style={{
+        fontFamily: "var(--font-mono)",
+        fontSize: "1.05rem",
+        fontWeight: 700,
+        color: "var(--text)",
+        lineHeight: 1,
+        fontVariantNumeric: "tabular-nums",
+        letterSpacing: "-0.02em",
+      }}>
+        {kpi.value}
+        {kpi.unit && (
+          <span style={{
+            fontSize: "0.58em",
+            color: "var(--text-3)",
+            marginLeft: 1,
+            fontWeight: 500,
+          }}>{kpi.unit}</span>
+        )}
+      </span>
+      <span style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: "0.15rem",
+        fontSize: "0.62rem",
+        fontWeight: 700,
+        color,
+        whiteSpace: "nowrap",
+      }}>
+        <Icon size={10} strokeWidth={2.5} />
+        {kpi.trend}
+      </span>
+    </button>
   );
 }
 
