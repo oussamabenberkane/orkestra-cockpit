@@ -317,6 +317,7 @@ export default function AgentTestPage() {
 
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const isFirstScroll = useRef(true);
   // Memoised store handle — singleton inside the module, but keeping it on
   // a ref makes the dependency surface explicit for callbacks.
   const memoryStoreRef = useRef(getMemoryStore());
@@ -431,15 +432,18 @@ export default function AgentTestPage() {
   // Conversation persistence is owned by AgentConversationProvider — no
   // local persist effect here.
 
-  // Autoscroll on new content — but only if the user is already pinned to the
-  // bottom. The `showScrollBottom` flag (set by the scroll listener below) is
-  // the source of truth: when the user has scrolled up to re-read context,
-  // suppress the smooth scroll so we don't yank them back.
+  // Autoscroll on new content — but only if content actually overflows and the
+  // user is already pinned to the bottom. Skipping when content fits the
+  // viewport keeps the page static for short conversations. The first scroll
+  // per conversation uses "instant" so loading a previous chat doesn't animate.
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
+    if (el.scrollHeight <= el.clientHeight) return;
     if (!showScrollBottom) {
-      el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
+      const behavior = isFirstScroll.current ? "instant" : "smooth";
+      isFirstScroll.current = false;
+      el.scrollTo({ top: el.scrollHeight, behavior });
     }
   }, [active.messages, loading, showScrollBottom]);
 
@@ -448,6 +452,7 @@ export default function AgentTestPage() {
   // "scroll to bottom" pill. A small slack keeps the pill from flashing on
   // sub-pixel rounding.
   useEffect(() => {
+    isFirstScroll.current = true;
     const el = scrollRef.current;
     if (!el) return;
     const onScroll = () => {
@@ -979,6 +984,9 @@ export default function AgentTestPage() {
             0 8px 24px -10px rgba(0,0,0,0.08),
             0 20px 48px -24px rgba(0,0,0,0.10);
         }
+        /* Desktop composer floor — two-row minimum (~92px card with border).
+         * Overridden to 42px by the mobile rule below. */
+        textarea.agent-input { min-height: 90px; }
         textarea.agent-input::placeholder { color: ${T.text4}; }
         textarea.agent-input:disabled { cursor: not-allowed; opacity: 0.6; }
         /* Hide the textarea scrollbar — pairs with scrollbarWidth: "none" in
@@ -995,20 +1003,242 @@ export default function AgentTestPage() {
           .agent-composer-model { display: none !important; }
         }
 
-        /* Welcome — let the suggestion grid breathe down through breakpoints
-           rather than relying on auto-fill, which produces awkward 2.5-column
-           layouts at intermediate widths. */
-        @media (max-width: 900px) {
-          .agent-welcome-grid { grid-template-columns: repeat(2, 1fr) !important; }
+        /* ─── Mobile shell compaction ───
+         * The topbar contributes ~64px between the floating button band and
+         * the welcome content, but its only inline content (conversation
+         * title) is HIDDEN on the empty/welcome screen. Collapse the topbar
+         * to zero on mobile so the eyebrow sits flush against the clearance
+         * band. When a conversation has messages, the title grows naturally
+         * (~24-32px) — a one-time layout adjustment per navigation, not on
+         * load. */
+        @media (max-width: 720px) {
+          /* Remove min-height:100vh which on iOS Safari (address bar visible)
+           * is larger than the dynamic viewport, pushing the composer off-screen.
+           * height:100dvh (inline) correctly tracks the visible area. */
+          .agent-root { min-height: 0 !important; }
+          .agent-topbar {
+            min-height: 0 !important;
+            padding-top: 0 !important;
+            padding-bottom: 0 !important;
+            border-bottom-color: transparent !important;
+          }
+          /* Scroll container — minimal breathing space, no bottom gap. */
+          .agent-scroll {
+            padding-top: 0.65rem !important;
+            padding-bottom: 0.1rem !important;
+          }
+          /* Welcome itself — no extra top space. */
+          .agent-welcome { padding-top: 0 !important; }
         }
+
+        /* ─── Suggestion tiles: centered stack, title slot pre-reserved ───
+         * The whole icon + title stack is centered vertically in the tile
+         * (justify-content: center). To stop the icon from being LIFTED
+         * when a long title wraps to two lines, the title slot reserves a
+         * fixed min-height of 2.4em (= two lines of its 1.2 line-height).
+         * 1-line titles render at the top of that slot; 2-line titles fill
+         * it. Either way, the total stack height is identical across all
+         * tiles in a row, so the icon centered position never shifts. */
+        @media (max-width: 720px) {
+          .agent-welcome-grid {
+            grid-template-columns: repeat(3, 1fr) !important;
+            gap: 0.45rem !important;
+          }
+          .agent-welcome-grid > button {
+            aspect-ratio: 1 / 1;
+            min-height: 0 !important;
+            padding: 0.5rem 0.4rem !important;
+            border-radius: 12px !important;
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+            justify-content: center !important;
+            text-align: center !important;
+            gap: 0.5rem !important;
+            overflow: hidden !important;
+          }
+          /* Icon row — center the chip, hide the chevron (the SVG sibling
+           * of the chip span). */
+          .agent-welcome-grid > button > div:first-child {
+            justify-content: center !important;
+            width: auto !important;
+            flex-shrink: 0 !important;
+          }
+          .agent-welcome-grid > button > div:first-child > svg {
+            display: none !important;
+          }
+          /* Icon chip — bump up so it carries the centered composition. */
+          .agent-welcome-grid > button [data-suggest-icon] {
+            width: 32px !important;
+            height: 32px !important;
+            border-radius: 9px !important;
+          }
+          .agent-welcome-grid > button [data-suggest-icon] svg {
+            width: 16px !important;
+            height: 16px !important;
+          }
+          /* Title — fixed 2-line slot. Line-clamp 2 caps any oversized
+           * label; min-height 2.4em (= 2 × line-height 1.2) reserves the
+           * slot even for 1-line labels so the icon above never shifts. */
+          .agent-welcome-grid > button > div:nth-child(2) {
+            font-size: 0.76rem !important;
+            line-height: 1.2 !important;
+            font-weight: 600 !important;
+            color: var(--text) !important;
+            min-height: 2.4em !important;
+            display: -webkit-box !important;
+            -webkit-line-clamp: 2 !important;
+            -webkit-box-orient: vertical !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            max-width: 100% !important;
+          }
+          /* Hint row — hidden, title alone is the affordance. */
+          .agent-welcome-grid > button > div:nth-child(3) {
+            display: none !important;
+          }
+        }
+        @media (max-width: 380px) {
+          .agent-welcome-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+          }
+        }
+
+        /* Helper line above grid hidden on narrow — already implicit from
+         * the centered tile labels. */
         @media (max-width: 540px) {
-          .agent-welcome-grid { grid-template-columns: 1fr !important; }
+          .agent-welcome-helper { display: none !important; }
+        }
+
+        /* ─── Composer: standard mobile single-row pill ───
+         * Target: ~44px card height (= Apple HIG / Material touch target
+         * floor and the dominant mobile-chat-input pattern in ChatGPT,
+         * Claude, WhatsApp, iMessage). Auto-grows up to maxHeight on
+         * multi-line input. 16px font prevents iOS auto-zoom on focus.
+         *
+         * Geometry:
+         *   textarea: 42px min total (border-box) + 2px card border = ~44px card
+         *   action buttons: 32×32 at bottom:4px (3px clearance each side)
+         *   wrapper pad: 0.08rem top / 0.45rem bottom + safe area inset */
+        @media (max-width: 720px) {
+          /* Textarea: slim single-row pill (~44px card, WhatsApp/iMessage style).
+           * 16px font prevents iOS auto-zoom; min-height 42px (border-box total)
+           * gives a 44px card with 2px border. Action buttons at bottom:4px sit
+           * comfortably inside. */
+          textarea.agent-input {
+            font-size: 16px !important;
+            min-height: 42px !important;
+            line-height: 1.4 !important;
+            padding: 0.42rem 2.85rem 0.42rem 0.95rem !important;
+            max-height: 140px !important;
+          }
+          .agent-composer { border-radius: 22px !important; }
+          /* No top gap between grid and composer; safe-area handles bottom. */
+          .agent-composer-wrap {
+            padding: 0.08rem 0.7rem calc(0.45rem + env(safe-area-inset-bottom, 0px)) !important;
+          }
+          .agent-composer-meta { display: none !important; }
+          /* Action buttons — 32×32, anchored to bottom:4px so they sit
+           * inside the ~35px card with 3px clearance on each side. */
+          .agent-composer-send,
+          .agent-composer-stop {
+            width: 32px !important;
+            height: 32px !important;
+            right: 6px !important;
+            bottom: 4px !important;
+            border-radius: 9px !important;
+          }
+          .agent-composer-mic {
+            width: 32px !important;
+            height: 32px !important;
+            right: 44px !important;
+            bottom: 4px !important;
+            border-radius: 9px !important;
+          }
+        }
+        /* Slightly narrower tap region on the smallest devices — mic shifts
+         * left to give the send button breathing room from the screen edge. */
+        @media (max-width: 380px) {
+          textarea.agent-input {
+            padding-right: 2.55rem !important;
+          }
+        }
+
+        /* ─── Tap-to-edit (touch devices) ───
+         * The Modifier chip on user bubbles uses opacity:0 + pointer-events:
+         * none until hover — which never fires on touch. Force the chip
+         * visible/interactive on any pointer that doesn't support hover. */
+        @media (hover: none) {
+          .agent-edit-trigger {
+            opacity: 1 !important;
+            pointer-events: auto !important;
+          }
+        }
+
+        /* Edit card on mobile — tighter padding, hide the kbd-shortcut hint
+         * that doesn't apply on touch, bump textarea to 16px. */
+        @media (max-width: 540px) {
+          .agent-edit-card {
+            padding: 0.45rem 0.45rem 0.5rem !important;
+            border-radius: 14px !important;
+          }
+          .agent-edit-input-wrap {
+            padding: 0.7rem 0.85rem !important;
+            border-radius: 10px !important;
+          }
+          .agent-edit-textarea {
+            font-size: 16px !important;
+          }
+          .agent-edit-hint { display: none !important; }
+          .agent-edit-footer {
+            justify-content: flex-end !important;
+            padding: 0.05rem 0.2rem 0 !important;
+          }
+          /* Bump action buttons to the 44pt touch-target floor so a thumb
+           * tap lands cleanly without precision pixel-hunting. */
+          .agent-edit-footer button {
+            min-height: 40px !important;
+            padding: 0.55rem 1.05rem !important;
+            font-size: 0.85rem !important;
+          }
+        }
+
+        /* Welcome typography compaction on narrow screens — every saved row
+         * here is one we don't need to scroll to reveal the suggestion grid
+         * and composer underneath. */
+        @media (max-width: 540px) {
+          .agent-welcome > h1 {
+            font-size: 1.25rem !important;
+            margin-bottom: 0.3rem !important;
+            line-height: 1.15 !important;
+          }
+          .agent-welcome > p {
+            font-size: 0.82rem !important;
+            line-height: 1.4 !important;
+            margin-bottom: 0.6rem !important;
+          }
+          /* The mono eyebrow above the H1 — trim its margin so the heading
+           * sits close. */
+          .agent-welcome > div:first-of-type {
+            margin-bottom: 0.35rem !important;
+          }
+          /* "Pour démarrer" section bar — compact its margin. */
+          .agent-welcome > div:nth-of-type(2) {
+            margin-bottom: 0.35rem !important;
+          }
+        }
+
+        /* On the smallest devices (≤380px / iPhone SE-class) the descriptive
+         * paragraph is the lowest-priority text — fold it so the eyebrow +
+         * heading + 6 tiles + composer all fit without scroll. */
+        @media (max-width: 380px) {
+          .agent-welcome > p { display: none !important; }
         }
 
         /* Message bubbles — give the assistant card a max width and lift the
            user bubble's cap on narrower screens so threads don't feel cramped. */
         @media (max-width: 540px) {
-          .agent-scroll [data-user-bubble] { max-width: 88% !important; }
+          .agent-scroll [data-user-bubble] { max-width: 92% !important; }
         }
 
         /* Subtle, brand-consistent focus ring for keyboard users across all
@@ -3694,27 +3924,35 @@ function UserMessage({
         >
           {canEdit && !editing && (
             <motion.button
+              className="agent-edit-trigger"
               onClick={startEdit}
               aria-label="Modifier et renvoyer"
               title="Modifier et renvoyer"
-              tabIndex={hover ? 0 : -1}
+              /* Always tab-reachable on touch — the @media (hover:none) CSS
+               * rule overrides the desktop opacity:0 default to make the
+               * chip visible there too. */
+              tabIndex={0}
               whileTap={{ scale: 0.94 }}
               transition={{ duration: 0.1 }}
               style={{
                 display: "inline-flex",
                 alignItems: "center",
-                gap: "0.25rem",
-                padding: "0.15rem 0.4rem",
+                gap: "0.3rem",
+                padding: "0.3rem 0.55rem",
                 background: T.surface,
                 border: `1px solid ${T.border}`,
-                borderRadius: 5,
+                borderRadius: 7,
                 color: T.text3,
                 fontFamily: "inherit",
-                fontSize: "0.65rem",
+                fontSize: "0.72rem",
                 fontWeight: 600,
                 cursor: "pointer",
                 textTransform: "none",
                 letterSpacing: 0,
+                /* Min hit area satisfies WCAG/Apple HIG touch target spec on
+                 * mobile where the chip is always visible via the
+                 * @media (hover:none) override. */
+                minHeight: 32,
                 opacity: hover ? 1 : 0,
                 pointerEvents: hover ? "auto" : "none",
                 transition: "opacity 0.18s ease, background 0.12s, color 0.12s, border-color 0.12s",
@@ -3730,7 +3968,7 @@ function UserMessage({
                 e.currentTarget.style.borderColor = T.border;
               }}
             >
-              <Pencil size={10} strokeWidth={2.25} />
+              <Pencil size={11} strokeWidth={2.25} />
               Modifier
             </motion.button>
           )}
@@ -3782,6 +4020,7 @@ function UserMessage({
           {editing && (
             <motion.div
               key="edit"
+              className="agent-edit-card"
               initial={{ opacity: 0, scale: 0.98 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.98 }}
@@ -3803,6 +4042,7 @@ function UserMessage({
             >
             {/* Inner white textarea card — thin blue border signals "active". */}
             <div
+              className="agent-edit-input-wrap"
               style={{
                 background: "var(--surface)",
                 borderRadius: 12,
@@ -3812,6 +4052,7 @@ function UserMessage({
             >
               <textarea
                 ref={editorRef}
+                className="agent-edit-textarea"
                 value={draft}
                 onChange={(e) => {
                   setDraft(e.target.value);
@@ -3853,6 +4094,7 @@ function UserMessage({
 
             {/* Footer sits on the warm container surface — no divider line. */}
             <div
+              className="agent-edit-footer"
               style={{
                 display: "flex",
                 justifyContent: "flex-end",
@@ -3862,6 +4104,7 @@ function UserMessage({
               }}
             >
               <span
+                className="agent-edit-hint"
                 style={{
                   display: "inline-flex",
                   alignItems: "center",
@@ -4645,16 +4888,16 @@ function Composer({
                  * field, plus a deeper bottom inset for the action buttons.
                  * Mirrors Claude's tall, generous composer footprint. */
                 padding: voiceSupported
-                  ? "1.15rem 5.85rem 3.25rem 1.2rem"
-                  : "1.15rem 3.65rem 3.25rem 1.2rem",
+                  ? "0.85rem 5.85rem 1.1rem 1.2rem"
+                  : "0.85rem 3.65rem 1.1rem 1.2rem",
                 maxHeight: 340,
-                minHeight: 88,
                 scrollbarWidth: "none",
               }}
             />
             {voiceSupported && !loading && (
               <button
                 type="button"
+                className="agent-composer-mic"
                 onClick={recording ? stopDictation : startDictation}
                 aria-label={recording ? "Arrêter la dictée" : "Dicter une question"}
                 title={recording ? "Arrêter la dictée" : "Dicter une question"}
@@ -4702,6 +4945,7 @@ function Composer({
             {loading ? (
               <button
                 type="button"
+                className="agent-composer-stop"
                 onClick={onStop}
                 aria-label="Arrêter la génération"
                 style={{
@@ -4742,6 +4986,7 @@ function Composer({
             ) : (
               <button
                 type="submit"
+                className="agent-composer-send"
                 disabled={!value.trim()}
                 aria-label="Envoyer"
                 style={{
