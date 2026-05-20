@@ -6,6 +6,7 @@ import {
   useEffect,
   useCallback,
   useMemo,
+  type ComponentType,
   type FormEvent,
   type KeyboardEvent,
 } from "react";
@@ -45,6 +46,7 @@ import {
   Mic,
   MicOff,
   Brain,
+  type LucideIcon,
 } from "lucide-react";
 import { Markdown } from "./markdown";
 import type { Memory, MemoryInput, MemoryKind } from "@/agent/memory/types";
@@ -187,6 +189,9 @@ const SUGGESTIONS: {
 // Persisted sidebar collapse state. Conversation persistence is owned by the
 // AgentConversationProvider — only the sidebar preference stays local here.
 const SIDEBAR_STATE_KEY = "orkestra.agent-test.sidebar.v1";
+/* Desktop collapse preference for the right history+memory rail. Independent
+ * of the mobile open/closed drawer state stored under SIDEBAR_STATE_KEY. */
+const SIDEBAR_COLLAPSED_KEY = "orkestra.agent-test.sidebar-collapsed.v1";
 
 // Shared with /dashboard so the app-wide sidebar's collapsed preference
 // carries across routes.
@@ -280,6 +285,9 @@ export default function AgentTestPage() {
   // for first visits, from the viewport width (closed below SIDEBAR_BREAKPOINT
   // so mobile doesn't land on a full-screen drawer over a scrim).
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  /* Desktop collapsed (slim icon rail) vs expanded (full panel). Mirrors the
+   * left shared sidebar's pattern. Hydrated from localStorage after mount. */
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   // Becomes true once localStorage has been read. Guards the persist effect
   // so it can't clobber saved data with the default state before rehydration.
   const [hydrated, setHydrated] = useState(false);
@@ -321,7 +329,7 @@ export default function AgentTestPage() {
   }, []);
 
   // Conversation rehydration is owned by AgentConversationProvider. We only
-  // recover the sidebar preference here.
+  // recover the sidebar preferences here.
   useEffect(() => {
     const mobile = window.innerWidth < SIDEBAR_BREAKPOINT;
     setIsMobileLayout(mobile);
@@ -333,11 +341,15 @@ export default function AgentTestPage() {
     } catch {
       setSidebarOpen(!mobile);
     }
+    try {
+      const stored = window.localStorage.getItem(SIDEBAR_COLLAPSED_KEY);
+      if (stored === "true") setSidebarCollapsed(true);
+    } catch {}
 
     setHydrated(true);
   }, []);
 
-  // Persist the sidebar preference after the user has had a chance to toggle.
+  // Persist the sidebar preferences after the user has had a chance to toggle.
   useEffect(() => {
     if (!hydrated) return;
     try {
@@ -346,6 +358,23 @@ export default function AgentTestPage() {
       // storage disabled — preference degrades to per-session.
     }
   }, [sidebarOpen, hydrated]);
+  useEffect(() => {
+    if (!hydrated) return;
+    try {
+      window.localStorage.setItem(SIDEBAR_COLLAPSED_KEY, String(sidebarCollapsed));
+    } catch {}
+  }, [sidebarCollapsed, hydrated]);
+
+  /* Single toggle handler — mobile flips the drawer, desktop flips the
+   * collapsed (slim-rail) state. Same trigger button can call this from
+   * either the topbar or the sidebar's internal chevron. */
+  const toggleSidebar = useCallback(() => {
+    if (isMobileLayout) {
+      setSidebarOpen((v) => !v);
+    } else {
+      setSidebarCollapsed((v) => !v);
+    }
+  }, [isMobileLayout]);
 
   /* Cross-sidebar mobile coordination — when the right history drawer
    * opens, signal the app sidebar (left) to close, and vice versa. */
@@ -621,8 +650,8 @@ export default function AgentTestPage() {
           memoryCount={memories.length}
           memoryDrawerOpen={memoryDrawerOpen}
           onToggleMemoryDrawer={() => setMemoryDrawerOpen((v) => !v)}
-          historyOpen={sidebarOpen}
-          onToggleHistory={() => setSidebarOpen((v) => !v)}
+          historyOpen={isMobileLayout ? sidebarOpen : !sidebarCollapsed}
+          onToggleHistory={toggleSidebar}
         />
 
         <main
@@ -756,6 +785,8 @@ export default function AgentTestPage() {
       {/* ─── Chat history (right rail) — own expand/collapse + mobile drawer ─── */}
       <Sidebar
         open={sidebarOpen}
+        collapsed={sidebarCollapsed}
+        onToggle={toggleSidebar}
         conversations={conversations}
         activeId={activeId}
         onSelect={setActiveId}
@@ -848,6 +879,9 @@ export default function AgentTestPage() {
             right: 0;
             z-index: 50;
             box-shadow: -8px 0 32px rgba(0,0,0,0.16);
+            /* Mobile drawer always uses the full var width regardless of the
+             * desktop "collapsed" preference. The slim rail is hidden below. */
+            width: var(--agent-sidebar-w, 320px) !important;
           }
           .agent-sidebar-scrim {
             display: block;
@@ -858,6 +892,27 @@ export default function AgentTestPage() {
             -webkit-backdrop-filter: blur(2px);
             z-index: 49;
           }
+          /* Slim rail is desktop-only. On mobile the drawer renders the full
+           * content directly. */
+          .agent-sidebar-rail { display: none !important; }
+          .agent-sidebar-content { display: flex !important; }
+        }
+
+        /* Desktop collapse mode — slim icon rail only, full content hidden.
+         * !important is required because the rail and content elements set
+         * display:flex inline; that wins over a regular CSS rule even
+         * inside a media query. */
+        @media (min-width: 721px) {
+          .agent-sidebar[data-collapsed="true"] .agent-sidebar-content {
+            display: none !important;
+          }
+          .agent-sidebar[data-collapsed="false"] .agent-sidebar-rail {
+            display: none !important;
+          }
+          /* Topbar's history toggle is desktop-redundant once the sidebar
+           * carries its own collapse/expand chevron. Keep it for the mobile
+           * drawer where the panel itself is hidden when closed. */
+          .agent-topbar-history-toggle { display: none !important; }
         }
 
         /* TopBar — hide the memory label on narrow widths so the chrome stays
@@ -1055,7 +1110,7 @@ function TopBar({
           onClick={onToggleHistory}
           aria-label={historyOpen ? "Fermer l'historique" : "Ouvrir l'historique"}
           aria-expanded={historyOpen}
-          className="agent-icon-btn"
+          className="agent-icon-btn agent-topbar-history-toggle"
           style={{
             width: 36,
             height: 36,
@@ -1356,6 +1411,8 @@ function Row({
 
 function Sidebar({
   open,
+  collapsed,
+  onToggle,
   conversations,
   activeId,
   onSelect,
@@ -1366,6 +1423,10 @@ function Sidebar({
   onCloseMobile,
 }: {
   open: boolean;
+  /** Desktop slim-rail mode. Ignored on mobile (always full drawer width). */
+  collapsed: boolean;
+  /** Unified toggle: flips drawer on mobile, flips collapsed on desktop. */
+  onToggle: () => void;
   conversations: Conversation[];
   activeId: string;
   onSelect: (id: string) => void;
@@ -1390,15 +1451,17 @@ function Sidebar({
       aria-label="Historique des conversations"
       aria-hidden={!open}
       data-open={open ? "true" : "false"}
+      data-collapsed={collapsed ? "true" : "false"}
       style={{
-        // Width animates via CSS so the responsive variable (per breakpoint)
-        // is respected without re-mounting the element. The inner content
-        // div keeps its full width while the outer rail collapses, so the
-        // labels don't reflow during the transition. Sits on the right side
-        // of the page — borderLeft (not borderRight) carries the divider.
-        width: open ? "var(--agent-sidebar-w, 268px)" : 0,
+        /* Three width states:
+         *   - Mobile drawer: full width via CSS var (slides via transform).
+         *   - Desktop collapsed: 56px slim icon rail.
+         *   - Desktop expanded: full panel via CSS var.
+         * The @media (max-width: 720px) rule forces the var width regardless
+         * of `collapsed`, so the mobile drawer always opens to full size. */
+        width: collapsed ? 56 : "var(--agent-sidebar-w, 288px)",
         background: "var(--surface-2)",
-        borderLeft: open ? "1px solid var(--border)" : "1px solid transparent",
+        borderLeft: "1px solid var(--border)",
         display: "flex",
         flexDirection: "column",
         overflow: "hidden",
@@ -1407,16 +1470,86 @@ function Sidebar({
           "width 0.26s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.26s ease",
       }}
     >
+      {/* ─── Slim icon rail (desktop collapsed) — visible only via CSS rule
+       *     below at >720px when data-collapsed="true". On mobile the rail
+       *     is hidden and the full drawer always renders. */}
+      <SidebarSlimRail
+        onExpand={onToggle}
+        onNew={onNew}
+        conversationCount={conversations.length}
+      />
+
+      {/* ─── Full content (desktop expanded + mobile drawer) ─── */}
       <div
+        className="agent-sidebar-content"
         style={{
-          width: "var(--agent-sidebar-w, 268px)",
+          width: "var(--agent-sidebar-w, 288px)",
           display: "flex",
           flexDirection: "column",
           height: "100%",
         }}
       >
+            {/* ─── Header row with collapse chevron (desktop only) ─── */}
+            <div
+              className="agent-sidebar-header"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "0.5rem",
+                padding: "0.65rem 0.65rem 0",
+              }}
+            >
+              <button
+                type="button"
+                onClick={onToggle}
+                aria-label="Replier le panneau"
+                title="Replier le panneau"
+                style={{
+                  width: 32,
+                  height: 32,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  background: "transparent",
+                  border: "1px solid transparent",
+                  borderRadius: 8,
+                  color: "var(--text-3)",
+                  cursor: "pointer",
+                  flexShrink: 0,
+                  transition: "background 0.15s, color 0.15s, border-color 0.15s",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = "var(--surface)";
+                  e.currentTarget.style.color = "var(--text-2)";
+                  e.currentTarget.style.borderColor = "var(--border)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = "transparent";
+                  e.currentTarget.style.color = "var(--text-3)";
+                  e.currentTarget.style.borderColor = "transparent";
+                }}
+              >
+                <PanelRightClose size={16} strokeWidth={2} aria-hidden="true" />
+              </button>
+              <span
+                style={{
+                  fontFamily: "var(--font-mono), ui-monospace, monospace",
+                  fontSize: "0.62rem",
+                  fontWeight: 700,
+                  letterSpacing: "0.18em",
+                  textTransform: "uppercase",
+                  color: "var(--text-4)",
+                  flex: 1,
+                  textAlign: "right",
+                  paddingRight: "0.25rem",
+                }}
+              >
+                Espace
+              </span>
+            </div>
+
             {/* ─── Solid-accent banner CTA (mirrors dashboard action banner) ─── */}
-            <div style={{ padding: "1rem 0.85rem 0.65rem" }}>
+            <div style={{ padding: "0.6rem 0.85rem 0.65rem" }}>
               <button
                 onClick={() => {
                   onNew();
@@ -1566,9 +1699,14 @@ function Sidebar({
               )}
             </div>
 
-            {/* ─── Flat conversation list (sober, no per-row shadow) ─── */}
+            {/* ─── Flat conversation list (sober, no per-row shadow) ───
+             * minHeight:0 lets this flex child shrink below its content
+             * height so overflowY:auto actually kicks in; without it the
+             * list pushes the memory section + footer past the aside's
+             * overflow:hidden boundary and clips them. */}
             <div className="agent-scroll agent-conv-list" style={{
               flex: 1,
+              minHeight: 0,
               overflowY: "auto",
               padding: "0 0.5rem 0.5rem",
               display: "flex",
@@ -1612,6 +1750,153 @@ function Sidebar({
             <UsageFooter datasetLabel={datasetLabel} />
       </div>
     </aside>
+  );
+}
+
+/* Slim icon rail shown when the right sidebar is collapsed on desktop.
+ * Visibility is governed by .agent-sidebar[data-collapsed="true"] CSS at
+ * >720px. On mobile the rail is hidden and the full drawer always renders. */
+function SidebarSlimRail({
+  onExpand,
+  onNew,
+  conversationCount,
+}: {
+  onExpand: () => void;
+  onNew: () => void;
+  conversationCount: number;
+}) {
+  return (
+    <div
+      className="agent-sidebar-rail"
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        width: 56,
+        height: "100%",
+        padding: "0.65rem 0",
+        gap: "0.45rem",
+      }}
+    >
+      <SlimRailButton
+        Icon={PanelRightOpen}
+        label="Déployer le panneau"
+        onClick={onExpand}
+      />
+      <SlimRailDivider />
+      <SlimRailButton
+        Icon={Plus}
+        label="Nouvelle conversation"
+        onClick={onNew}
+        variant="accent"
+      />
+      <div style={{ height: "0.3rem" }} />
+      <SlimRailButton
+        Icon={MessageSquare}
+        label={`Discussions · ${conversationCount}`}
+        onClick={onExpand}
+        badge={conversationCount}
+      />
+    </div>
+  );
+}
+
+function SlimRailDivider() {
+  return (
+    <span
+      aria-hidden="true"
+      style={{
+        width: 28,
+        height: 1,
+        background: "var(--border)",
+        margin: "0.15rem 0",
+      }}
+    />
+  );
+}
+
+function SlimRailButton({
+  Icon,
+  label,
+  onClick,
+  badge,
+  variant,
+}: {
+  Icon: LucideIcon | ComponentType<{ size?: number; strokeWidth?: number }>;
+  label: string;
+  onClick: () => void;
+  badge?: number;
+  variant?: "default" | "accent";
+}) {
+  const isAccent = variant === "accent";
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={label}
+      title={label}
+      style={{
+        position: "relative",
+        width: 36,
+        height: 36,
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        background: isAccent ? "var(--accent)" : "transparent",
+        border: "1px solid",
+        borderColor: isAccent ? "var(--accent-2)" : "transparent",
+        borderRadius: 9,
+        color: isAccent ? "#FFFFFF" : "var(--text-3)",
+        cursor: "pointer",
+        flexShrink: 0,
+        boxShadow: isAccent
+          ? "0 4px 12px -4px rgba(0,122,255,0.45)"
+          : "none",
+        transition:
+          "background 0.15s, color 0.15s, border-color 0.15s, transform 0.12s",
+      }}
+      onMouseEnter={(e) => {
+        if (isAccent) return;
+        e.currentTarget.style.background = "var(--surface)";
+        e.currentTarget.style.borderColor = "var(--border)";
+        e.currentTarget.style.color = "var(--text)";
+      }}
+      onMouseLeave={(e) => {
+        if (isAccent) return;
+        e.currentTarget.style.background = "transparent";
+        e.currentTarget.style.borderColor = "transparent";
+        e.currentTarget.style.color = "var(--text-3)";
+      }}
+    >
+      <Icon size={15} strokeWidth={2.25} />
+      {badge !== undefined && badge > 0 && !isAccent && (
+        <span
+          aria-hidden="true"
+          style={{
+            position: "absolute",
+            top: -3,
+            right: -3,
+            minWidth: 14,
+            height: 14,
+            padding: "0 3px",
+            background: "var(--accent)",
+            color: "#FFFFFF",
+            border: "2px solid var(--surface-2)",
+            borderRadius: 999,
+            fontSize: "0.55rem",
+            fontWeight: 700,
+            fontFamily: "var(--font-mono), ui-monospace, monospace",
+            fontVariantNumeric: "tabular-nums",
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            lineHeight: 1,
+          }}
+        >
+          {badge > 99 ? "99+" : badge}
+        </span>
+      )}
+    </button>
   );
 }
 
