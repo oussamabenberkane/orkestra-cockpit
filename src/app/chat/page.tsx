@@ -882,6 +882,21 @@ export default function AgentTestPage() {
             /* Mobile drawer always uses the full var width regardless of the
              * desktop "collapsed" preference. The slim rail is hidden below. */
             width: var(--agent-sidebar-w, 320px) !important;
+            /* Slide-in/out animation tied to data-open. Without this rule the
+             * drawer is fixed:right:0 with no visibility binding, so clicking
+             * the in-drawer close button flips state but nothing moves on
+             * screen — the "blocked on expanded" symptom. */
+            transition:
+              transform 0.26s cubic-bezier(0.22, 1, 0.36, 1),
+              box-shadow 0.26s ease !important;
+          }
+          .agent-sidebar[data-open="false"] {
+            transform: translateX(100%);
+            box-shadow: none;
+            pointer-events: none;
+          }
+          .agent-sidebar[data-open="true"] {
+            transform: translateX(0);
           }
           .agent-sidebar-scrim {
             display: block;
@@ -926,6 +941,28 @@ export default function AgentTestPage() {
            the topbar isn't hidden behind it. */
         @media (max-width: 720px) {
           .agent-column { padding-top: 4.5rem; }
+          /* Topbar must drop its stacking context on mobile so the
+           * position:fixed children below can escape to body's z-order.
+           * Both position:sticky (in some browsers) AND z-index:30 create
+           * a context that would trap them at an effective z=30, beneath
+           * the clearance bar (z=39). position:static + z-index:auto is
+           * the only combo guaranteed to NOT create a stacking context.
+           * Sticky isn't needed on mobile anyway — column doesn't scroll. */
+          .agent-topbar {
+            position: static !important;
+            z-index: auto !important;
+            padding-right: clamp(0.85rem, 2.5vw, 1.5rem);
+          }
+          /* Float the topbar's memory + history-toggle pair into the clearance
+           * band so they sit on the exact same y as the left hamburger
+           * (top:0.75rem). z:46 puts them above the clearance strip (z:39)
+           * and the hamburger (z:45), and below the drawer scrim (z:49). */
+          .agent-topbar-actions {
+            position: fixed !important;
+            top: 0.75rem;
+            right: 0.75rem;
+            z-index: 46;
+          }
         }
 
         /* Composer — focus ring lives on the wrapper via :focus-within so the
@@ -1043,7 +1080,10 @@ function TopBar({
     <header
       className="agent-topbar"
       style={{
-        minHeight: 56,
+        /* 64px keeps the memory button + history toggle visually centered at
+         * y=32 from the page top, aligning with the left hamburger's center
+         * (top:0.75rem + 40/2 = 32) and the right sidebar's collapse toggle. */
+        minHeight: 64,
         background: "var(--surface)",
         borderBottom: "1px solid var(--border)",
         display: "flex",
@@ -1099,7 +1139,10 @@ function TopBar({
         </span>
       </div>
 
-      <div style={{ display: "flex", alignItems: "center", gap: "0.45rem", flexShrink: 0 }}>
+      <div
+        className="agent-topbar-actions"
+        style={{ display: "flex", alignItems: "center", gap: "0.45rem", flexShrink: 0 }}
+      >
         <MemoryButton
           count={memoryCount}
           open={memoryDrawerOpen}
@@ -1112,37 +1155,35 @@ function TopBar({
           aria-expanded={historyOpen}
           className="agent-icon-btn agent-topbar-history-toggle"
           style={{
-            width: 36,
-            height: 36,
+            /* 40×40 + surface chrome mirrors the left hamburger so the mobile
+             * topbar reads as a balanced pair when the drawer is closed. */
+            width: 40,
+            height: 40,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            background: historyOpen ? "var(--surface-2)" : "transparent",
-            border: "1px solid",
-            borderColor: historyOpen ? "var(--border)" : "transparent",
-            borderRadius: 9,
-            color: historyOpen ? "var(--text)" : "var(--text-3)",
+            background: "var(--surface)",
+            border: "1px solid var(--border)",
+            borderRadius: 10,
+            boxShadow: "var(--tier-1)",
+            color: "var(--text)",
             cursor: "pointer",
             flexShrink: 0,
             transition: "background 0.15s, border-color 0.15s, color 0.15s",
           }}
           onMouseEnter={(e) => {
-            if (historyOpen) return;
             e.currentTarget.style.background = "var(--surface-2)";
-            e.currentTarget.style.borderColor = "var(--border)";
-            e.currentTarget.style.color = "var(--text-2)";
+            e.currentTarget.style.borderColor = "var(--border-strong)";
           }}
           onMouseLeave={(e) => {
-            if (historyOpen) return;
-            e.currentTarget.style.background = "transparent";
-            e.currentTarget.style.borderColor = "transparent";
-            e.currentTarget.style.color = "var(--text-3)";
+            e.currentTarget.style.background = "var(--surface)";
+            e.currentTarget.style.borderColor = "var(--border)";
           }}
         >
           {historyOpen ? (
-            <PanelRightClose size={16} strokeWidth={2} aria-hidden="true" />
+            <PanelRightClose size={18} strokeWidth={2.25} aria-hidden="true" />
           ) : (
-            <PanelRightOpen size={16} strokeWidth={2} aria-hidden="true" />
+            <PanelRightOpen size={18} strokeWidth={2.25} aria-hidden="true" />
           )}
         </button>
       </div>
@@ -1168,22 +1209,26 @@ function MemoryButton({
       title="Mémoire de l'agent"
       className="agent-memory-trigger"
       style={{
+        /* height:40 + topbar minHeight:64 + alignItems:center anchors the
+         * memory pill's center at y=32, identical to the hamburger and the
+         * right sidebar's collapse toggle — clean visual symmetry across
+         * the page top. */
+        height: 40,
         display: "inline-flex",
         alignItems: "center",
         gap: "0.45rem",
-        padding: "0.4rem 0.7rem 0.4rem 0.6rem",
+        padding: "0 0.85rem 0 0.7rem",
         background: open ? T.accentTint2 : T.surface,
         color: open ? T.accent : T.text2,
-        border: "none",
+        border: "1px solid",
+        borderColor: open ? T.accentTint : "var(--border)",
         borderRadius: 100,
         fontFamily: "inherit",
-        fontSize: "0.74rem",
+        fontSize: "0.78rem",
         fontWeight: 600,
         letterSpacing: "-0.005em",
         cursor: "pointer",
-        boxShadow: open
-          ? `inset 0 0 0 1px ${T.accentTint}, ${T.tier1}`
-          : T.tier1,
+        boxShadow: T.tier1,
         transition: "transform 0.18s ease, background 0.18s ease, color 0.18s ease",
         flexShrink: 0,
       }}
@@ -1194,7 +1239,7 @@ function MemoryButton({
         e.currentTarget.style.transform = "translateY(0)";
       }}
     >
-      <Brain size={13} strokeWidth={2.25} aria-hidden="true" />
+      <Brain size={15} strokeWidth={2.25} aria-hidden="true" />
       <span className="agent-memory-trigger-label">Mémoire</span>
       <span
         style={{
@@ -1489,14 +1534,17 @@ function Sidebar({
           height: "100%",
         }}
       >
-            {/* ─── Header row with collapse chevron (desktop only) ─── */}
+            {/* ─── Header row with collapse chevron (desktop only) ───
+             *     padding-top 0.75rem mirrors the left hamburger's top:0.75rem
+             *     fixed offset; combined with the 40×40 button, the toggle's
+             *     center lands at y=32, identical to the hamburger. */}
             <div
               className="agent-sidebar-header"
               style={{
                 display: "flex",
                 alignItems: "center",
                 gap: "0.5rem",
-                padding: "0.65rem 0.65rem 0",
+                padding: "0.75rem 0.5rem 0",
               }}
             >
               <button
@@ -1505,31 +1553,30 @@ function Sidebar({
                 aria-label="Replier le panneau"
                 title="Replier le panneau"
                 style={{
-                  width: 32,
-                  height: 32,
+                  width: 40,
+                  height: 40,
                   display: "inline-flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  background: "transparent",
-                  border: "1px solid transparent",
-                  borderRadius: 8,
-                  color: "var(--text-3)",
+                  background: "var(--surface)",
+                  border: "1px solid var(--border)",
+                  borderRadius: 10,
+                  boxShadow: "var(--tier-1)",
+                  color: "var(--text)",
                   cursor: "pointer",
                   flexShrink: 0,
                   transition: "background 0.15s, color 0.15s, border-color 0.15s",
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.background = "var(--surface)";
-                  e.currentTarget.style.color = "var(--text-2)";
-                  e.currentTarget.style.borderColor = "var(--border)";
+                  e.currentTarget.style.background = "var(--surface-2)";
+                  e.currentTarget.style.borderColor = "var(--border-strong)";
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.background = "transparent";
-                  e.currentTarget.style.color = "var(--text-3)";
-                  e.currentTarget.style.borderColor = "transparent";
+                  e.currentTarget.style.background = "var(--surface)";
+                  e.currentTarget.style.borderColor = "var(--border)";
                 }}
               >
-                <PanelRightClose size={16} strokeWidth={2} aria-hidden="true" />
+                <PanelRightClose size={18} strokeWidth={2.25} aria-hidden="true" />
               </button>
               <span
                 style={{
@@ -1548,8 +1595,10 @@ function Sidebar({
               </span>
             </div>
 
-            {/* ─── Solid-accent banner CTA (mirrors dashboard action banner) ─── */}
-            <div style={{ padding: "0.6rem 0.85rem 0.65rem" }}>
+            {/* ─── Solid-accent banner CTA (mirrors dashboard action banner) ───
+             * Horizontal padding 0.5rem matches the conv list's container so
+             * the CTA, search field, and chat rows share a single left edge. */}
+            <div style={{ padding: "0.5rem 0.5rem 0.55rem" }}>
               <button
                 onClick={() => {
                   onNew();
@@ -1564,45 +1613,45 @@ function Sidebar({
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "space-between",
-                  gap: "0.5rem",
-                  padding: "0.7rem 0.95rem",
+                  gap: "0.4rem",
+                  padding: "0.55rem 0.8rem",
                   background: "var(--accent)",
                   color: "#FFFFFF",
                   border: "none",
-                  borderRadius: 12,
+                  borderRadius: 10,
                   fontFamily: "inherit",
-                  fontSize: "0.82rem",
+                  fontSize: "0.78rem",
                   fontWeight: 600,
                   letterSpacing: "-0.005em",
                   cursor: "pointer",
-                  boxShadow: "0 12px 30px -14px rgba(0,122,255,0.55)",
+                  boxShadow: "0 10px 24px -12px rgba(0,122,255,0.55)",
                   transition: "transform 0.22s ease, box-shadow 0.22s ease",
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.transform = "translateY(-1px)";
-                  e.currentTarget.style.boxShadow = "0 16px 36px -14px rgba(0,122,255,0.65)";
+                  e.currentTarget.style.boxShadow = "0 14px 30px -12px rgba(0,122,255,0.65)";
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.transform = "translateY(0)";
-                  e.currentTarget.style.boxShadow = "0 12px 30px -14px rgba(0,122,255,0.55)";
+                  e.currentTarget.style.boxShadow = "0 10px 24px -12px rgba(0,122,255,0.55)";
                 }}
               >
-                <span style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem" }}>
+                <span style={{ display: "inline-flex", alignItems: "center", gap: "0.45rem" }}>
                   <span aria-hidden="true" style={{
-                    width: 22, height: 22, borderRadius: 7,
+                    width: 20, height: 20, borderRadius: 6,
                     background: "rgba(255,255,255,0.18)",
                     display: "inline-flex", alignItems: "center", justifyContent: "center",
                   }}>
-                    <Plus size={13} strokeWidth={2.5} />
+                    <Plus size={12} strokeWidth={2.5} />
                   </span>
                   Nouvelle conversation
                 </span>
-                <ChevronRight size={14} strokeWidth={2.25} style={{ opacity: 0.7 }} />
+                <ChevronRight size={12} strokeWidth={2.25} style={{ opacity: 0.7 }} />
               </button>
             </div>
 
             {/* ─── Search card (tier-1 elevation, accent-tint focus ring) ─── */}
-            <div style={{ padding: "0.1rem 0.85rem 0.65rem" }}>
+            <div style={{ padding: "0.1rem 0.5rem 0.65rem" }}>
               <div
                 className="agent-conv-search"
                 style={{
@@ -1663,7 +1712,9 @@ function Sidebar({
               </div>
             </div>
 
-            {/* ─── Mono eyebrow (matches dashboard section labels) ─── */}
+            {/* ─── Mono eyebrow (matches dashboard section labels) ───
+             * Horizontal padding aligns the label to the same left edge as
+             * the CTA, search field, and conv rows. */}
             <div
               style={{
                 fontFamily: "var(--font-mono), ui-monospace, monospace",
@@ -1672,7 +1723,7 @@ function Sidebar({
                 letterSpacing: "0.18em",
                 textTransform: "uppercase",
                 color: "var(--text-4)",
-                padding: "0.3rem 1.05rem 0.5rem",
+                padding: "0.3rem 0.7rem 0.5rem",
                 display: "flex",
                 alignItems: "center",
                 gap: "0.45rem",
@@ -1703,11 +1754,15 @@ function Sidebar({
              * minHeight:0 lets this flex child shrink below its content
              * height so overflowY:auto actually kicks in; without it the
              * list pushes the memory section + footer past the aside's
-             * overflow:hidden boundary and clips them. */}
+             * overflow:hidden boundary and clips them.
+             * overscrollBehavior:contain stops the wheel/touch scroll from
+             * propagating into the chat area behind when the user hits
+             * top/bottom inside the sidebar. */}
             <div className="agent-scroll agent-conv-list" style={{
               flex: 1,
               minHeight: 0,
               overflowY: "auto",
+              overscrollBehavior: "contain",
               padding: "0 0.5rem 0.5rem",
               display: "flex",
               flexDirection: "column",
@@ -1774,7 +1829,10 @@ function SidebarSlimRail({
         alignItems: "center",
         width: 56,
         height: "100%",
-        padding: "0.65rem 0",
+        /* padding-top 0.75rem mirrors the left hamburger's top:0.75rem; the
+         * 40×40 expand toggle below then centers at y=32, identical to the
+         * hamburger and to the in-header collapse button. */
+        padding: "0.75rem 0",
         gap: "0.45rem",
       }}
     >
@@ -1782,6 +1840,8 @@ function SidebarSlimRail({
         Icon={PanelRightOpen}
         label="Déployer le panneau"
         onClick={onExpand}
+        variant="panel"
+        iconSize={18}
       />
       <SlimRailDivider />
       <SlimRailButton
@@ -1821,14 +1881,22 @@ function SlimRailButton({
   onClick,
   badge,
   variant,
+  iconSize = 15,
 }: {
   Icon: LucideIcon | ComponentType<{ size?: number; strokeWidth?: number }>;
   label: string;
   onClick: () => void;
   badge?: number;
-  variant?: "default" | "accent";
+  /** "panel" matches the left hamburger's 40×40 chrome (surface bg +
+   *  border + radius 10 + tier-1 shadow); reserved for the expand-toggle
+   *  to anchor visual symmetry with the left sidebar. */
+  variant?: "default" | "accent" | "panel";
+  /** Override the default 15px glyph — used by the expand-toggle so it
+   *  visually matches the left sidebar's 17px chevron. */
+  iconSize?: number;
 }) {
   const isAccent = variant === "accent";
+  const isPanel = variant === "panel";
   return (
     <button
       type="button"
@@ -1837,38 +1905,62 @@ function SlimRailButton({
       title={label}
       style={{
         position: "relative",
-        width: 36,
-        height: 36,
+        width: isPanel ? 40 : 36,
+        height: isPanel ? 40 : 36,
         display: "inline-flex",
         alignItems: "center",
         justifyContent: "center",
-        background: isAccent ? "var(--accent)" : "transparent",
+        background: isAccent
+          ? "var(--accent)"
+          : isPanel
+          ? "var(--surface)"
+          : "transparent",
         border: "1px solid",
-        borderColor: isAccent ? "var(--accent-2)" : "transparent",
-        borderRadius: 9,
-        color: isAccent ? "#FFFFFF" : "var(--text-3)",
+        borderColor: isAccent
+          ? "var(--accent-2)"
+          : isPanel
+          ? "var(--border)"
+          : "transparent",
+        borderRadius: isPanel ? 10 : 9,
+        color: isAccent
+          ? "#FFFFFF"
+          : isPanel
+          ? "var(--text)"
+          : "var(--text-3)",
         cursor: "pointer",
         flexShrink: 0,
         boxShadow: isAccent
           ? "0 4px 12px -4px rgba(0,122,255,0.45)"
+          : isPanel
+          ? "var(--tier-1)"
           : "none",
         transition:
           "background 0.15s, color 0.15s, border-color 0.15s, transform 0.12s",
       }}
       onMouseEnter={(e) => {
         if (isAccent) return;
+        if (isPanel) {
+          e.currentTarget.style.background = "var(--surface-2)";
+          e.currentTarget.style.borderColor = "var(--border-strong)";
+          return;
+        }
         e.currentTarget.style.background = "var(--surface)";
         e.currentTarget.style.borderColor = "var(--border)";
         e.currentTarget.style.color = "var(--text)";
       }}
       onMouseLeave={(e) => {
         if (isAccent) return;
+        if (isPanel) {
+          e.currentTarget.style.background = "var(--surface)";
+          e.currentTarget.style.borderColor = "var(--border)";
+          return;
+        }
         e.currentTarget.style.background = "transparent";
         e.currentTarget.style.borderColor = "transparent";
         e.currentTarget.style.color = "var(--text-3)";
       }}
     >
-      <Icon size={15} strokeWidth={2.25} />
+      <Icon size={iconSize} strokeWidth={2.25} />
       {badge !== undefined && badge > 0 && !isAccent && (
         <span
           aria-hidden="true"
