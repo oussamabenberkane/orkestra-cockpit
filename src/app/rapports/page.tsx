@@ -559,7 +559,7 @@ export default function RapportsPage() {
                 </h1>
               </div>
               <p style={{ fontSize: "0.9rem", color: "var(--text-3)", margin: 0 }}>
-                {REPORTS.length} rapports disponibles · Cabinet Müller &amp; Associés
+                {REPORTS.length}{" "}rapports disponibles · Cabinet Müller &amp; Associés
               </p>
             </div>
 

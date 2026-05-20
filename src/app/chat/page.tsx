@@ -45,7 +45,6 @@ import {
   Mic,
   MicOff,
   Brain,
-  type LucideIcon,
 } from "lucide-react";
 import { Markdown } from "./markdown";
 import type { Memory, MemoryInput, MemoryKind } from "@/agent/memory/types";
@@ -436,7 +435,7 @@ export default function AgentTestPage() {
     const ta = textareaRef.current;
     if (!ta) return;
     ta.style.height = "auto";
-    ta.style.height = Math.min(ta.scrollHeight, 220) + "px";
+    ta.style.height = Math.min(ta.scrollHeight, 340) + "px";
   }, [input]);
 
   // /chat-local memory observers: after a stream resolves, the
@@ -478,16 +477,21 @@ export default function AgentTestPage() {
   // prefill the composer with its content, focus the textarea. The user
   // re-submits via Enter or the send button. Truncation is delegated to the
   // provider; setInput/focus stay local to /chat.
+  /* Inline edit-and-resend: truncates the conversation back to just before
+   * the edited user message, then resubmits the new text via `send` so the
+   * agent re-answers without the user having to retype. The UserMessage
+   * bubble owns the editing UX; this handler just performs the action. */
   const editUserMessage = useCallback(
-    (idx: number) => {
+    (idx: number, newText: string) => {
       const msg = active.messages[idx];
       if (!msg || msg.role !== "user" || !msg.id) return;
-      setInput(msg.content);
-      providerEditUserMessage(msg.id, msg.content);
-      // Defer focus so the textarea exists post-render and autogrow kicks in.
-      setTimeout(() => textareaRef.current?.focus(), 0);
+      const trimmed = newText.trim();
+      if (!trimmed) return;
+      providerEditUserMessage(msg.id);
+      /* Defer so the truncation reducer settles before we append + stream. */
+      setTimeout(() => { void send(trimmed); }, 0);
     },
-    [active.messages, providerEditUserMessage],
+    [active.messages, providerEditUserMessage, send],
   );
 
   const onSubmit = (e: FormEvent) => {
@@ -670,7 +674,7 @@ export default function AgentTestPage() {
                         }
                         onEdit={
                           m.role === "user" && !loading
-                            ? () => editUserMessage(i)
+                            ? (newText: string) => editUserMessage(i, newText)
                             : undefined
                         }
                       />
@@ -872,17 +876,22 @@ export default function AgentTestPage() {
         /* Composer — focus ring lives on the wrapper via :focus-within so the
            ring follows the textarea, mic, and send button as one cohesive
            field. Keeps the click-zone obvious for keyboard users. */
-        .agent-composer { transition: box-shadow 0.2s ease; }
+        .agent-composer { transition: box-shadow 0.2s ease, border-color 0.2s ease; }
         .agent-composer:focus-within {
+          /* Soft accent border + 3px halo on focus — replaces the prior heavy
+           * 4-layer shadow. Stays consistent with the frosted resting state. */
+          border-color: var(--accent) !important;
           box-shadow:
-            inset 0 1px 0 rgba(255,255,255,1),
-            0 0 0 1px rgba(0,0,0,0.04),
-            0 1px 2px rgba(0,0,0,0.05),
-            0 6px 16px -10px rgba(0,0,0,0.12),
-            0 0 0 4px ${T.accentTint2};
+            0 0 0 3px var(--accent-tint),
+            0 1px 2px rgba(0,0,0,0.03),
+            0 8px 24px -10px rgba(0,0,0,0.08),
+            0 20px 48px -24px rgba(0,0,0,0.10);
         }
         textarea.agent-input::placeholder { color: ${T.text4}; }
         textarea.agent-input:disabled { cursor: not-allowed; opacity: 0.6; }
+        /* Hide the textarea scrollbar — pairs with scrollbarWidth: "none" in
+         * the inline style. Scrolling still works; the bar just doesn't render. */
+        textarea.agent-input::-webkit-scrollbar { display: none; }
 
         /* Hide the keyboard hint on narrow screens — the kbd glyphs aren't
            useful on touch devices that don't have a real Enter key. */
@@ -1557,14 +1566,14 @@ function Sidebar({
               )}
             </div>
 
-            {/* ─── Conversation cards (tier-1 elevated rows, hover-lift) ─── */}
+            {/* ─── Flat conversation list (sober, no per-row shadow) ─── */}
             <div className="agent-scroll agent-conv-list" style={{
               flex: 1,
               overflowY: "auto",
-              padding: "0 0.85rem 0.85rem",
+              padding: "0 0.5rem 0.5rem",
               display: "flex",
               flexDirection: "column",
-              gap: "0.4rem",
+              gap: 1,
             }}>
               {filteredConvs.length === 0 ? (
                 <div
@@ -1572,9 +1581,6 @@ function Sidebar({
                     padding: "0.85rem 0.9rem",
                     fontSize: "0.78rem",
                     color: "var(--text-4)",
-                    background: "var(--surface)",
-                    border: "1px dashed var(--border-strong)",
-                    borderRadius: 10,
                     textAlign: "center",
                   }}
                 >
@@ -1602,42 +1608,8 @@ function Sidebar({
 
             </div>
 
-            {/* ─── Footer tile strip (3 tier-1 chips: tools / dataset / model) ─── */}
-            <div
-              style={{
-                padding: "0.7rem 0.85rem calc(0.85rem + env(safe-area-inset-bottom, 0px))",
-                display: "grid",
-                gridTemplateColumns: model && datasetLabel ? "1fr 1fr" : "1fr",
-                gap: "0.4rem",
-                borderTop: "1px solid var(--border)",
-              }}
-            >
-              <FooterChip
-                Icon={Wrench}
-                iconColor="var(--accent)"
-                label="8 outils"
-                sub="KPI · SQL · mémoire"
-              />
-              {datasetLabel && (
-                <FooterChip
-                  Icon={Database}
-                  iconColor="var(--info)"
-                  label="Données"
-                  sub={datasetLabel}
-                  mono
-                />
-              )}
-              {model && (
-                <FooterChip
-                  Icon={Cpu}
-                  iconColor="var(--purple)"
-                  label="Modèle"
-                  sub={model}
-                  mono
-                  spanFull={!datasetLabel}
-                />
-              )}
-            </div>
+            {/* ─── Usage + sync footer (replaces tools/dataset/model strip) ─── */}
+            <UsageFooter datasetLabel={datasetLabel} />
       </div>
     </aside>
   );
@@ -1673,10 +1645,10 @@ function ConvRow({
     conv.messages.length > 0
       ? conv.messages[conv.messages.length - 1].ts ?? conv.createdAt
       : conv.createdAt;
-  /* Each conversation row is an elevated card — same plinth tier-1 / tier-2
-   * elevation rhythm as the dashboard tiles. Active state uses a left
-   * accent rail + tier-2 + accent-tint background for a clear "selected"
-   * read; hover lifts the card -1px and bumps to tier-2 transiently. */
+  /* Sober, flat row — no per-row card, no shadow, no accent rail. Hover and
+   * active states use only a soft fill (--surface-3 on hover, --surface on
+   * active) so the rail feels editorial rather than tile-heavy. The icon
+   * stays small and inline, no chip background. */
   return (
     <div
       onMouseEnter={() => setHover(true)}
@@ -1688,14 +1660,12 @@ function ConvRow({
         gridTemplateColumns: "auto minmax(0, 1fr) auto",
         alignItems: "center",
         gap: "0.55rem",
-        padding: "0.6rem 0.7rem 0.6rem 0.85rem",
-        background: active ? "var(--accent-tint)" : "var(--surface)",
-        borderRadius: 10,
+        padding: "0.45rem 0.55rem",
+        background:
+          active ? "var(--surface)" : hover ? "var(--surface-3)" : "transparent",
+        borderRadius: 8,
         cursor: "pointer",
-        boxShadow: active ? "var(--tier-2)" : "var(--tier-1)",
-        transition:
-          "background 0.18s ease, box-shadow 0.22s ease, transform 0.18s ease",
-        transform: hover && !active ? "translateY(-1px)" : "translateY(0)",
+        transition: "background 0.15s ease, color 0.15s ease",
       }}
       onClick={onSelect}
       role="button"
@@ -1708,41 +1678,16 @@ function ConvRow({
         }
       }}
     >
-      {/* Active-state left accent rail */}
-      {active && (
-        <span
-          aria-hidden="true"
-          style={{
-            position: "absolute",
-            left: 0,
-            top: 8,
-            bottom: 8,
-            width: 3,
-            background: "var(--accent)",
-            borderRadius: "0 2px 2px 0",
-          }}
-        />
-      )}
-      <span
+      <MessageSquare
+        size={13}
+        strokeWidth={2}
+        color={active ? "var(--accent)" : "var(--text-3)"}
+        style={{ flexShrink: 0 }}
         aria-hidden="true"
-        style={{
-          width: 26,
-          height: 26,
-          borderRadius: 7,
-          display: "inline-flex",
-          alignItems: "center",
-          justifyContent: "center",
-          background: active ? "var(--accent)" : "var(--accent-tint)",
-          color: active ? "#FFFFFF" : "var(--accent)",
-          flexShrink: 0,
-          transition: "background 0.18s ease, color 0.18s ease",
-        }}
-      >
-        <MessageSquare size={13} strokeWidth={2.25} />
-      </span>
+      />
       <span
         style={{
-          fontSize: "0.84rem",
+          fontSize: "0.82rem",
           color: active ? "var(--text)" : "var(--text-2)",
           fontWeight: active ? 600 : 500,
           letterSpacing: "-0.005em",
@@ -1754,119 +1699,204 @@ function ConvRow({
       >
         {conv.title}
       </span>
-      {hover ? (
+      {/* Reserved-slot pattern: timestamp + trash sit in the same 22-tall
+       * area; hover crossfades them so the row never reflows vertically. */}
+      <span
+        style={{
+          position: "relative",
+          width: 32,
+          height: 22,
+          display: "inline-flex",
+          alignItems: "center",
+          justifyContent: "flex-end",
+          flexShrink: 0,
+        }}
+      >
+        <span
+          aria-hidden="true"
+          style={{
+            fontSize: "0.66rem",
+            fontFamily: "var(--font-mono), ui-monospace, monospace",
+            color: "var(--text-4)",
+            whiteSpace: "nowrap",
+            fontVariantNumeric: "tabular-nums",
+            opacity: hover ? 0 : active ? 0.9 : 0.7,
+            transition: "opacity 0.15s ease",
+            pointerEvents: "none",
+          }}
+        >
+          {relTime(lastTs)}
+        </span>
         <button
           onClick={(e) => {
             e.stopPropagation();
             onDelete();
           }}
           aria-label="Supprimer la conversation"
+          tabIndex={hover ? 0 : -1}
           style={{
-            width: 24,
-            height: 24,
+            position: "absolute",
+            right: 0,
+            top: 0,
+            width: 22,
+            height: 22,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            background: "var(--surface-2)",
+            background: "transparent",
             border: "none",
-            color: "var(--text-3)",
+            color: "var(--text-4)",
             cursor: "pointer",
-            borderRadius: 6,
-            transition: "background 0.12s, color 0.12s",
-            flexShrink: 0,
+            borderRadius: 5,
+            opacity: hover ? 1 : 0,
+            pointerEvents: hover ? "auto" : "none",
+            transition: "opacity 0.15s ease, background 0.12s, color 0.12s",
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.background = "var(--danger-tint)";
+            e.currentTarget.style.background = "var(--surface)";
             e.currentTarget.style.color = "var(--danger)";
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.background = "var(--surface-2)";
-            e.currentTarget.style.color = "var(--text-3)";
+            e.currentTarget.style.background = "transparent";
+            e.currentTarget.style.color = "var(--text-4)";
           }}
         >
-          <Trash2 size={12} strokeWidth={2.25} aria-hidden="true" />
+          <Trash2 size={11} strokeWidth={2} aria-hidden="true" />
         </button>
-      ) : (
-        <span
-          aria-hidden="true"
-          style={{
-            fontSize: "0.66rem",
-            fontFamily: "var(--font-mono), ui-monospace, monospace",
-            color: active ? "var(--accent)" : "var(--text-4)",
-            whiteSpace: "nowrap",
-            fontVariantNumeric: "tabular-nums",
-            fontWeight: active ? 600 : 500,
-            flexShrink: 0,
-          }}
-        >
-          {relTime(lastTs)}
-        </span>
-      )}
+      </span>
     </div>
   );
 }
 
-/* Footer chip used in the sidebar's bottom strip — small tier-1 card that
- * mirrors the dashboard's CompactStat rhythm: icon chip + label + sub. */
-function FooterChip({
-  Icon,
-  iconColor,
-  label,
-  sub,
-  mono = false,
-  spanFull = false,
-}: {
-  Icon: LucideIcon;
-  iconColor: string;
-  label: string;
-  sub: string;
-  mono?: boolean;
-  spanFull?: boolean;
-}) {
+/* Usage + sync footer — replaces the old tools/dataset/model strip. Surfaces
+ * what's actually operational for the client: monthly question quota with a
+ * mini progress bar + last sync of the underlying data sources. Mock counts
+ * for now; swap to real quota state when the backend exposes it. */
+function UsageFooter({ datasetLabel }: { datasetLabel: string | null }) {
+  const used = 47;
+  const cap = 500;
+  const pct = Math.min(100, (used / cap) * 100);
+  /* Read sync intervals from the dataset label when present, otherwise show
+   * a sensible default that matches the dashboard's source pills. */
   return (
-    <div style={{
-      display: "flex",
-      alignItems: "center",
-      gap: "0.45rem",
-      padding: "0.5rem 0.6rem",
-      background: "var(--surface)",
-      borderRadius: 8,
-      boxShadow: "var(--tier-1)",
-      minWidth: 0,
-      gridColumn: spanFull ? "1 / -1" : undefined,
-    }}>
-      <span aria-hidden="true" style={{
-        width: 20,
-        height: 20,
-        borderRadius: 5,
-        display: "inline-flex",
-        alignItems: "center",
-        justifyContent: "center",
-        background: "var(--surface-2)",
-        color: iconColor,
-        flexShrink: 0,
+    <div
+      style={{
+        padding: "0.75rem 0.85rem calc(0.9rem + env(safe-area-inset-bottom, 0px))",
+        display: "flex",
+        flexDirection: "column",
+        gap: "0.55rem",
+        borderTop: "1px solid var(--border)",
+      }}
+    >
+      {/* Quota card */}
+      <div style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: "0.4rem",
+        padding: "0.6rem 0.7rem 0.65rem",
+        background: "var(--surface)",
+        borderRadius: 9,
+        boxShadow: "var(--tier-1)",
       }}>
-        <Icon size={11} strokeWidth={2.25} />
-      </span>
-      <div style={{ display: "flex", flexDirection: "column", minWidth: 0, lineHeight: 1.2 }}>
-        <span style={{
-          fontSize: "0.58rem",
-          fontWeight: 700,
-          letterSpacing: "0.08em",
-          textTransform: "uppercase",
-          color: "var(--text-4)",
-        }}>{label}</span>
-        <span style={{
-          fontSize: "0.7rem",
-          color: "var(--text-2)",
-          fontFamily: mono ? "var(--font-mono), ui-monospace, monospace" : "inherit",
-          fontWeight: mono ? 500 : 600,
-          fontVariantNumeric: mono ? "tabular-nums" : undefined,
+        <div style={{
+          display: "flex",
+          alignItems: "baseline",
+          justifyContent: "space-between",
+          gap: "0.5rem",
+        }}>
+          <span style={{
+            fontFamily: "var(--font-mono), ui-monospace, monospace",
+            fontSize: "0.58rem",
+            fontWeight: 700,
+            letterSpacing: "0.14em",
+            textTransform: "uppercase",
+            color: "var(--text-4)",
+          }}>Questions ce mois</span>
+          <span style={{
+            fontFamily: "var(--font-mono), ui-monospace, monospace",
+            fontSize: "0.74rem",
+            fontWeight: 600,
+            color: "var(--text-2)",
+            fontVariantNumeric: "tabular-nums",
+          }}>
+            <span style={{ color: "var(--accent)" }}>{used}</span>
+            <span style={{ color: "var(--text-4)" }}> / {cap}</span>
+          </span>
+        </div>
+        <div aria-hidden="true" style={{
+          position: "relative",
+          height: 4,
+          background: "var(--surface-3)",
+          borderRadius: 999,
           overflow: "hidden",
-          textOverflow: "ellipsis",
-          whiteSpace: "nowrap",
-        }}>{sub}</span>
+        }}>
+          <span style={{
+            position: "absolute",
+            inset: "0 auto 0 0",
+            width: `${pct}%`,
+            background: "var(--accent)",
+            borderRadius: 999,
+            transition: "width 0.4s ease",
+          }} />
+        </div>
       </div>
+
+      {/* Sync status card */}
+      <div style={{
+        display: "flex",
+        alignItems: "center",
+        gap: "0.5rem",
+        padding: "0.5rem 0.7rem",
+        background: "var(--surface)",
+        borderRadius: 9,
+        boxShadow: "var(--tier-1)",
+        minWidth: 0,
+      }}>
+        <span aria-hidden="true" style={{
+          width: 6, height: 6, borderRadius: "50%",
+          background: "var(--success)",
+          boxShadow: "0 0 0 3px var(--success-tint)",
+          flexShrink: 0,
+        }} />
+        <div style={{
+          display: "flex",
+          flexDirection: "column",
+          minWidth: 0,
+          lineHeight: 1.2,
+        }}>
+          <span style={{
+            fontFamily: "var(--font-mono), ui-monospace, monospace",
+            fontSize: "0.58rem",
+            fontWeight: 700,
+            letterSpacing: "0.14em",
+            textTransform: "uppercase",
+            color: "var(--text-4)",
+          }}>Données à jour</span>
+          <span style={{
+            fontSize: "0.7rem",
+            color: "var(--text-2)",
+            fontWeight: 500,
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+          }}>
+            BrokerStar · 3 min · Odoo · 5 min
+          </span>
+        </div>
+      </div>
+
+      {datasetLabel && (
+        <div style={{
+          fontSize: "0.62rem",
+          color: "var(--text-4)",
+          fontFamily: "var(--font-mono), ui-monospace, monospace",
+          fontVariantNumeric: "tabular-nums",
+          textAlign: "center",
+          opacity: 0.8,
+        }}>
+          {datasetLabel}
+        </div>
+      )}
     </div>
   );
 }
@@ -2955,31 +2985,34 @@ function Welcome({
   onPick: (text: string) => void;
   loading: boolean;
 }) {
+  /* Compact landing — every element scales down enough that on a typical
+   * 720–1080px viewport the user sees the eyebrow, heading, paragraph, all
+   * three suggestion cards AND the composer below without scrolling. */
   return (
     <motion.div
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
       className="agent-welcome"
-      style={{ paddingTop: "clamp(0.5rem, 4vh, 2.5rem)" }}
+      style={{ paddingTop: "clamp(0.25rem, 1.5vh, 0.85rem)" }}
     >
       {/* ─── Mono eyebrow (dashboard section-label style) ─── */}
       <div
         style={{
           display: "flex",
           alignItems: "center",
-          gap: "0.6rem",
+          gap: "0.55rem",
           fontFamily: "var(--font-mono), ui-monospace, monospace",
-          fontSize: "clamp(0.6rem, 1.7vw, 0.66rem)",
+          fontSize: "clamp(0.58rem, 1.5vw, 0.64rem)",
           fontWeight: 700,
           letterSpacing: "0.18em",
           textTransform: "uppercase",
           color: "var(--accent)",
-          marginBottom: "0.85rem",
+          marginBottom: "0.55rem",
         }}
       >
         <span aria-hidden="true" style={{
-          width: 18, height: 1,
+          width: 16, height: 1,
           background: "var(--accent)",
           opacity: 0.45,
         }} />
@@ -2987,27 +3020,27 @@ function Welcome({
         <span>Agent · Cabinet Müller</span>
       </div>
 
-      {/* ─── Editorial display heading + paragraph ─── */}
+      {/* ─── Editorial display heading + paragraph (compacted) ─── */}
       <h1
         style={{
-          fontSize: "clamp(1.75rem, 4.4vw, 2.4rem)",
+          fontSize: "clamp(1.35rem, 3.4vw, 1.85rem)",
           fontWeight: 700,
-          letterSpacing: "-0.03em",
-          lineHeight: 1.1,
+          letterSpacing: "-0.025em",
+          lineHeight: 1.12,
           color: "var(--text)",
-          margin: "0 0 0.7rem",
-          maxWidth: "22ch",
+          margin: "0 0 0.45rem",
+          maxWidth: "24ch",
         }}
       >
         Que voulez-vous savoir sur le cabinet&nbsp;?
       </h1>
       <p
         style={{
-          fontSize: "clamp(0.92rem, 2vw, 1rem)",
+          fontSize: "clamp(0.84rem, 1.8vw, 0.92rem)",
           color: "var(--text-3)",
-          lineHeight: 1.55,
-          margin: "0 0 clamp(1.5rem, 3.5vw, 2.25rem)",
-          maxWidth: "58ch",
+          lineHeight: 1.5,
+          margin: "0 0 clamp(0.95rem, 2.2vw, 1.35rem)",
+          maxWidth: "60ch",
         }}
       >
         L&apos;agent connaît les <strong style={{ color: "var(--text-2)" }}>50 clients</strong>,{" "}
@@ -3016,22 +3049,20 @@ function Welcome({
         Chiffres exacts, jamais d&apos;invention.
       </p>
 
-      {/* ─── Section header bar: eyebrow + helper text on the right ─── */}
+      {/* ─── Tight section bar (no border, no helper line below) ─── */}
       <div
         style={{
           display: "flex",
           alignItems: "baseline",
           justifyContent: "space-between",
-          gap: "0.75rem",
-          marginBottom: "0.75rem",
-          paddingBottom: "0.55rem",
-          borderBottom: "1px solid var(--border)",
+          gap: "0.6rem",
+          marginBottom: "0.55rem",
         }}
       >
         <div
           style={{
             fontFamily: "var(--font-mono), ui-monospace, monospace",
-            fontSize: "clamp(0.6rem, 1.7vw, 0.66rem)",
+            fontSize: "clamp(0.58rem, 1.5vw, 0.64rem)",
             fontWeight: 700,
             letterSpacing: "0.18em",
             textTransform: "uppercase",
@@ -3041,12 +3072,13 @@ function Welcome({
           Pour démarrer
         </div>
         <div
+          className="agent-welcome-helper"
           style={{
-            fontSize: "0.7rem",
+            fontSize: "0.68rem",
             color: "var(--text-4)",
           }}
         >
-          Cliquez une suggestion · ou tapez votre question
+          Cliquez une suggestion · ou tapez
         </div>
       </div>
 
@@ -3055,7 +3087,7 @@ function Welcome({
         style={{
           display: "grid",
           gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-          gap: "clamp(0.6rem, 1.5vw, 0.85rem)",
+          gap: "clamp(0.5rem, 1.3vw, 0.7rem)",
         }}
       >
         {SUGGESTIONS.map((s, i) => (
@@ -3089,8 +3121,8 @@ function SuggestionCard({
         display: "flex",
         flexDirection: "column",
         alignItems: "stretch",
-        gap: "0.55rem",
-        padding: "clamp(0.85rem, 2.2vw, 1.05rem) clamp(0.9rem, 2.4vw, 1.1rem) clamp(0.8rem, 2vw, 0.95rem)",
+        gap: "0.4rem",
+        padding: "clamp(0.65rem, 1.8vw, 0.85rem) clamp(0.7rem, 1.9vw, 0.95rem) clamp(0.6rem, 1.6vw, 0.8rem)",
         background: "var(--surface)",
         border: "none",
         borderRadius: 12,
@@ -3103,7 +3135,7 @@ function SuggestionCard({
         color: "inherit",
         position: "relative",
         overflow: "hidden",
-        minHeight: 118,
+        minHeight: 92,
       }}
       onMouseEnter={(e) => {
         if (disabled) return;
@@ -3125,15 +3157,15 @@ function SuggestionCard({
         if (icon) icon.style.transform = "rotate(0) scale(1)";
       }}
     >
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "0.55rem" }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "0.5rem" }}>
         <span
           data-suggest-icon
           style={{
-            width: 30,
-            height: 30,
+            width: 26,
+            height: 26,
             background: "var(--accent-tint-2)",
             color: "var(--accent)",
-            borderRadius: 9,
+            borderRadius: 7,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -3143,13 +3175,13 @@ function SuggestionCard({
           }}
           aria-hidden="true"
         >
-          <s.Icon size={14} strokeWidth={2.25} />
+          <s.Icon size={13} strokeWidth={2.25} />
         </span>
-        <ChevronRight size={13} strokeWidth={2.25} color="var(--text-4)" aria-hidden="true" />
+        <ChevronRight size={12} strokeWidth={2.25} color="var(--text-4)" aria-hidden="true" />
       </div>
       <div
         style={{
-          fontSize: "clamp(0.86rem, 2vw, 0.92rem)",
+          fontSize: "clamp(0.8rem, 1.8vw, 0.88rem)",
           fontWeight: 600,
           color: "var(--text)",
           letterSpacing: "-0.01em",
@@ -3159,9 +3191,9 @@ function SuggestionCard({
         {s.title}
       </div>
       <div style={{
-        fontSize: "clamp(0.72rem, 1.7vw, 0.78rem)",
+        fontSize: "clamp(0.68rem, 1.6vw, 0.74rem)",
         color: "var(--text-3)",
-        lineHeight: 1.45,
+        lineHeight: 1.4,
       }}>{s.hint}</div>
     </motion.button>
   );
@@ -3176,21 +3208,64 @@ function MessageBubble({
 }: {
   message: Message;
   onMemorise?: () => void;
-  onEdit?: () => void;
+  onEdit?: (newText: string) => void;
 }) {
   const isUser = message.role === "user";
   if (isUser) return <UserMessage message={message} onEdit={onEdit} />;
   return <AssistantMessage message={message} onMemorise={onMemorise} />;
 }
 
+/* User message bubble — solid accent chip that shrink-wraps to its content
+ * (chip sizing matches Claude's behaviour). Editing is inline: clicking the
+ * Modifier button morphs the chip into an in-place textarea with Save /
+ * Cancel actions, no jump to the bottom composer. */
 function UserMessage({
   message,
   onEdit,
 }: {
   message: Message;
-  onEdit?: () => void;
+  onEdit?: (newText: string) => void;
 }) {
   const [hover, setHover] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(message.content);
+  const editorRef = useRef<HTMLTextAreaElement | null>(null);
+
+  /* Focus + autosize on entering edit mode. */
+  useEffect(() => {
+    if (!editing) return;
+    const ta = editorRef.current;
+    if (!ta) return;
+    ta.focus();
+    ta.setSelectionRange(ta.value.length, ta.value.length);
+    ta.style.height = "auto";
+    ta.style.height = Math.min(ta.scrollHeight, 320) + "px";
+  }, [editing]);
+
+  const canEdit = !!onEdit;
+  const trimmedDraft = draft.trim();
+  const canSave =
+    editing &&
+    trimmedDraft.length > 0 &&
+    trimmedDraft !== message.content.trim();
+
+  const startEdit = () => {
+    setDraft(message.content);
+    setEditing(true);
+  };
+  const cancelEdit = () => {
+    setDraft(message.content);
+    setEditing(false);
+  };
+  const saveEdit = () => {
+    if (!canSave) return;
+    onEdit?.(trimmedDraft);
+    setEditing(false);
+  };
+
+  const bubbleShadow =
+    "inset 0 1px 0 rgba(255,255,255,0.20), 0 0 0 1px rgba(0,98,204,0.25), 0 8px 20px -10px rgba(0,122,255,0.40)";
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 6 }}
@@ -3200,7 +3275,28 @@ function UserMessage({
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
     >
-      <div data-user-bubble style={{ maxWidth: "78%" }}>
+      {/* alignItems: flex-end on the column lets each child (eyebrow row,
+       * bubble) hug the right edge while still living in a stable-width
+       * track. The track itself never resizes — only the inner chip/editor
+       * crossfade — so the view↔edit transition stays flicker-free. */}
+      <div
+        data-user-bubble
+        style={{
+          maxWidth: "78%",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "flex-end",
+          minWidth: 0,
+          /* Always the editor's target width so the chip mode doesn't
+           * collapse the wrapper. The chip uses fit-content + alignSelf
+           * = flex-end to stay right-anchored within this wider track. */
+          width: "min(640px, 100%)",
+        }}
+      >
+        {/* Eyebrow with Modifier button. Always rendered with a reserved
+         * height; we only toggle visibility/opacity in edit mode so the
+         * column height stays constant and the chip↔editor crossfade has
+         * no vertical reflow to fight. */}
         <div
           style={{
             display: "flex",
@@ -3213,13 +3309,20 @@ function UserMessage({
             textTransform: "uppercase",
             color: T.text4,
             marginBottom: "0.35rem",
+            minHeight: 22,
+            opacity: editing ? 0 : 1,
+            visibility: editing ? "hidden" : "visible",
+            transition: "opacity 0.18s ease",
           }}
         >
-          {onEdit && hover && (
-            <button
-              onClick={onEdit}
+          {canEdit && !editing && (
+            <motion.button
+              onClick={startEdit}
               aria-label="Modifier et renvoyer"
               title="Modifier et renvoyer"
+              tabIndex={hover ? 0 : -1}
+              whileTap={{ scale: 0.94 }}
+              transition={{ duration: 0.1 }}
               style={{
                 display: "inline-flex",
                 alignItems: "center",
@@ -3235,7 +3338,9 @@ function UserMessage({
                 cursor: "pointer",
                 textTransform: "none",
                 letterSpacing: 0,
-                transition: "background 0.12s, color 0.12s, border-color 0.12s",
+                opacity: hover ? 1 : 0,
+                pointerEvents: hover ? "auto" : "none",
+                transition: "opacity 0.18s ease, background 0.12s, color 0.12s, border-color 0.12s",
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.background = T.accentTint2;
@@ -3250,27 +3355,230 @@ function UserMessage({
             >
               <Pencil size={10} strokeWidth={2.25} />
               Modifier
-            </button>
+            </motion.button>
           )}
           <span>Vous</span>
         </div>
-        <div
-          style={{
-            background: T.gradient,
-            color: "#FFFFFF",
-            padding: "0.8rem 1.05rem",
-            borderRadius: "14px 14px 4px 14px",
-            fontSize: "0.92rem",
-            lineHeight: 1.55,
-            whiteSpace: "pre-wrap",
-            wordBreak: "break-word",
-            letterSpacing: "-0.005em",
-            boxShadow:
-              "inset 0 1px 0 rgba(255,255,255,0.20), 0 0 0 1px rgba(0,98,204,0.25), 0 8px 20px -10px rgba(0,122,255,0.40)",
-          }}
-        >
-          {message.content}
-        </div>
+
+        {/* In-place crossfade between view (chip) and edit (nested card).
+         *   mode="popLayout" — the exiting element is taken out of flow
+         *   so the entering element can mount in the same spot without
+         *   waiting. No `layout` prop on the children: we don't want
+         *   framer-motion to interpolate the exiting editor's rect toward
+         *   the smaller chip — that's what was producing the downward
+         *   slide-and-fade. Each element just fades in/out in place. */}
+        <AnimatePresence mode="popLayout" initial={false}>
+          {!editing && (
+            <motion.div
+              key="view"
+              initial={{ opacity: 0, scale: 0.98 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.98 }}
+              transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+              style={{
+                background: "var(--accent)",
+                color: "#FFFFFF",
+                padding: "0.8rem 1.05rem",
+                borderRadius: "14px 14px 4px 14px",
+                fontSize: "0.92rem",
+                lineHeight: 1.55,
+                whiteSpace: "pre-wrap",
+                wordBreak: "break-word",
+                letterSpacing: "-0.005em",
+                boxShadow: bubbleShadow,
+                width: "fit-content",
+                maxWidth: "100%",
+                /* Right-anchor: the chip sits on the right edge of its column,
+                 * so morphing from/to its position should pivot there. */
+                transformOrigin: "top right",
+              }}
+            >
+              {message.content}
+            </motion.div>
+          )}
+
+          {/* Edit mode — nested two-layer card to match Claude's pattern:
+           *   outer  = warm gray container (var(--surface-2)) with soft shadow
+           *   inner  = white textarea with a thin accent border (active input)
+           *   footer = sits on the warm container surface, no divider line
+           * Accent blue is scoped to the inner border + Enregistrer CTA only. */}
+          {editing && (
+            <motion.div
+              key="edit"
+              initial={{ opacity: 0, scale: 0.98 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.98 }}
+              transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+              style={{
+                background: "var(--surface-2)",
+                color: "var(--text)",
+                padding: "0.6rem 0.6rem 0.65rem",
+                borderRadius: 16,
+                border: "1px solid var(--border-strong)",
+                boxShadow:
+                  "0 1px 2px rgba(0,0,0,0.03), 0 8px 24px -10px rgba(0,0,0,0.08), 0 20px 48px -24px rgba(0,0,0,0.10)",
+                width: "100%",
+                display: "flex",
+                flexDirection: "column",
+                gap: "0.55rem",
+                transformOrigin: "top right",
+              }}
+            >
+            {/* Inner white textarea card — thin blue border signals "active". */}
+            <div
+              style={{
+                background: "var(--surface)",
+                borderRadius: 12,
+                border: "1px solid var(--accent)",
+                padding: "0.85rem 1rem",
+              }}
+            >
+              <textarea
+                ref={editorRef}
+                value={draft}
+                onChange={(e) => {
+                  setDraft(e.target.value);
+                  const ta = e.currentTarget;
+                  ta.style.height = "auto";
+                  ta.style.height = Math.min(ta.scrollHeight, 320) + "px";
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Escape") {
+                    e.preventDefault();
+                    cancelEdit();
+                  } else if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+                    e.preventDefault();
+                    saveEdit();
+                  }
+                }}
+                aria-label="Modifier votre message"
+                style={{
+                  width: "100%",
+                  resize: "none",
+                  background: "transparent",
+                  border: "none",
+                  outline: "none",
+                  color: "var(--text)",
+                  fontFamily: "inherit",
+                  fontSize: "0.98rem",
+                  fontWeight: 500,
+                  lineHeight: 1.55,
+                  letterSpacing: "-0.005em",
+                  padding: 0,
+                  minHeight: 28,
+                  maxHeight: 320,
+                  scrollbarWidth: "none",
+                  caretColor: "var(--accent)",
+                  display: "block",
+                }}
+              />
+            </div>
+
+            {/* Footer sits on the warm container surface — no divider line. */}
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "flex-end",
+                alignItems: "center",
+                gap: "0.5rem",
+                padding: "0.05rem 0.25rem 0.05rem 0.4rem",
+              }}
+            >
+              <span
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "0.4rem",
+                  fontSize: "0.7rem",
+                  color: "var(--text-3)",
+                  marginRight: "auto",
+                  letterSpacing: 0,
+                  textTransform: "none",
+                  fontWeight: 400,
+                  lineHeight: 1.4,
+                }}
+              >
+                <CircleAlert
+                  size={12}
+                  strokeWidth={2}
+                  color="var(--text-4)"
+                  aria-hidden="true"
+                  style={{ flexShrink: 0 }}
+                />
+                <span>
+                  Échap pour annuler · ⌘/Ctrl + ↵ pour renvoyer
+                </span>
+              </span>
+              <motion.button
+                type="button"
+                onClick={cancelEdit}
+                whileTap={{ scale: 0.96 }}
+                transition={{ duration: 0.12 }}
+                style={{
+                  padding: "0.45rem 0.95rem",
+                  background: "var(--surface)",
+                  border: "1px solid var(--border-strong)",
+                  borderRadius: 8,
+                  color: "var(--text-2)",
+                  fontFamily: "inherit",
+                  fontSize: "0.78rem",
+                  fontWeight: 500,
+                  cursor: "pointer",
+                  transition: "background 0.15s ease, color 0.15s ease, border-color 0.15s ease",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = "var(--surface-2)";
+                  e.currentTarget.style.color = "var(--text)";
+                  e.currentTarget.style.borderColor = "var(--text-4)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = "var(--surface)";
+                  e.currentTarget.style.color = "var(--text-2)";
+                  e.currentTarget.style.borderColor = "var(--border-strong)";
+                }}
+              >
+                Annuler
+              </motion.button>
+              <motion.button
+                type="button"
+                onClick={saveEdit}
+                disabled={!canSave}
+                whileTap={canSave ? { scale: 0.96 } : undefined}
+                transition={{ duration: 0.12 }}
+                style={{
+                  padding: "0.45rem 1rem",
+                  background: canSave ? "var(--accent)" : "var(--surface-3)",
+                  border: "1px solid",
+                  borderColor: canSave ? "var(--accent-2)" : "var(--border-strong)",
+                  borderRadius: 8,
+                  color: canSave ? "#FFFFFF" : "var(--text-4)",
+                  fontFamily: "inherit",
+                  fontSize: "0.78rem",
+                  fontWeight: 600,
+                  cursor: canSave ? "pointer" : "not-allowed",
+                  letterSpacing: "-0.005em",
+                  boxShadow: canSave
+                    ? "0 1px 2px rgba(0,98,204,0.18), 0 4px 12px -4px rgba(0,122,255,0.35)"
+                    : "none",
+                  transition: "background 0.15s ease, box-shadow 0.15s ease",
+                }}
+                onMouseEnter={(e) => {
+                  if (!canSave) return;
+                  e.currentTarget.style.boxShadow =
+                    "0 1px 2px rgba(0,98,204,0.18), 0 8px 18px -6px rgba(0,122,255,0.45)";
+                }}
+                onMouseLeave={(e) => {
+                  if (!canSave) return;
+                  e.currentTarget.style.boxShadow =
+                    "0 1px 2px rgba(0,98,204,0.18), 0 4px 12px -4px rgba(0,122,255,0.35)";
+                }}
+              >
+                Enregistrer
+              </motion.button>
+            </div>
+          </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </motion.div>
   );
@@ -3923,10 +4231,16 @@ function Composer({
             style={{
               position: "relative",
               background: "var(--surface)",
-              border: "none",
-              borderRadius: 12,
-              transition: "box-shadow 0.2s ease",
-              boxShadow: "var(--tier-1)",
+              /* Hair-thin neutral border. The visual presence comes from the
+               * soft, wide drop-shadow (frosted halo) below — not the border. */
+              border: "1px solid var(--border-strong)",
+              borderRadius: 16,
+              transition: "box-shadow 0.2s ease, border-color 0.2s ease",
+              /* Soft "frosted" shadow — wide blur radius, low opacity gives
+               * the card a faint glow on the sides without darkening below
+               * (matches the Claude composer treatment). */
+              boxShadow:
+                "0 1px 2px rgba(0,0,0,0.03), 0 8px 24px -10px rgba(0,0,0,0.08), 0 20px 48px -24px rgba(0,0,0,0.10)",
             }}
           >
             <textarea
@@ -3946,14 +4260,19 @@ function Composer({
                 border: "none",
                 outline: "none",
                 fontFamily: "inherit",
-                fontSize: "0.95rem",
-                lineHeight: 1.5,
+                fontSize: "0.98rem",
+                fontWeight: 500,
+                lineHeight: 1.55,
                 color: T.text,
+                /* Roomier top padding so the placeholder sits high in the
+                 * field, plus a deeper bottom inset for the action buttons.
+                 * Mirrors Claude's tall, generous composer footprint. */
                 padding: voiceSupported
-                  ? "0.8rem 5.4rem 0.8rem 1rem"
-                  : "0.8rem 3.4rem 0.8rem 1rem",
-                maxHeight: 220,
-                minHeight: 46,
+                  ? "1.15rem 5.85rem 3.25rem 1.2rem"
+                  : "1.15rem 3.65rem 3.25rem 1.2rem",
+                maxHeight: 340,
+                minHeight: 88,
+                scrollbarWidth: "none",
               }}
             />
             {voiceSupported && !loading && (
@@ -3964,11 +4283,11 @@ function Composer({
                 title={recording ? "Arrêter la dictée" : "Dicter une question"}
                 style={{
                   position: "absolute",
-                  right: 48,
-                  bottom: 8,
-                  width: 34,
-                  height: 34,
-                  borderRadius: 9,
+                  right: 52,
+                  bottom: 10,
+                  width: 36,
+                  height: 36,
+                  borderRadius: 10,
                   border: "none",
                   background: recording ? T.danger : T.surface,
                   color: recording ? "#FFFFFF" : T.text3,
@@ -4010,11 +4329,11 @@ function Composer({
                 aria-label="Arrêter la génération"
                 style={{
                   position: "absolute",
-                  right: 8,
-                  bottom: 8,
-                  width: 34,
-                  height: 34,
-                  borderRadius: 9,
+                  right: 10,
+                  bottom: 10,
+                  width: 36,
+                  height: 36,
+                  borderRadius: 10,
                   border: "none",
                   background: T.danger,
                   color: "#FFFFFF",
@@ -4050,11 +4369,11 @@ function Composer({
                 aria-label="Envoyer"
                 style={{
                   position: "absolute",
-                  right: 8,
-                  bottom: 8,
-                  width: 34,
-                  height: 34,
-                  borderRadius: 9,
+                  right: 10,
+                  bottom: 10,
+                  width: 36,
+                  height: 36,
+                  borderRadius: 10,
                   border: "none",
                   background: !value.trim() ? T.surface3 : T.gradient,
                   color: !value.trim() ? T.text4 : "#FFFFFF",
