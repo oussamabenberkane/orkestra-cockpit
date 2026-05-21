@@ -5,6 +5,7 @@
 // Postgres land, add a `PostgresMemoryStore` and swap the factory — every
 // call site keeps working.
 
+import { supabase } from "@/lib/supabase";
 import type { Memory, MemoryInput } from "./types";
 
 const STORAGE_KEY = "orkestra.agent.memories.v1";
@@ -95,10 +96,121 @@ export class LocalStorageMemoryStore implements MemoryStore {
   }
 }
 
-let cached: MemoryStore | null = null;
+/** Supabase-backed implementation. Requires an active session. */
+export class SupabaseMemoryStore implements MemoryStore {
+  private async getUserId(): Promise<string> {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error("SupabaseMemoryStore: no active session");
+    return user.id;
+  }
 
-/** Singleton accessor used by the chat page. */
-export function getMemoryStore(): MemoryStore {
-  if (!cached) cached = new LocalStorageMemoryStore();
+  async list(): Promise<Memory[]> {
+    const userId = await this.getUserId();
+    const { data, error } = await supabase
+      .from("memories")
+      .select("*")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: true });
+    if (error) throw new Error(error.message);
+    return (data ?? []).map((row) => ({
+      id: row.id as string,
+      kind: row.kind as Memory["kind"],
+      name: row.name as string,
+      body: row.body as string,
+      target: row.target as string | undefined,
+      createdAt: row.created_at as number,
+      updatedAt: row.updated_at as number,
+    }));
+  }
+
+  async save(input: MemoryInput): Promise<Memory> {
+    const userId = await this.getUserId();
+    const now = Date.now();
+    const row = {
+      id: genId(),
+      user_id: userId,
+      kind: input.kind,
+      name: input.name.trim(),
+      body: input.body.trim(),
+      target: input.target?.trim() ?? null,
+      created_at: now,
+      updated_at: now,
+    };
+    const { error } = await supabase.from("memories").insert(row);
+    if (error) throw new Error(error.message);
+    return {
+      id: row.id,
+      kind: row.kind,
+      name: row.name,
+      body: row.body,
+      target: row.target ?? undefined,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
+    };
+  }
+
+  async update(id: string, patch: Partial<MemoryInput>): Promise<Memory> {
+    const userId = await this.getUserId();
+    const { data: existing, error: fetchError } = await supabase
+      .from("memories")
+      .select("*")
+      .eq("id", id)
+      .eq("user_id", userId)
+      .single();
+    if (fetchError || !existing) throw new Error(`Memory not found: ${id}`);
+
+    const updated = {
+      kind: patch.kind ?? existing.kind,
+      name: patch.name?.trim() ?? existing.name,
+      body: patch.body?.trim() ?? existing.body,
+      target: patch.target === undefined ? existing.target : (patch.target.trim() || null),
+      updated_at: Date.now(),
+    };
+    const { error } = await supabase
+      .from("memories")
+      .update(updated)
+      .eq("id", id)
+      .eq("user_id", userId);
+    if (error) throw new Error(error.message);
+    return {
+      id,
+      kind: updated.kind,
+      name: updated.name,
+      body: updated.body,
+      target: updated.target ?? undefined,
+      createdAt: existing.created_at as number,
+      updatedAt: updated.updated_at,
+    };
+  }
+
+  async remove(id: string): Promise<void> {
+    const userId = await this.getUserId();
+    const { error } = await supabase
+      .from("memories")
+      .delete()
+      .eq("id", id)
+      .eq("user_id", userId);
+    if (error) throw new Error(error.message);
+  }
+}
+
+let cached: MemoryStore | null = null;
+let cachedSessionId: string | null = null;
+
+/** Singleton accessor used by the chat page. Returns SupabaseMemoryStore when
+ *  a session is active, falling back to LocalStorageMemoryStore otherwise. */
+export async function getMemoryStore(): Promise<MemoryStore> {
+  const { data: { session } } = await supabase.auth.getSession();
+  const sessionId = session?.user?.id ?? null;
+
+  if (sessionId !== cachedSessionId) {
+    // Session changed — invalidate the cache.
+    cached = null;
+    cachedSessionId = sessionId;
+  }
+
+  if (!cached) {
+    cached = sessionId ? new SupabaseMemoryStore() : new LocalStorageMemoryStore();
+  }
   return cached;
 }
