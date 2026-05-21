@@ -593,25 +593,102 @@ html.scroll-locked body {
 }
 
 /* ── Alerts page ──────────────────────────────────────────────
-   Two-panel master-detail layout. Below 900 px the preview panel
-   is hidden — users navigate to /alertes/[id] for the editor. */
+   Master/detail at ≥900 px (list + preview), single column below.
+   Mobile rows act as nav targets (click → /alertes/[id]) since the
+   preview pane is hidden.
+
+   Breakpoint ladder:
+     ≥1100 px : list 380 + preview flex   (comfortable)
+     900–1099 : list 320 + preview flex   (compact desktop)
+     <900     : list full-width, preview hidden, click navigates */
+
 .alerts-layout {
-  display: flex;
+  display: grid;
+  grid-template-columns: 380px minmax(0, 1fr);
   gap: 1.5rem;
   align-items: flex-start;
 }
-.alerts-layout-list {
-  width: 400px;
+.alerts-layout-list { min-width: 0; }
+.alerts-layout-preview { min-width: 0; }
+
+@media (max-width: 1099px) {
+  .alerts-layout {
+    grid-template-columns: 320px minmax(0, 1fr);
+    gap: 1.125rem;
+  }
+}
+
+@media (max-width: 899px) {
+  .alerts-layout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+  }
+  .alerts-layout-preview { display: none; }
+}
+
+/* Row interaction surface — keyboard-focusable, larger touch targets on small viewports.
+   The outer .alert-row is rendered as <div role="button">; we add a subtle hover lift
+   and a clearer focus ring than the default. */
+.alert-row {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: box-shadow 0.18s, border-color 0.18s, background 0.18s, transform 0.18s;
+  outline: none;
+}
+.alert-row:hover { transform: translateY(-1px); }
+.alert-row:active { transform: translateY(0); }
+.alert-row:focus-visible {
+  box-shadow: 0 0 0 2px var(--accent-tint), 0 0 0 4px color-mix(in srgb, var(--accent) 40%, transparent);
+}
+.alert-row-chevron {
+  display: none;
+  color: var(--text-4);
   flex-shrink: 0;
 }
-.alerts-layout-preview {
-  flex: 1;
-  min-width: 0;
+.alert-row-action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+  background: transparent;
+  border: none;
+  color: var(--text-4);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  font-family: inherit;
 }
-@media (max-width: 900px) {
-  .alerts-layout { flex-direction: column; }
-  .alerts-layout-list { width: 100%; }
-  .alerts-layout-preview { display: none; }
+
+/* Email preview height respects viewport — short laptops don't get hidden bodies. */
+.alert-email-body {
+  max-height: clamp(260px, calc(100vh - 360px), 520px);
+  overflow-y: auto;
+}
+
+/* Header CTA label: full text on wide screens, abbreviated on narrow. */
+.alert-cta-label { display: inline; }
+.alert-cta-label-short { display: none; }
+@media (max-width: 480px) {
+  .alert-cta-label { display: none; }
+  .alert-cta-label-short { display: inline; }
+}
+
+@media (max-width: 899px) {
+  /* Show the navigation chevron, hide the persistent X (still reachable via the [id] editor's "Ignorer"). */
+  .alert-row-chevron { display: inline-flex; }
+  .alert-row-action { width: 34px; height: 34px; }
+  .alert-row-actions-mobile-hide { display: none; }
+  .alert-email-body {
+    max-height: clamp(220px, calc(100vh - 280px), 460px);
+  }
+}
+
+/* Compact desktop: trim padding so the preview body actually fits two-column. */
+@media (max-width: 1099px) and (min-width: 900px) {
+  .alert-email-body { padding-left: 1.25rem; padding-right: 1.25rem; }
 }
 
 /* ── Paramètres (settings) responsive helpers ────────────────────
