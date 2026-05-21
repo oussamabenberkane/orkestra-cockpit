@@ -6,9 +6,11 @@ import {
   useEffect,
   useCallback,
   useMemo,
+  type ComponentType,
   type FormEvent,
   type KeyboardEvent,
 } from "react";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowUp,
@@ -29,8 +31,8 @@ import {
   Cpu,
   CircleCheck,
   CircleAlert,
-  PanelLeftClose,
-  PanelLeftOpen,
+  PanelRightClose,
+  PanelRightOpen,
   BookmarkPlus,
   Bookmark,
   Eye,
@@ -44,6 +46,7 @@ import {
   Mic,
   MicOff,
   Brain,
+  type LucideIcon,
 } from "lucide-react";
 import { Markdown } from "./markdown";
 import type { Memory, MemoryInput, MemoryKind } from "@/agent/memory/types";
@@ -56,41 +59,43 @@ import {
   type ToolCall,
   type ToolResult,
 } from "@/components/dashboard/AgentConversationProvider";
+import { Sidebar as AppSidebar } from "@/components/dashboard/Sidebar";
 
-/* ─── Plinth tokens (matches /c design language) ─── */
+/* ─── Plinth tokens — references the dashboard's CSS variables.
+ * Keeping the `T` shape lets the rest of this file stay readable while
+ * every color/shadow now resolves to the same `var(--*)` tokens the
+ * dashboard uses. Theme flips (dark mode, brand change) propagate. */
 const T = {
-  bg: "#F5F5F7",
-  surface: "#FFFFFF",
-  surface2: "#FBFBFD",
-  surface3: "#F2F2F4",
-  border: "rgba(0,0,0,0.06)",
-  borderStrong: "rgba(0,0,0,0.10)",
-  text: "#1D1D1F",
-  text2: "#424245",
-  text3: "#6E6E73",
-  text4: "#86868B",
-  accent: "#5856D6",
-  accent2: "#4441C8",
-  accentTint: "rgba(88,86,214,0.16)",
-  accentTint2: "rgba(88,86,214,0.10)",
-  success: "#34A853",
-  successTint: "rgba(52,168,83,0.10)",
-  warn: "#FF9F0A",
-  warnTint: "rgba(255,159,10,0.10)",
-  danger: "#FF3B30",
-  dangerTint: "rgba(255,59,48,0.10)",
-  info: "#007AFF",
-  infoTint: "rgba(0,122,255,0.10)",
-  // Elevation system (Plinth tier-1 / tier-2)
-  tier1:
-    "inset 0 1px 0 rgba(255,255,255,1), 0 0 0 1px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.05), 0 6px 16px -10px rgba(0,0,0,0.12)",
-  tier2:
-    "inset 0 1px 0 rgba(255,255,255,1), 0 0 0 1px rgba(0,0,0,0.06), 0 2px 4px rgba(0,0,0,0.06), 0 16px 32px -12px rgba(0,0,0,0.18)",
-  gradient: "linear-gradient(to bottom, #5856D6, #4441C8)",
+  bg: "var(--bg)",
+  surface: "var(--surface)",
+  surface2: "var(--surface-2)",
+  surface3: "var(--surface-3)",
+  border: "var(--border)",
+  borderStrong: "var(--border-strong)",
+  text: "var(--text)",
+  text2: "var(--text-2)",
+  text3: "var(--text-3)",
+  text4: "var(--text-4)",
+  accent: "var(--accent)",
+  accent2: "var(--accent-2)",
+  accentTint: "var(--accent-tint-2)",   /* 16% — matches the original visual */
+  accentTint2: "var(--accent-tint)",    /* 10% */
+  success: "var(--success)",
+  successTint: "var(--success-tint)",
+  warn: "var(--warn)",
+  warnTint: "var(--warn-tint)",
+  danger: "var(--danger)",
+  dangerTint: "var(--danger-tint)",
+  info: "var(--info)",
+  infoTint: "var(--info-tint)",
+  // Elevation system — atomic tokens from globals.css
+  tier1: "var(--tier-1)",
+  tier2: "var(--tier-2)",
+  gradient: "linear-gradient(to bottom, #007AFF, #0062CC)",
   gradientShadow:
-    "inset 0 1px 0 rgba(255,255,255,0.25), 0 0 0 1px rgba(68,65,200,0.30), 0 4px 14px -4px rgba(88,86,214,0.40)",
+    "inset 0 1px 0 rgba(255,255,255,0.25), 0 0 0 1px rgba(0,98,204,0.30), 0 4px 14px -4px rgba(0,122,255,0.40)",
   gradientShadowHover:
-    "inset 0 1px 0 rgba(255,255,255,0.25), 0 0 0 1px rgba(68,65,200,0.30), 0 8px 20px -4px rgba(88,86,214,0.50)",
+    "inset 0 1px 0 rgba(255,255,255,0.25), 0 0 0 1px rgba(0,98,204,0.30), 0 8px 20px -4px rgba(0,122,255,0.50)",
 };
 
 /* ─── shared per-message action button style ─── */
@@ -184,11 +189,19 @@ const SUGGESTIONS: {
 // Persisted sidebar collapse state. Conversation persistence is owned by the
 // AgentConversationProvider — only the sidebar preference stays local here.
 const SIDEBAR_STATE_KEY = "orkestra.agent-test.sidebar.v1";
+/* Desktop collapse preference for the right history+memory rail. Independent
+ * of the mobile open/closed drawer state stored under SIDEBAR_STATE_KEY. */
+const SIDEBAR_COLLAPSED_KEY = "orkestra.agent-test.sidebar-collapsed.v1";
 
-// Below this width the sidebar becomes an overlay drawer and defaults to
-// closed on first visit. Keep this in sync with the @media breakpoint at the
-// bottom of the file.
-const SIDEBAR_BREAKPOINT = 820;
+// Shared with /dashboard so the app-wide sidebar's collapsed preference
+// carries across routes.
+const APP_SIDEBAR_KEY = "orkestra.sidebar.collapsed";
+
+// Below this width both sidebars become overlay drawers and the chat history
+// rail defaults to closed on first visit. Matches /dashboard's mobile
+// breakpoint so the two rails feel consistent across routes. Keep this in
+// sync with the @media (max-width: 720px) blocks at the bottom of the file.
+const SIDEBAR_BREAKPOINT = 720;
 
 // French label shown in the live activity indicator while a tool is
 // running. Falls back to the raw tool name if a label isn't mapped.
@@ -238,6 +251,26 @@ export default function AgentTestPage() {
     clearError,
   } = useAgentConversation();
 
+  const router = useRouter();
+
+  /* App-wide left sidebar collapse state — mirrors /dashboard so the
+   * preference carries across routes. Hydrated from localStorage after mount. */
+  const [appSidebarCollapsed, setAppSidebarCollapsed] = useState(false);
+  useEffect(() => {
+    try {
+      const stored = window.localStorage.getItem(APP_SIDEBAR_KEY);
+      if (stored === "true") setAppSidebarCollapsed(true);
+    } catch {}
+  }, []);
+  const toggleAppSidebar = useCallback(() => {
+    setAppSidebarCollapsed((prev) => {
+      const next = !prev;
+      try { window.localStorage.setItem(APP_SIDEBAR_KEY, String(next)); } catch {}
+      return next;
+    });
+  }, []);
+  const onLogout = useCallback(() => router.replace("/login"), [router]);
+
   const [input, setInput] = useState("");
   const [health, setHealth] = useState<Health | null>(null);
   // Local UI-side errors (voice input failures, etc.) live next to the
@@ -252,6 +285,9 @@ export default function AgentTestPage() {
   // for first visits, from the viewport width (closed below SIDEBAR_BREAKPOINT
   // so mobile doesn't land on a full-screen drawer over a scrim).
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  /* Desktop collapsed (slim icon rail) vs expanded (full panel). Mirrors the
+   * left shared sidebar's pattern. Hydrated from localStorage after mount. */
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   // Becomes true once localStorage has been read. Guards the persist effect
   // so it can't clobber saved data with the default state before rehydration.
   const [hydrated, setHydrated] = useState(false);
@@ -281,6 +317,7 @@ export default function AgentTestPage() {
 
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const isFirstScroll = useRef(true);
   // Memoised store handle — singleton inside the module, but keeping it on
   // a ref makes the dependency surface explicit for callbacks.
   const memoryStoreRef = useRef(getMemoryStore());
@@ -293,7 +330,7 @@ export default function AgentTestPage() {
   }, []);
 
   // Conversation rehydration is owned by AgentConversationProvider. We only
-  // recover the sidebar preference here.
+  // recover the sidebar preferences here.
   useEffect(() => {
     const mobile = window.innerWidth < SIDEBAR_BREAKPOINT;
     setIsMobileLayout(mobile);
@@ -305,11 +342,15 @@ export default function AgentTestPage() {
     } catch {
       setSidebarOpen(!mobile);
     }
+    try {
+      const stored = window.localStorage.getItem(SIDEBAR_COLLAPSED_KEY);
+      if (stored === "true") setSidebarCollapsed(true);
+    } catch {}
 
     setHydrated(true);
   }, []);
 
-  // Persist the sidebar preference after the user has had a chance to toggle.
+  // Persist the sidebar preferences after the user has had a chance to toggle.
   useEffect(() => {
     if (!hydrated) return;
     try {
@@ -318,6 +359,51 @@ export default function AgentTestPage() {
       // storage disabled — preference degrades to per-session.
     }
   }, [sidebarOpen, hydrated]);
+  useEffect(() => {
+    if (!hydrated) return;
+    try {
+      window.localStorage.setItem(SIDEBAR_COLLAPSED_KEY, String(sidebarCollapsed));
+    } catch {}
+  }, [sidebarCollapsed, hydrated]);
+
+  /* Single toggle handler — mobile flips the drawer, desktop flips the
+   * collapsed (slim-rail) state. Same trigger button can call this from
+   * either the topbar or the sidebar's internal chevron. */
+  const toggleSidebar = useCallback(() => {
+    if (isMobileLayout) {
+      setSidebarOpen((v) => !v);
+    } else {
+      setSidebarCollapsed((v) => !v);
+    }
+  }, [isMobileLayout]);
+
+  /* Cross-sidebar mobile coordination — when the right history drawer
+   * opens, signal the app sidebar (left) to close, and vice versa. */
+  useEffect(() => {
+    if (!sidebarOpen || !isMobileLayout) return;
+    window.dispatchEvent(
+      new CustomEvent("orkestra:close-sidebars", { detail: { source: "chat-history" } }),
+    );
+  }, [sidebarOpen, isMobileLayout]);
+  useEffect(() => {
+    const onCloseOthers = (e: Event) => {
+      const detail = (e as CustomEvent<{ source?: string }>).detail;
+      if (detail?.source === "chat-history") return;
+      if (isMobileLayout) setSidebarOpen(false);
+    };
+    window.addEventListener("orkestra:close-sidebars", onCloseOthers);
+    return () => window.removeEventListener("orkestra:close-sidebars", onCloseOthers);
+  }, [isMobileLayout]);
+
+  /* Lock background scroll when the chat history drawer is open on mobile
+   * (same mechanism the app sidebar uses — toggling a class on <html>). */
+  useEffect(() => {
+    if (!sidebarOpen || !isMobileLayout) return;
+    document.documentElement.classList.add("scroll-locked");
+    return () => {
+      document.documentElement.classList.remove("scroll-locked");
+    };
+  }, [sidebarOpen, isMobileLayout]);
 
   // Keep `isMobileLayout` reactive so the drawer styling/scrim toggle correctly
   // when the user rotates a tablet or resizes a desktop window. The matchMedia
@@ -346,15 +432,18 @@ export default function AgentTestPage() {
   // Conversation persistence is owned by AgentConversationProvider — no
   // local persist effect here.
 
-  // Autoscroll on new content — but only if the user is already pinned to the
-  // bottom. The `showScrollBottom` flag (set by the scroll listener below) is
-  // the source of truth: when the user has scrolled up to re-read context,
-  // suppress the smooth scroll so we don't yank them back.
+  // Autoscroll on new content — but only if content actually overflows and the
+  // user is already pinned to the bottom. Skipping when content fits the
+  // viewport keeps the page static for short conversations. The first scroll
+  // per conversation uses "instant" so loading a previous chat doesn't animate.
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
+    if (el.scrollHeight <= el.clientHeight) return;
     if (!showScrollBottom) {
-      el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
+      const behavior = isFirstScroll.current ? "instant" : "smooth";
+      isFirstScroll.current = false;
+      el.scrollTo({ top: el.scrollHeight, behavior });
     }
   }, [active.messages, loading, showScrollBottom]);
 
@@ -363,6 +452,7 @@ export default function AgentTestPage() {
   // "scroll to bottom" pill. A small slack keeps the pill from flashing on
   // sub-pixel rounding.
   useEffect(() => {
+    isFirstScroll.current = true;
     const el = scrollRef.current;
     if (!el) return;
     const onScroll = () => {
@@ -379,7 +469,7 @@ export default function AgentTestPage() {
     const ta = textareaRef.current;
     if (!ta) return;
     ta.style.height = "auto";
-    ta.style.height = Math.min(ta.scrollHeight, 220) + "px";
+    ta.style.height = Math.min(ta.scrollHeight, 340) + "px";
   }, [input]);
 
   // /chat-local memory observers: after a stream resolves, the
@@ -421,16 +511,21 @@ export default function AgentTestPage() {
   // prefill the composer with its content, focus the textarea. The user
   // re-submits via Enter or the send button. Truncation is delegated to the
   // provider; setInput/focus stay local to /chat.
+  /* Inline edit-and-resend: truncates the conversation back to just before
+   * the edited user message, then resubmits the new text via `send` so the
+   * agent re-answers without the user having to retype. The UserMessage
+   * bubble owns the editing UX; this handler just performs the action. */
   const editUserMessage = useCallback(
-    (idx: number) => {
+    (idx: number, newText: string) => {
       const msg = active.messages[idx];
       if (!msg || msg.role !== "user" || !msg.id) return;
-      setInput(msg.content);
-      providerEditUserMessage(msg.id, msg.content);
-      // Defer focus so the textarea exists post-render and autogrow kicks in.
-      setTimeout(() => textareaRef.current?.focus(), 0);
+      const trimmed = newText.trim();
+      if (!trimmed) return;
+      providerEditUserMessage(msg.id);
+      /* Defer so the truncation reducer settles before we append + stream. */
+      setTimeout(() => { void send(trimmed); }, 0);
     },
-    [active.messages, providerEditUserMessage],
+    [active.messages, providerEditUserMessage, send],
   );
 
   const onSubmit = (e: FormEvent) => {
@@ -524,44 +619,44 @@ export default function AgentTestPage() {
       style={{
         minHeight: "100vh",
         height: "100dvh",
-        background: T.bg,
-        color: T.text,
+        background: "var(--surface-2)",
+        color: "var(--text)",
         fontFamily: "var(--font-sans), system-ui, sans-serif",
         display: "flex",
-        flexDirection: "column",
         overflow: "hidden",
         visibility: hydrated ? "visible" : "hidden",
       }}
     >
-      <TopBar
-        health={health}
-        sidebarOpen={sidebarOpen}
-        onToggleSidebar={() => setSidebarOpen((v) => !v)}
-        title={active.title}
-        hasMessages={active.messages.length > 0}
-        loading={loading}
-        memoryCount={memories.length}
-        memoryDrawerOpen={memoryDrawerOpen}
-        onToggleMemoryDrawer={() => setMemoryDrawerOpen((v) => !v)}
+      {/* ─── App-wide sidebar (left) — same component as /dashboard ─── */}
+      <AppSidebar
+        collapsed={appSidebarCollapsed}
+        onToggle={toggleAppSidebar}
+        onLogout={onLogout}
+        onOpenPalette={() => {}}
+        onOpenModal={() => router.push("/dashboard")}
       />
 
+      {/* ─── Chat column ─── */}
       <div
+        className="agent-column"
         style={{
           flex: 1,
           display: "flex",
+          flexDirection: "column",
+          minWidth: 0,
           minHeight: 0,
+          background: "var(--bg)",
         }}
       >
-        <Sidebar
-          open={sidebarOpen}
-          conversations={conversations}
-          activeId={activeId}
-          onSelect={setActiveId}
-          onNew={newConversation}
-          onDelete={deleteConversation}
-          datasetLabel={datasetLabel}
-          model={health?.model}
-          onCloseMobile={() => setSidebarOpen(false)}
+        <TopBar
+          title={active.title}
+          hasMessages={active.messages.length > 0}
+          loading={loading}
+          memoryCount={memories.length}
+          memoryDrawerOpen={memoryDrawerOpen}
+          onToggleMemoryDrawer={() => setMemoryDrawerOpen((v) => !v)}
+          historyOpen={isMobileLayout ? sidebarOpen : !sidebarCollapsed}
+          onToggleHistory={toggleSidebar}
         />
 
         <main
@@ -570,7 +665,8 @@ export default function AgentTestPage() {
             display: "flex",
             flexDirection: "column",
             minWidth: 0,
-            background: T.bg,
+            minHeight: 0,
+            background: "var(--bg)",
             position: "relative",
           }}
         >
@@ -587,7 +683,11 @@ export default function AgentTestPage() {
               {active.messages.length === 0 && !loading ? (
                 <Welcome onPick={send} loading={loading} />
               ) : (
-                <div style={{ display: "flex", flexDirection: "column", gap: "1.4rem" }}>
+                <div style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "clamp(1.2rem, 2.8vw, 1.6rem)",
+                }}>
                   <AnimatePresence initial={false}>
                     {active.messages.map((m, i) => (
                       <MessageBubble
@@ -608,7 +708,7 @@ export default function AgentTestPage() {
                         }
                         onEdit={
                           m.role === "user" && !loading
-                            ? () => editUserMessage(i)
+                            ? (newText: string) => editUserMessage(i, newText)
                             : undefined
                         }
                       />
@@ -687,6 +787,21 @@ export default function AgentTestPage() {
         </main>
       </div>
 
+      {/* ─── Chat history (right rail) — own expand/collapse + mobile drawer ─── */}
+      <Sidebar
+        open={sidebarOpen}
+        collapsed={sidebarCollapsed}
+        onToggle={toggleSidebar}
+        conversations={conversations}
+        activeId={activeId}
+        onSelect={setActiveId}
+        onNew={newConversation}
+        onDelete={deleteConversation}
+        datasetLabel={datasetLabel}
+        model={health?.model}
+        onCloseMobile={() => setSidebarOpen(false)}
+      />
+
       <AnimatePresence>
         {memoryDrawerOpen && (
           <MemoryDrawer
@@ -746,69 +861,137 @@ export default function AgentTestPage() {
       </AnimatePresence>
 
       <style>{`
-        /* Sidebar width responds to viewport — narrower on tablet, full
+        /* History rail width responds to viewport — narrower on tablet, full
            drawer width on mobile so the touch targets stay comfortable. */
-        :root, .agent-root { --agent-sidebar-w: 268px; }
+        :root, .agent-root { --agent-sidebar-w: 288px; }
         @media (max-width: 1100px) {
-          .agent-root { --agent-sidebar-w: 244px; }
+          .agent-root { --agent-sidebar-w: 256px; }
         }
-        @media (max-width: 820px) {
+        @media (max-width: 720px) {
           .agent-root { --agent-sidebar-w: min(86vw, 320px); }
         }
 
-        /* Mobile drawer + scrim. The sidebar lives below the topbar so the
-           hamburger toggle is always reachable. Scrim sits one z-index below
-           the drawer so a tap closes it without intercepting drawer clicks. */
+        /* Mobile drawer — pins to the right edge so it slides in opposite the
+           shared app sidebar on the left. Scrim catches taps outside the
+           drawer; one-at-a-time coordination with the app sidebar happens via
+           the orkestra:close-sidebars custom event. */
         .agent-sidebar-scrim { display: none; }
-        @media (max-width: 820px) {
+        @media (max-width: 720px) {
           .agent-sidebar {
             position: fixed !important;
-            top: 56px;
+            top: 0;
             bottom: 0;
-            left: 0;
-            z-index: 40;
-            box-shadow: 8px 0 32px rgba(0,0,0,0.16);
+            right: 0;
+            z-index: 50;
+            box-shadow: -8px 0 32px rgba(0,0,0,0.16);
+            /* Mobile drawer always uses the full var width regardless of the
+             * desktop "collapsed" preference. The slim rail is hidden below. */
+            width: var(--agent-sidebar-w, 320px) !important;
+            /* Slide-in/out animation tied to data-open. Without this rule the
+             * drawer is fixed:right:0 with no visibility binding, so clicking
+             * the in-drawer close button flips state but nothing moves on
+             * screen — the "blocked on expanded" symptom. */
+            transition:
+              transform 0.26s cubic-bezier(0.22, 1, 0.36, 1),
+              box-shadow 0.26s ease !important;
+          }
+          .agent-sidebar[data-open="false"] {
+            transform: translateX(100%);
+            box-shadow: none;
+            pointer-events: none;
+          }
+          .agent-sidebar[data-open="true"] {
+            transform: translateX(0);
           }
           .agent-sidebar-scrim {
             display: block;
             position: fixed;
-            inset: 56px 0 0 0;
+            inset: 0;
             background: rgba(0,0,0,0.32);
             backdrop-filter: blur(2px);
             -webkit-backdrop-filter: blur(2px);
-            z-index: 39;
+            z-index: 49;
           }
+          /* Slim rail is desktop-only. On mobile the drawer renders the full
+           * content directly. */
+          .agent-sidebar-rail { display: none !important; }
+          .agent-sidebar-content { display: flex !important; }
         }
 
-        /* TopBar — collapse the brand text and centre title on narrow widths
-           so the hamburger + model chip stay legible without overflow. */
-        @media (max-width: 720px) {
-          .agent-topbar-brand-text { display: none !important; }
+        /* Desktop collapse mode — slim icon rail only, full content hidden.
+         * !important is required because the rail and content elements set
+         * display:flex inline; that wins over a regular CSS rule even
+         * inside a media query. */
+        @media (min-width: 721px) {
+          .agent-sidebar[data-collapsed="true"] .agent-sidebar-content {
+            display: none !important;
+          }
+          .agent-sidebar[data-collapsed="false"] .agent-sidebar-rail {
+            display: none !important;
+          }
+          /* Topbar's history toggle is desktop-redundant once the sidebar
+           * carries its own collapse/expand chevron. Keep it for the mobile
+           * drawer where the panel itself is hidden when closed. */
+          .agent-topbar-history-toggle { display: none !important; }
         }
+
+        /* TopBar — hide the memory label on narrow widths so the chrome stays
+           tight; the icon + count badge alone are enough on small screens. */
         @media (max-width: 600px) {
           .agent-memory-trigger-label { display: none !important; }
         }
-        @media (max-width: 540px) {
-          .agent-topbar-title { display: none !important; }
-        }
-        @media (max-width: 460px) {
-          .agent-topbar-brand { display: none !important; }
+
+        /* On mobile, the app sidebar's portaled top clearance bar adds 4.5rem
+           of safe top space for the hamburger. Inset our column past that so
+           the topbar isn't hidden behind it. */
+        @media (max-width: 720px) {
+          .agent-column { padding-top: 4.5rem; }
+          /* Topbar must drop its stacking context on mobile so the
+           * position:fixed children below can escape to body's z-order.
+           * Both position:sticky (in some browsers) AND z-index:30 create
+           * a context that would trap them at an effective z=30, beneath
+           * the clearance bar (z=39). position:static + z-index:auto is
+           * the only combo guaranteed to NOT create a stacking context.
+           * Sticky isn't needed on mobile anyway — column doesn't scroll. */
+          .agent-topbar {
+            position: static !important;
+            z-index: auto !important;
+            padding-right: clamp(0.85rem, 2.5vw, 1.5rem);
+          }
+          /* Float the topbar's memory + history-toggle pair into the clearance
+           * band so they sit on the exact same y as the left hamburger
+           * (top:0.75rem). z:46 puts them above the clearance strip (z:39)
+           * and the hamburger (z:45), and below the drawer scrim (z:49). */
+          .agent-topbar-actions {
+            position: fixed !important;
+            top: 0.75rem;
+            right: 0.75rem;
+            z-index: 46;
+          }
         }
 
         /* Composer — focus ring lives on the wrapper via :focus-within so the
            ring follows the textarea, mic, and send button as one cohesive
            field. Keeps the click-zone obvious for keyboard users. */
-        .agent-composer { transition: box-shadow 0.2s ease; }
+        .agent-composer { transition: box-shadow 0.2s ease, border-color 0.2s ease; }
         .agent-composer:focus-within {
+          /* Soft accent border + 3px halo on focus — replaces the prior heavy
+           * 4-layer shadow. Stays consistent with the frosted resting state. */
+          border-color: var(--accent) !important;
           box-shadow:
-            inset 0 1px 0 rgba(255,255,255,1),
-            0 0 0 1px rgba(0,0,0,0.04),
-            0 1px 2px rgba(0,0,0,0.05),
-            0 6px 16px -10px rgba(0,0,0,0.12),
-            0 0 0 4px ${T.accentTint2};
+            0 0 0 3px var(--accent-tint),
+            0 1px 2px rgba(0,0,0,0.03),
+            0 8px 24px -10px rgba(0,0,0,0.08),
+            0 20px 48px -24px rgba(0,0,0,0.10);
         }
+        /* Desktop composer floor — two-row minimum (~92px card with border).
+         * Overridden to 42px by the mobile rule below. */
+        textarea.agent-input { min-height: 90px; }
         textarea.agent-input::placeholder { color: ${T.text4}; }
         textarea.agent-input:disabled { cursor: not-allowed; opacity: 0.6; }
+        /* Hide the textarea scrollbar — pairs with scrollbarWidth: "none" in
+         * the inline style. Scrolling still works; the bar just doesn't render. */
+        textarea.agent-input::-webkit-scrollbar { display: none; }
 
         /* Hide the keyboard hint on narrow screens — the kbd glyphs aren't
            useful on touch devices that don't have a real Enter key. */
@@ -820,20 +1003,242 @@ export default function AgentTestPage() {
           .agent-composer-model { display: none !important; }
         }
 
-        /* Welcome — let the suggestion grid breathe down through breakpoints
-           rather than relying on auto-fill, which produces awkward 2.5-column
-           layouts at intermediate widths. */
-        @media (max-width: 900px) {
-          .agent-welcome-grid { grid-template-columns: repeat(2, 1fr) !important; }
+        /* ─── Mobile shell compaction ───
+         * The topbar contributes ~64px between the floating button band and
+         * the welcome content, but its only inline content (conversation
+         * title) is HIDDEN on the empty/welcome screen. Collapse the topbar
+         * to zero on mobile so the eyebrow sits flush against the clearance
+         * band. When a conversation has messages, the title grows naturally
+         * (~24-32px) — a one-time layout adjustment per navigation, not on
+         * load. */
+        @media (max-width: 720px) {
+          /* Remove min-height:100vh which on iOS Safari (address bar visible)
+           * is larger than the dynamic viewport, pushing the composer off-screen.
+           * height:100dvh (inline) correctly tracks the visible area. */
+          .agent-root { min-height: 0 !important; }
+          .agent-topbar {
+            min-height: 0 !important;
+            padding-top: 0 !important;
+            padding-bottom: 0 !important;
+            border-bottom-color: transparent !important;
+          }
+          /* Scroll container — minimal breathing space, no bottom gap. */
+          .agent-scroll {
+            padding-top: 0.65rem !important;
+            padding-bottom: 0.1rem !important;
+          }
+          /* Welcome itself — no extra top space. */
+          .agent-welcome { padding-top: 0 !important; }
         }
+
+        /* ─── Suggestion tiles: centered stack, title slot pre-reserved ───
+         * The whole icon + title stack is centered vertically in the tile
+         * (justify-content: center). To stop the icon from being LIFTED
+         * when a long title wraps to two lines, the title slot reserves a
+         * fixed min-height of 2.4em (= two lines of its 1.2 line-height).
+         * 1-line titles render at the top of that slot; 2-line titles fill
+         * it. Either way, the total stack height is identical across all
+         * tiles in a row, so the icon centered position never shifts. */
+        @media (max-width: 720px) {
+          .agent-welcome-grid {
+            grid-template-columns: repeat(3, 1fr) !important;
+            gap: 0.45rem !important;
+          }
+          .agent-welcome-grid > button {
+            aspect-ratio: 1 / 1;
+            min-height: 0 !important;
+            padding: 0.5rem 0.4rem !important;
+            border-radius: 12px !important;
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+            justify-content: center !important;
+            text-align: center !important;
+            gap: 0.5rem !important;
+            overflow: hidden !important;
+          }
+          /* Icon row — center the chip, hide the chevron (the SVG sibling
+           * of the chip span). */
+          .agent-welcome-grid > button > div:first-child {
+            justify-content: center !important;
+            width: auto !important;
+            flex-shrink: 0 !important;
+          }
+          .agent-welcome-grid > button > div:first-child > svg {
+            display: none !important;
+          }
+          /* Icon chip — bump up so it carries the centered composition. */
+          .agent-welcome-grid > button [data-suggest-icon] {
+            width: 32px !important;
+            height: 32px !important;
+            border-radius: 9px !important;
+          }
+          .agent-welcome-grid > button [data-suggest-icon] svg {
+            width: 16px !important;
+            height: 16px !important;
+          }
+          /* Title — fixed 2-line slot. Line-clamp 2 caps any oversized
+           * label; min-height 2.4em (= 2 × line-height 1.2) reserves the
+           * slot even for 1-line labels so the icon above never shifts. */
+          .agent-welcome-grid > button > div:nth-child(2) {
+            font-size: 0.76rem !important;
+            line-height: 1.2 !important;
+            font-weight: 600 !important;
+            color: var(--text) !important;
+            min-height: 2.4em !important;
+            display: -webkit-box !important;
+            -webkit-line-clamp: 2 !important;
+            -webkit-box-orient: vertical !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            max-width: 100% !important;
+          }
+          /* Hint row — hidden, title alone is the affordance. */
+          .agent-welcome-grid > button > div:nth-child(3) {
+            display: none !important;
+          }
+        }
+        @media (max-width: 380px) {
+          .agent-welcome-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+          }
+        }
+
+        /* Helper line above grid hidden on narrow — already implicit from
+         * the centered tile labels. */
         @media (max-width: 540px) {
-          .agent-welcome-grid { grid-template-columns: 1fr !important; }
+          .agent-welcome-helper { display: none !important; }
+        }
+
+        /* ─── Composer: standard mobile single-row pill ───
+         * Target: ~44px card height (= Apple HIG / Material touch target
+         * floor and the dominant mobile-chat-input pattern in ChatGPT,
+         * Claude, WhatsApp, iMessage). Auto-grows up to maxHeight on
+         * multi-line input. 16px font prevents iOS auto-zoom on focus.
+         *
+         * Geometry:
+         *   textarea: 42px min total (border-box) + 2px card border = ~44px card
+         *   action buttons: 32×32 at bottom:4px (3px clearance each side)
+         *   wrapper pad: 0.08rem top / 0.45rem bottom + safe area inset */
+        @media (max-width: 720px) {
+          /* Textarea: slim single-row pill (~44px card, WhatsApp/iMessage style).
+           * 16px font prevents iOS auto-zoom; min-height 42px (border-box total)
+           * gives a 44px card with 2px border. Action buttons at bottom:4px sit
+           * comfortably inside. */
+          textarea.agent-input {
+            font-size: 16px !important;
+            min-height: 42px !important;
+            line-height: 1.4 !important;
+            padding: 0.42rem 2.85rem 0.42rem 0.95rem !important;
+            max-height: 140px !important;
+          }
+          .agent-composer { border-radius: 22px !important; }
+          /* No top gap between grid and composer; safe-area handles bottom. */
+          .agent-composer-wrap {
+            padding: 0.08rem 0.7rem calc(0.45rem + env(safe-area-inset-bottom, 0px)) !important;
+          }
+          .agent-composer-meta { display: none !important; }
+          /* Action buttons — 32×32, anchored to bottom:4px so they sit
+           * inside the ~35px card with 3px clearance on each side. */
+          .agent-composer-send,
+          .agent-composer-stop {
+            width: 32px !important;
+            height: 32px !important;
+            right: 6px !important;
+            bottom: 4px !important;
+            border-radius: 9px !important;
+          }
+          .agent-composer-mic {
+            width: 32px !important;
+            height: 32px !important;
+            right: 44px !important;
+            bottom: 4px !important;
+            border-radius: 9px !important;
+          }
+        }
+        /* Slightly narrower tap region on the smallest devices — mic shifts
+         * left to give the send button breathing room from the screen edge. */
+        @media (max-width: 380px) {
+          textarea.agent-input {
+            padding-right: 2.55rem !important;
+          }
+        }
+
+        /* ─── Tap-to-edit (touch devices) ───
+         * The Modifier chip on user bubbles uses opacity:0 + pointer-events:
+         * none until hover — which never fires on touch. Force the chip
+         * visible/interactive on any pointer that doesn't support hover. */
+        @media (hover: none) {
+          .agent-edit-trigger {
+            opacity: 1 !important;
+            pointer-events: auto !important;
+          }
+        }
+
+        /* Edit card on mobile — tighter padding, hide the kbd-shortcut hint
+         * that doesn't apply on touch, bump textarea to 16px. */
+        @media (max-width: 540px) {
+          .agent-edit-card {
+            padding: 0.45rem 0.45rem 0.5rem !important;
+            border-radius: 14px !important;
+          }
+          .agent-edit-input-wrap {
+            padding: 0.7rem 0.85rem !important;
+            border-radius: 10px !important;
+          }
+          .agent-edit-textarea {
+            font-size: 16px !important;
+          }
+          .agent-edit-hint { display: none !important; }
+          .agent-edit-footer {
+            justify-content: flex-end !important;
+            padding: 0.05rem 0.2rem 0 !important;
+          }
+          /* Bump action buttons to the 44pt touch-target floor so a thumb
+           * tap lands cleanly without precision pixel-hunting. */
+          .agent-edit-footer button {
+            min-height: 40px !important;
+            padding: 0.55rem 1.05rem !important;
+            font-size: 0.85rem !important;
+          }
+        }
+
+        /* Welcome typography compaction on narrow screens — every saved row
+         * here is one we don't need to scroll to reveal the suggestion grid
+         * and composer underneath. */
+        @media (max-width: 540px) {
+          .agent-welcome > h1 {
+            font-size: 1.25rem !important;
+            margin-bottom: 0.3rem !important;
+            line-height: 1.15 !important;
+          }
+          .agent-welcome > p {
+            font-size: 0.82rem !important;
+            line-height: 1.4 !important;
+            margin-bottom: 0.6rem !important;
+          }
+          /* The mono eyebrow above the H1 — trim its margin so the heading
+           * sits close. */
+          .agent-welcome > div:first-of-type {
+            margin-bottom: 0.35rem !important;
+          }
+          /* "Pour démarrer" section bar — compact its margin. */
+          .agent-welcome > div:nth-of-type(2) {
+            margin-bottom: 0.35rem !important;
+          }
+        }
+
+        /* On the smallest devices (≤380px / iPhone SE-class) the descriptive
+         * paragraph is the lowest-priority text — fold it so the eyebrow +
+         * heading + 6 tiles + composer all fit without scroll. */
+        @media (max-width: 380px) {
+          .agent-welcome > p { display: none !important; }
         }
 
         /* Message bubbles — give the assistant card a max width and lift the
            user bubble's cap on narrower screens so threads don't feel cramped. */
         @media (max-width: 540px) {
-          .agent-scroll [data-user-bubble] { max-width: 88% !important; }
+          .agent-scroll [data-user-bubble] { max-width: 92% !important; }
         }
 
         /* Subtle, brand-consistent focus ring for keyboard users across all
@@ -861,7 +1266,7 @@ export default function AgentTestPage() {
            "loading" without becoming an attention sink. */
         @keyframes agent-pulse {
           0%, 100% { box-shadow: 0 0 0 4px ${T.accentTint2}; }
-          50% { box-shadow: 0 0 0 6px rgba(88,86,214,0.04); }
+          50% { box-shadow: 0 0 0 6px rgba(0,122,255,0.04); }
         }
 
         /* Respect prefers-reduced-motion — strip our motion-heavy moments. */
@@ -879,147 +1284,59 @@ export default function AgentTestPage() {
 /* ─── topbar ─── */
 
 function TopBar({
-  health,
-  sidebarOpen,
-  onToggleSidebar,
   title,
   hasMessages,
   loading,
   memoryCount,
   memoryDrawerOpen,
   onToggleMemoryDrawer,
+  historyOpen,
+  onToggleHistory,
 }: {
-  health: Health | null;
-  sidebarOpen: boolean;
-  onToggleSidebar: () => void;
   title: string;
   hasMessages: boolean;
   loading: boolean;
   memoryCount: number;
   memoryDrawerOpen: boolean;
   onToggleMemoryDrawer: () => void;
+  historyOpen: boolean;
+  onToggleHistory: () => void;
 }) {
-  // Show the conversation title in the center slot only when the user is
-  // actually inside a conversation — for a fresh "Nouvelle conversation"
-  // (no messages yet) the title is generic and would just be visual noise.
+  // Show the conversation title only when the user is actually inside a
+  // conversation — for a fresh "Nouvelle conversation" (no messages yet) the
+  // title is generic and would just be visual noise.
   const showTitle = hasMessages;
   return (
     <header
       className="agent-topbar"
       style={{
-        height: 56,
-        background: T.surface,
-        borderBottom: `1px solid ${T.border}`,
+        /* 64px keeps the memory button + history toggle visually centered at
+         * y=32 from the page top, aligning with the left hamburger's center
+         * (top:0.75rem + 40/2 = 32) and the right sidebar's collapse toggle. */
+        minHeight: 64,
+        background: "var(--surface)",
+        borderBottom: "1px solid var(--border)",
         display: "flex",
         alignItems: "center",
-        gap: "0.75rem",
-        padding: "0 clamp(0.75rem, 2vw, 1.5rem)",
+        gap: "clamp(0.5rem, 1.5vw, 0.75rem)",
+        padding: "0.5rem clamp(0.85rem, 2.5vw, 1.5rem)",
         flexShrink: 0,
         position: "sticky",
         top: 0,
         zIndex: 30,
       }}
     >
-      <button
-        onClick={onToggleSidebar}
-        aria-label={sidebarOpen ? "Fermer la sidebar" : "Ouvrir la sidebar"}
-        aria-expanded={sidebarOpen}
-        className="agent-icon-btn"
-        style={{
-          width: 36,
-          height: 36,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          background: "transparent",
-          border: `1px solid transparent`,
-          borderRadius: 9,
-          color: T.text3,
-          cursor: "pointer",
-          flexShrink: 0,
-          transition: "background 0.15s, border-color 0.15s, color 0.15s",
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.background = T.surface3;
-          e.currentTarget.style.borderColor = T.border;
-          e.currentTarget.style.color = T.text2;
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.background = "transparent";
-          e.currentTarget.style.borderColor = "transparent";
-          e.currentTarget.style.color = T.text3;
-        }}
-      >
-        {sidebarOpen ? (
-          <PanelLeftClose size={16} strokeWidth={2} aria-hidden="true" />
-        ) : (
-          <PanelLeftOpen size={16} strokeWidth={2} aria-hidden="true" />
-        )}
-      </button>
-
-      <div
-        className="agent-topbar-brand"
-        style={{ display: "flex", alignItems: "center", gap: "0.6rem", flexShrink: 0 }}
-      >
-        <span
-          aria-hidden="true"
-          style={{
-            width: 28,
-            height: 28,
-            background: T.gradient,
-            color: "#FFFFFF",
-            borderRadius: 8,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontSize: "0.62rem",
-            fontWeight: 700,
-            boxShadow:
-              "inset 0 1px 0 rgba(255,255,255,0.30), 0 0 0 1px rgba(68,65,200,0.20), 0 2px 6px -2px rgba(88,86,214,0.40)",
-            letterSpacing: "0.02em",
-            flexShrink: 0,
-          }}
-        >
-          CMA
-        </span>
-        <div
-          className="agent-topbar-brand-text"
-          style={{ display: "flex", flexDirection: "column", lineHeight: 1.15 }}
-        >
-          <span
-            style={{
-              fontSize: "0.9rem",
-              fontWeight: 600,
-              letterSpacing: "-0.015em",
-              color: T.text,
-            }}
-          >
-            Cabinet Müller
-          </span>
-          <span
-            style={{
-              fontSize: "0.62rem",
-              fontWeight: 600,
-              letterSpacing: "0.12em",
-              textTransform: "uppercase",
-              color: T.text4,
-            }}
-          >
-            Agent · Conversation
-          </span>
-        </div>
-      </div>
-
       <div
         className="agent-topbar-title"
         aria-live="polite"
         style={{
           flex: 1,
           minWidth: 0,
-          display: showTitle ? "flex" : "none",
+          display: "flex",
           alignItems: "center",
-          justifyContent: "center",
           gap: "0.45rem",
+          opacity: showTitle ? 1 : 0,
+          transition: "opacity 0.18s ease",
         }}
       >
         <span
@@ -1028,8 +1345,8 @@ function TopBar({
             width: 6,
             height: 6,
             borderRadius: "50%",
-            background: loading ? T.accent : T.text4,
-            boxShadow: loading ? `0 0 0 4px ${T.accentTint2}` : "none",
+            background: loading ? "var(--accent)" : "var(--text-4)",
+            boxShadow: loading ? "0 0 0 4px var(--accent-tint-2)" : "none",
             transition: "background 0.2s, box-shadow 0.2s",
             flexShrink: 0,
             animation: loading ? "agent-pulse 1.4s ease-in-out infinite" : "none",
@@ -1038,33 +1355,67 @@ function TopBar({
         <span
           title={title}
           style={{
-            fontSize: "0.84rem",
-            fontWeight: 500,
-            color: T.text2,
-            letterSpacing: "-0.005em",
+            fontSize: "clamp(0.82rem, 2vw, 0.92rem)",
+            fontWeight: 600,
+            color: "var(--text)",
+            letterSpacing: "-0.01em",
             overflow: "hidden",
             textOverflow: "ellipsis",
             whiteSpace: "nowrap",
-            maxWidth: "min(48ch, 100%)",
+            minWidth: 0,
           }}
         >
           {title}
         </span>
       </div>
 
-      {!showTitle && <div style={{ flex: 1 }} />}
-
-      <div style={{ display: "flex", alignItems: "center", gap: "0.45rem", flexShrink: 0 }}>
+      <div
+        className="agent-topbar-actions"
+        style={{ display: "flex", alignItems: "center", gap: "0.45rem", flexShrink: 0 }}
+      >
         <MemoryButton
           count={memoryCount}
           open={memoryDrawerOpen}
           onToggle={onToggleMemoryDrawer}
         />
-        <ModelChip
-          model={health?.model}
-          hasKey={health?.has_api_key}
-          rows={health?.dataset}
-        />
+        <button
+          type="button"
+          onClick={onToggleHistory}
+          aria-label={historyOpen ? "Fermer l'historique" : "Ouvrir l'historique"}
+          aria-expanded={historyOpen}
+          className="agent-icon-btn agent-topbar-history-toggle"
+          style={{
+            /* 40×40 + surface chrome mirrors the left hamburger so the mobile
+             * topbar reads as a balanced pair when the drawer is closed. */
+            width: 40,
+            height: 40,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            background: "var(--surface)",
+            border: "1px solid var(--border)",
+            borderRadius: 10,
+            boxShadow: "var(--tier-1)",
+            color: "var(--text)",
+            cursor: "pointer",
+            flexShrink: 0,
+            transition: "background 0.15s, border-color 0.15s, color 0.15s",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = "var(--surface-2)";
+            e.currentTarget.style.borderColor = "var(--border-strong)";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = "var(--surface)";
+            e.currentTarget.style.borderColor = "var(--border)";
+          }}
+        >
+          {historyOpen ? (
+            <PanelRightClose size={18} strokeWidth={2.25} aria-hidden="true" />
+          ) : (
+            <PanelRightOpen size={18} strokeWidth={2.25} aria-hidden="true" />
+          )}
+        </button>
       </div>
     </header>
   );
@@ -1088,22 +1439,26 @@ function MemoryButton({
       title="Mémoire de l'agent"
       className="agent-memory-trigger"
       style={{
+        /* height:40 + topbar minHeight:64 + alignItems:center anchors the
+         * memory pill's center at y=32, identical to the hamburger and the
+         * right sidebar's collapse toggle — clean visual symmetry across
+         * the page top. */
+        height: 40,
         display: "inline-flex",
         alignItems: "center",
         gap: "0.45rem",
-        padding: "0.4rem 0.7rem 0.4rem 0.6rem",
+        padding: "0 0.85rem 0 0.7rem",
         background: open ? T.accentTint2 : T.surface,
         color: open ? T.accent : T.text2,
-        border: "none",
+        border: "1px solid",
+        borderColor: open ? T.accentTint : "var(--border)",
         borderRadius: 100,
         fontFamily: "inherit",
-        fontSize: "0.74rem",
+        fontSize: "0.78rem",
         fontWeight: 600,
         letterSpacing: "-0.005em",
         cursor: "pointer",
-        boxShadow: open
-          ? `inset 0 0 0 1px ${T.accentTint}, ${T.tier1}`
-          : T.tier1,
+        boxShadow: T.tier1,
         transition: "transform 0.18s ease, background 0.18s ease, color 0.18s ease",
         flexShrink: 0,
       }}
@@ -1114,7 +1469,7 @@ function MemoryButton({
         e.currentTarget.style.transform = "translateY(0)";
       }}
     >
-      <Brain size={13} strokeWidth={2.25} aria-hidden="true" />
+      <Brain size={15} strokeWidth={2.25} aria-hidden="true" />
       <span className="agent-memory-trigger-label">Mémoire</span>
       <span
         style={{
@@ -1331,6 +1686,8 @@ function Row({
 
 function Sidebar({
   open,
+  collapsed,
+  onToggle,
   conversations,
   activeId,
   onSelect,
@@ -1341,6 +1698,10 @@ function Sidebar({
   onCloseMobile,
 }: {
   open: boolean;
+  /** Desktop slim-rail mode. Ignored on mobile (always full drawer width). */
+  collapsed: boolean;
+  /** Unified toggle: flips drawer on mobile, flips collapsed on desktop. */
+  onToggle: () => void;
   conversations: Conversation[];
   activeId: string;
   onSelect: (id: string) => void;
@@ -1362,17 +1723,20 @@ function Sidebar({
   return (
     <aside
       className="agent-sidebar"
-      aria-label="Historique et mémoire"
+      aria-label="Historique des conversations"
       aria-hidden={!open}
       data-open={open ? "true" : "false"}
+      data-collapsed={collapsed ? "true" : "false"}
       style={{
-        // Width animates via CSS so the responsive variable (per breakpoint)
-        // is respected without re-mounting the element. The inner content
-        // div keeps its full width while the outer rail collapses, so the
-        // labels don't reflow during the transition.
-        width: open ? "var(--agent-sidebar-w, 268px)" : 0,
-        background: T.surface2,
-        borderRight: open ? `1px solid ${T.border}` : "1px solid transparent",
+        /* Three width states:
+         *   - Mobile drawer: full width via CSS var (slides via transform).
+         *   - Desktop collapsed: 56px slim icon rail.
+         *   - Desktop expanded: full panel via CSS var.
+         * The @media (max-width: 720px) rule forces the var width regardless
+         * of `collapsed`, so the mobile drawer always opens to full size. */
+        width: collapsed ? 56 : "var(--agent-sidebar-w, 288px)",
+        background: "var(--surface-2)",
+        borderLeft: "1px solid var(--border)",
         display: "flex",
         flexDirection: "column",
         overflow: "hidden",
@@ -1381,71 +1745,160 @@ function Sidebar({
           "width 0.26s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.26s ease",
       }}
     >
+      {/* ─── Slim icon rail (desktop collapsed) — visible only via CSS rule
+       *     below at >720px when data-collapsed="true". On mobile the rail
+       *     is hidden and the full drawer always renders. */}
+      <SidebarSlimRail
+        onExpand={onToggle}
+        onNew={onNew}
+        conversationCount={conversations.length}
+      />
+
+      {/* ─── Full content (desktop expanded + mobile drawer) ─── */}
       <div
+        className="agent-sidebar-content"
         style={{
-          width: "var(--agent-sidebar-w, 268px)",
+          width: "var(--agent-sidebar-w, 288px)",
           display: "flex",
           flexDirection: "column",
           height: "100%",
         }}
       >
-            <div style={{ padding: "1rem 0.85rem 0.6rem" }}>
+            {/* ─── Header row with collapse chevron (desktop only) ───
+             *     padding-top 0.75rem mirrors the left hamburger's top:0.75rem
+             *     fixed offset; combined with the 40×40 button, the toggle's
+             *     center lands at y=32, identical to the hamburger. */}
+            <div
+              className="agent-sidebar-header"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "0.5rem",
+                padding: "0.75rem 0.5rem 0",
+              }}
+            >
+              <button
+                type="button"
+                onClick={onToggle}
+                aria-label="Replier le panneau"
+                title="Replier le panneau"
+                style={{
+                  width: 40,
+                  height: 40,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  background: "var(--surface)",
+                  border: "1px solid var(--border)",
+                  borderRadius: 10,
+                  boxShadow: "var(--tier-1)",
+                  color: "var(--text)",
+                  cursor: "pointer",
+                  flexShrink: 0,
+                  transition: "background 0.15s, color 0.15s, border-color 0.15s",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = "var(--surface-2)";
+                  e.currentTarget.style.borderColor = "var(--border-strong)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = "var(--surface)";
+                  e.currentTarget.style.borderColor = "var(--border)";
+                }}
+              >
+                <PanelRightClose size={18} strokeWidth={2.25} aria-hidden="true" />
+              </button>
+              <span
+                style={{
+                  fontFamily: "var(--font-mono), ui-monospace, monospace",
+                  fontSize: "0.62rem",
+                  fontWeight: 700,
+                  letterSpacing: "0.18em",
+                  textTransform: "uppercase",
+                  color: "var(--text-4)",
+                  flex: 1,
+                  textAlign: "right",
+                  paddingRight: "0.25rem",
+                }}
+              >
+                Espace
+              </span>
+            </div>
+
+            {/* ─── Solid-accent banner CTA (mirrors dashboard action banner) ───
+             * Horizontal padding 0.5rem matches the conv list's container so
+             * the CTA, search field, and chat rows share a single left edge. */}
+            <div style={{ padding: "0.5rem 0.5rem 0.55rem" }}>
               <button
                 onClick={() => {
                   onNew();
-                  // On mobile, the drawer overlays the chat — auto-close so the
-                  // user immediately lands on the fresh empty thread.
                   if (typeof window !== "undefined" &&
-                      window.matchMedia("(max-width: 820px)").matches) {
+                      window.matchMedia("(max-width: 720px)").matches) {
                     onCloseMobile();
                   }
                 }}
+                className="agent-conv-cta"
                 style={{
                   width: "100%",
                   display: "flex",
                   alignItems: "center",
-                  justifyContent: "center",
-                  gap: "0.5rem",
-                  padding: "0.6rem 0.75rem",
-                  background: T.gradient,
+                  justifyContent: "space-between",
+                  gap: "0.4rem",
+                  padding: "0.55rem 0.8rem",
+                  background: "var(--accent)",
                   color: "#FFFFFF",
                   border: "none",
                   borderRadius: 10,
                   fontFamily: "inherit",
-                  fontSize: "0.82rem",
+                  fontSize: "0.78rem",
                   fontWeight: 600,
                   letterSpacing: "-0.005em",
                   cursor: "pointer",
-                  boxShadow: T.gradientShadow,
+                  boxShadow: "0 10px 24px -12px rgba(0,122,255,0.55)",
                   transition: "transform 0.22s ease, box-shadow 0.22s ease",
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.transform = "translateY(-1px)";
-                  e.currentTarget.style.boxShadow = T.gradientShadowHover;
+                  e.currentTarget.style.boxShadow = "0 14px 30px -12px rgba(0,122,255,0.65)";
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.transform = "translateY(0)";
-                  e.currentTarget.style.boxShadow = T.gradientShadow;
+                  e.currentTarget.style.boxShadow = "0 10px 24px -12px rgba(0,122,255,0.55)";
                 }}
               >
-                <Plus size={14} strokeWidth={2.5} />
-                Nouvelle conversation
+                <span style={{ display: "inline-flex", alignItems: "center", gap: "0.45rem" }}>
+                  <span aria-hidden="true" style={{
+                    width: 20, height: 20, borderRadius: 6,
+                    background: "rgba(255,255,255,0.18)",
+                    display: "inline-flex", alignItems: "center", justifyContent: "center",
+                  }}>
+                    <Plus size={12} strokeWidth={2.5} />
+                  </span>
+                  Nouvelle conversation
+                </span>
+                <ChevronRight size={12} strokeWidth={2.25} style={{ opacity: 0.7 }} />
               </button>
             </div>
 
-            <div style={{ padding: "0.1rem 0.85rem 0.5rem" }}>
+            {/* ─── Search card (tier-1 elevation, accent-tint focus ring) ─── */}
+            <div style={{ padding: "0.1rem 0.5rem 0.65rem" }}>
               <div
+                className="agent-conv-search"
                 style={{
                   position: "relative",
                   display: "flex",
                   alignItems: "center",
+                  background: "var(--surface)",
+                  borderRadius: 10,
+                  boxShadow: "var(--tier-1)",
+                  transition: "box-shadow 0.18s ease",
                 }}
               >
                 <Search
                   size={12}
                   strokeWidth={2.25}
-                  color={T.text4}
-                  style={{ position: "absolute", left: 9, pointerEvents: "none" }}
+                  color="var(--text-4)"
+                  style={{ position: "absolute", left: 10, pointerEvents: "none" }}
                 />
                 <input
                   type="text"
@@ -1454,15 +1907,14 @@ function Sidebar({
                   placeholder="Rechercher…"
                   style={{
                     width: "100%",
-                    padding: "0.45rem 0.6rem 0.45rem 1.85rem",
-                    background: T.surface,
+                    padding: "0.5rem 0.6rem 0.5rem 1.95rem",
+                    background: "transparent",
                     border: "none",
                     borderRadius: 10,
                     fontFamily: "inherit",
                     fontSize: "0.8rem",
-                    color: T.text,
+                    color: "var(--text)",
                     outline: "none",
-                    boxShadow: T.tier1,
                   }}
                 />
                 {searchQuery && (
@@ -1479,9 +1931,9 @@ function Sidebar({
                       justifyContent: "center",
                       background: "transparent",
                       border: "none",
-                      color: T.text3,
+                      color: "var(--text-3)",
                       cursor: "pointer",
-                      borderRadius: 4,
+                      borderRadius: 6,
                     }}
                   >
                     <X size={11} strokeWidth={2.25} />
@@ -1490,31 +1942,69 @@ function Sidebar({
               </div>
             </div>
 
+            {/* ─── Mono eyebrow (matches dashboard section labels) ───
+             * Horizontal padding aligns the label to the same left edge as
+             * the CTA, search field, and conv rows. */}
             <div
               style={{
-                fontSize: "0.62rem",
+                fontFamily: "var(--font-mono), ui-monospace, monospace",
+                fontSize: "clamp(0.6rem, 1.7vw, 0.66rem)",
                 fontWeight: 700,
-                letterSpacing: "0.14em",
+                letterSpacing: "0.18em",
                 textTransform: "uppercase",
-                color: T.text4,
-                padding: "0.1rem 1rem 0.35rem",
+                color: "var(--text-4)",
+                padding: "0.3rem 0.7rem 0.5rem",
+                display: "flex",
+                alignItems: "center",
+                gap: "0.45rem",
               }}
             >
-              Conversations
-              {searchQuery && (
-                <span style={{ color: T.text3, fontWeight: 500, marginLeft: "0.4rem" }}>
+              <span>Conversations</span>
+              {searchQuery ? (
+                <span style={{
+                  color: "var(--accent)",
+                  fontWeight: 700,
+                  letterSpacing: "0.02em",
+                  fontVariantNumeric: "tabular-nums",
+                }}>
                   · {filteredConvs.length}/{conversations.length}
+                </span>
+              ) : (
+                <span style={{
+                  color: "var(--text-3)",
+                  fontWeight: 600,
+                  fontVariantNumeric: "tabular-nums",
+                }}>
+                  · {conversations.length}
                 </span>
               )}
             </div>
 
-            <div className="agent-scroll" style={{ flex: 1, overflowY: "auto", padding: "0 0.5rem 0.5rem" }}>
+            {/* ─── Flat conversation list (sober, no per-row shadow) ───
+             * minHeight:0 lets this flex child shrink below its content
+             * height so overflowY:auto actually kicks in; without it the
+             * list pushes the memory section + footer past the aside's
+             * overflow:hidden boundary and clips them.
+             * overscrollBehavior:contain stops the wheel/touch scroll from
+             * propagating into the chat area behind when the user hits
+             * top/bottom inside the sidebar. */}
+            <div className="agent-scroll agent-conv-list" style={{
+              flex: 1,
+              minHeight: 0,
+              overflowY: "auto",
+              overscrollBehavior: "contain",
+              padding: "0 0.5rem 0.5rem",
+              display: "flex",
+              flexDirection: "column",
+              gap: 1,
+            }}>
               {filteredConvs.length === 0 ? (
                 <div
                   style={{
-                    padding: "0.6rem 0.7rem",
-                    fontSize: "0.74rem",
-                    color: T.text4,
+                    padding: "0.85rem 0.9rem",
+                    fontSize: "0.78rem",
+                    color: "var(--text-4)",
+                    textAlign: "center",
                   }}
                 >
                   Aucune conversation ne correspond.
@@ -1529,7 +2019,7 @@ function Sidebar({
                       active={isActive}
                       onSelect={() => {
                         onSelect(c.id);
-                        if (window.matchMedia("(max-width: 820px)").matches) {
+                        if (window.matchMedia("(max-width: 720px)").matches) {
                           onCloseMobile();
                         }
                       }}
@@ -1541,70 +2031,194 @@ function Sidebar({
 
             </div>
 
-            <div
-              style={{
-                padding: "0.75rem 0.9rem calc(0.75rem + env(safe-area-inset-bottom, 0px))",
-                display: "flex",
-                flexDirection: "column",
-                gap: "0.35rem",
-                background:
-                  "linear-gradient(to right, transparent, rgba(0,0,0,0.06) 12%, rgba(0,0,0,0.06) 88%, transparent) top / 100% 1px no-repeat",
-              }}
-            >
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "0.45rem",
-                  fontSize: "0.7rem",
-                  color: T.text3,
-                }}
-              >
-                <Wrench size={11} strokeWidth={2.25} color={T.accent} aria-hidden="true" />
-                <span style={{ fontWeight: 600, color: T.text2 }}>8 outils</span>
-                <span style={{ color: T.text4 }}>· KPI · lookups · SQL · mémoire</span>
-              </div>
-              {datasetLabel && (
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "0.45rem",
-                    fontSize: "0.7rem",
-                    color: T.text3,
-                  }}
-                >
-                  <Database size={11} strokeWidth={2.25} color={T.text4} aria-hidden="true" />
-                  <span style={{ fontVariantNumeric: "tabular-nums" }}>{datasetLabel}</span>
-                </div>
-              )}
-              {model && (
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "0.45rem",
-                    fontSize: "0.68rem",
-                    color: T.text3,
-                    fontFamily: "var(--font-mono), ui-monospace, monospace",
-                  }}
-                >
-                  <Cpu size={11} strokeWidth={2.25} color={T.text4} aria-hidden="true" />
-                  <span
-                    style={{
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                      whiteSpace: "nowrap",
-                      minWidth: 0,
-                    }}
-                  >
-                    {model}
-                  </span>
-                </div>
-              )}
-            </div>
+            {/* ─── Usage + sync footer (replaces tools/dataset/model strip) ─── */}
+            <UsageFooter datasetLabel={datasetLabel} />
       </div>
     </aside>
+  );
+}
+
+/* Slim icon rail shown when the right sidebar is collapsed on desktop.
+ * Visibility is governed by .agent-sidebar[data-collapsed="true"] CSS at
+ * >720px. On mobile the rail is hidden and the full drawer always renders. */
+function SidebarSlimRail({
+  onExpand,
+  onNew,
+  conversationCount,
+}: {
+  onExpand: () => void;
+  onNew: () => void;
+  conversationCount: number;
+}) {
+  return (
+    <div
+      className="agent-sidebar-rail"
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        width: 56,
+        height: "100%",
+        /* padding-top 0.75rem mirrors the left hamburger's top:0.75rem; the
+         * 40×40 expand toggle below then centers at y=32, identical to the
+         * hamburger and to the in-header collapse button. */
+        padding: "0.75rem 0",
+        gap: "0.45rem",
+      }}
+    >
+      <SlimRailButton
+        Icon={PanelRightOpen}
+        label="Déployer le panneau"
+        onClick={onExpand}
+        variant="panel"
+        iconSize={18}
+      />
+      <SlimRailDivider />
+      <SlimRailButton
+        Icon={Plus}
+        label="Nouvelle conversation"
+        onClick={onNew}
+        variant="accent"
+      />
+      <div style={{ height: "0.3rem" }} />
+      <SlimRailButton
+        Icon={MessageSquare}
+        label={`Discussions · ${conversationCount}`}
+        onClick={onExpand}
+        badge={conversationCount}
+      />
+    </div>
+  );
+}
+
+function SlimRailDivider() {
+  return (
+    <span
+      aria-hidden="true"
+      style={{
+        width: 28,
+        height: 1,
+        background: "var(--border)",
+        margin: "0.15rem 0",
+      }}
+    />
+  );
+}
+
+function SlimRailButton({
+  Icon,
+  label,
+  onClick,
+  badge,
+  variant,
+  iconSize = 15,
+}: {
+  Icon: LucideIcon | ComponentType<{ size?: number; strokeWidth?: number }>;
+  label: string;
+  onClick: () => void;
+  badge?: number;
+  /** "panel" matches the left hamburger's 40×40 chrome (surface bg +
+   *  border + radius 10 + tier-1 shadow); reserved for the expand-toggle
+   *  to anchor visual symmetry with the left sidebar. */
+  variant?: "default" | "accent" | "panel";
+  /** Override the default 15px glyph — used by the expand-toggle so it
+   *  visually matches the left sidebar's 17px chevron. */
+  iconSize?: number;
+}) {
+  const isAccent = variant === "accent";
+  const isPanel = variant === "panel";
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={label}
+      title={label}
+      style={{
+        position: "relative",
+        width: isPanel ? 40 : 36,
+        height: isPanel ? 40 : 36,
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        background: isAccent
+          ? "var(--accent)"
+          : isPanel
+          ? "var(--surface)"
+          : "transparent",
+        border: "1px solid",
+        borderColor: isAccent
+          ? "var(--accent-2)"
+          : isPanel
+          ? "var(--border)"
+          : "transparent",
+        borderRadius: isPanel ? 10 : 9,
+        color: isAccent
+          ? "#FFFFFF"
+          : isPanel
+          ? "var(--text)"
+          : "var(--text-3)",
+        cursor: "pointer",
+        flexShrink: 0,
+        boxShadow: isAccent
+          ? "0 4px 12px -4px rgba(0,122,255,0.45)"
+          : isPanel
+          ? "var(--tier-1)"
+          : "none",
+        transition:
+          "background 0.15s, color 0.15s, border-color 0.15s, transform 0.12s",
+      }}
+      onMouseEnter={(e) => {
+        if (isAccent) return;
+        if (isPanel) {
+          e.currentTarget.style.background = "var(--surface-2)";
+          e.currentTarget.style.borderColor = "var(--border-strong)";
+          return;
+        }
+        e.currentTarget.style.background = "var(--surface)";
+        e.currentTarget.style.borderColor = "var(--border)";
+        e.currentTarget.style.color = "var(--text)";
+      }}
+      onMouseLeave={(e) => {
+        if (isAccent) return;
+        if (isPanel) {
+          e.currentTarget.style.background = "var(--surface)";
+          e.currentTarget.style.borderColor = "var(--border)";
+          return;
+        }
+        e.currentTarget.style.background = "transparent";
+        e.currentTarget.style.borderColor = "transparent";
+        e.currentTarget.style.color = "var(--text-3)";
+      }}
+    >
+      <Icon size={iconSize} strokeWidth={2.25} />
+      {badge !== undefined && badge > 0 && !isAccent && (
+        <span
+          aria-hidden="true"
+          style={{
+            position: "absolute",
+            top: -3,
+            right: -3,
+            minWidth: 14,
+            height: 14,
+            padding: "0 3px",
+            background: "var(--accent)",
+            color: "#FFFFFF",
+            border: "2px solid var(--surface-2)",
+            borderRadius: 999,
+            fontSize: "0.55rem",
+            fontWeight: 700,
+            fontFamily: "var(--font-mono), ui-monospace, monospace",
+            fontVariantNumeric: "tabular-nums",
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            lineHeight: 1,
+          }}
+        >
+          {badge > 99 ? "99+" : badge}
+        </span>
+      )}
+    </button>
   );
 }
 
@@ -1638,22 +2252,27 @@ function ConvRow({
     conv.messages.length > 0
       ? conv.messages[conv.messages.length - 1].ts ?? conv.createdAt
       : conv.createdAt;
+  /* Sober, flat row — no per-row card, no shadow, no accent rail. Hover and
+   * active states use only a soft fill (--surface-3 on hover, --surface on
+   * active) so the rail feels editorial rather than tile-heavy. The icon
+   * stays small and inline, no chip background. */
   return (
     <div
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
+      className={`agent-conv-row${active ? " is-active" : ""}`}
       style={{
+        position: "relative",
         display: "grid",
-        gridTemplateColumns: "auto 1fr auto",
+        gridTemplateColumns: "auto minmax(0, 1fr) auto",
         alignItems: "center",
         gap: "0.55rem",
-        padding: "0.5rem 0.6rem",
-        background: active ? T.surface : hover ? T.surface : "transparent",
-        borderRadius: 9,
-        marginBottom: 2,
+        padding: "0.45rem 0.55rem",
+        background:
+          active ? "var(--surface)" : hover ? "var(--surface-3)" : "transparent",
+        borderRadius: 8,
         cursor: "pointer",
-        boxShadow: active ? T.tier1 : "none",
-        transition: "background 0.15s, box-shadow 0.18s",
+        transition: "background 0.15s ease, color 0.15s ease",
       }}
       onClick={onSelect}
       role="button"
@@ -1669,14 +2288,14 @@ function ConvRow({
       <MessageSquare
         size={13}
         strokeWidth={2}
-        color={active ? T.accent : T.text3}
+        color={active ? "var(--accent)" : "var(--text-3)"}
         style={{ flexShrink: 0 }}
         aria-hidden="true"
       />
       <span
         style={{
           fontSize: "0.82rem",
-          color: active ? T.text : T.text2,
+          color: active ? "var(--text)" : "var(--text-2)",
           fontWeight: active ? 600 : 500,
           letterSpacing: "-0.005em",
           overflow: "hidden",
@@ -1687,14 +2306,45 @@ function ConvRow({
       >
         {conv.title}
       </span>
-      {hover ? (
+      {/* Reserved-slot pattern: timestamp + trash sit in the same 22-tall
+       * area; hover crossfades them so the row never reflows vertically. */}
+      <span
+        style={{
+          position: "relative",
+          width: 32,
+          height: 22,
+          display: "inline-flex",
+          alignItems: "center",
+          justifyContent: "flex-end",
+          flexShrink: 0,
+        }}
+      >
+        <span
+          aria-hidden="true"
+          style={{
+            fontSize: "0.66rem",
+            fontFamily: "var(--font-mono), ui-monospace, monospace",
+            color: "var(--text-4)",
+            whiteSpace: "nowrap",
+            fontVariantNumeric: "tabular-nums",
+            opacity: hover ? 0 : active ? 0.9 : 0.7,
+            transition: "opacity 0.15s ease",
+            pointerEvents: "none",
+          }}
+        >
+          {relTime(lastTs)}
+        </span>
         <button
           onClick={(e) => {
             e.stopPropagation();
             onDelete();
           }}
           aria-label="Supprimer la conversation"
+          tabIndex={hover ? 0 : -1}
           style={{
+            position: "absolute",
+            right: 0,
+            top: 0,
             width: 22,
             height: 22,
             display: "flex",
@@ -1702,36 +2352,157 @@ function ConvRow({
             justifyContent: "center",
             background: "transparent",
             border: "none",
-            color: T.text4,
+            color: "var(--text-4)",
             cursor: "pointer",
             borderRadius: 5,
-            transition: "background 0.12s, color 0.12s",
+            opacity: hover ? 1 : 0,
+            pointerEvents: hover ? "auto" : "none",
+            transition: "opacity 0.15s ease, background 0.12s, color 0.12s",
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.background = T.surface;
-            e.currentTarget.style.color = T.danger;
+            e.currentTarget.style.background = "var(--surface)";
+            e.currentTarget.style.color = "var(--danger)";
           }}
           onMouseLeave={(e) => {
             e.currentTarget.style.background = "transparent";
-            e.currentTarget.style.color = T.text4;
+            e.currentTarget.style.color = "var(--text-4)";
           }}
         >
           <Trash2 size={11} strokeWidth={2} aria-hidden="true" />
         </button>
-      ) : (
-        <span
-          aria-hidden="true"
-          style={{
-            fontSize: "0.66rem",
+      </span>
+    </div>
+  );
+}
+
+/* Usage + sync footer — replaces the old tools/dataset/model strip. Surfaces
+ * what's actually operational for the client: monthly question quota with a
+ * mini progress bar + last sync of the underlying data sources. Mock counts
+ * for now; swap to real quota state when the backend exposes it. */
+function UsageFooter({ datasetLabel }: { datasetLabel: string | null }) {
+  const used = 47;
+  const cap = 500;
+  const pct = Math.min(100, (used / cap) * 100);
+  /* Read sync intervals from the dataset label when present, otherwise show
+   * a sensible default that matches the dashboard's source pills. */
+  return (
+    <div
+      style={{
+        padding: "0.75rem 0.85rem calc(0.9rem + env(safe-area-inset-bottom, 0px))",
+        display: "flex",
+        flexDirection: "column",
+        gap: "0.55rem",
+        borderTop: "1px solid var(--border)",
+      }}
+    >
+      {/* Quota card */}
+      <div style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: "0.4rem",
+        padding: "0.6rem 0.7rem 0.65rem",
+        background: "var(--surface)",
+        borderRadius: 9,
+        boxShadow: "var(--tier-1)",
+      }}>
+        <div style={{
+          display: "flex",
+          alignItems: "baseline",
+          justifyContent: "space-between",
+          gap: "0.5rem",
+        }}>
+          <span style={{
             fontFamily: "var(--font-mono), ui-monospace, monospace",
-            color: T.text4,
-            whiteSpace: "nowrap",
+            fontSize: "0.58rem",
+            fontWeight: 700,
+            letterSpacing: "0.14em",
+            textTransform: "uppercase",
+            color: "var(--text-4)",
+          }}>Questions ce mois</span>
+          <span style={{
+            fontFamily: "var(--font-mono), ui-monospace, monospace",
+            fontSize: "0.74rem",
+            fontWeight: 600,
+            color: "var(--text-2)",
             fontVariantNumeric: "tabular-nums",
-            opacity: active ? 0.85 : 0.7,
-          }}
-        >
-          {relTime(lastTs)}
-        </span>
+          }}>
+            <span style={{ color: "var(--accent)" }}>{used}</span>
+            <span style={{ color: "var(--text-4)" }}> / {cap}</span>
+          </span>
+        </div>
+        <div aria-hidden="true" style={{
+          position: "relative",
+          height: 4,
+          background: "var(--surface-3)",
+          borderRadius: 999,
+          overflow: "hidden",
+        }}>
+          <span style={{
+            position: "absolute",
+            inset: "0 auto 0 0",
+            width: `${pct}%`,
+            background: "var(--accent)",
+            borderRadius: 999,
+            transition: "width 0.4s ease",
+          }} />
+        </div>
+      </div>
+
+      {/* Sync status card */}
+      <div style={{
+        display: "flex",
+        alignItems: "center",
+        gap: "0.5rem",
+        padding: "0.5rem 0.7rem",
+        background: "var(--surface)",
+        borderRadius: 9,
+        boxShadow: "var(--tier-1)",
+        minWidth: 0,
+      }}>
+        <span aria-hidden="true" style={{
+          width: 6, height: 6, borderRadius: "50%",
+          background: "var(--success)",
+          boxShadow: "0 0 0 3px var(--success-tint)",
+          flexShrink: 0,
+        }} />
+        <div style={{
+          display: "flex",
+          flexDirection: "column",
+          minWidth: 0,
+          lineHeight: 1.2,
+        }}>
+          <span style={{
+            fontFamily: "var(--font-mono), ui-monospace, monospace",
+            fontSize: "0.58rem",
+            fontWeight: 700,
+            letterSpacing: "0.14em",
+            textTransform: "uppercase",
+            color: "var(--text-4)",
+          }}>Données à jour</span>
+          <span style={{
+            fontSize: "0.7rem",
+            color: "var(--text-2)",
+            fontWeight: 500,
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+          }}>
+            BrokerStar · 3 min · Odoo · 5 min
+          </span>
+        </div>
+      </div>
+
+      {datasetLabel && (
+        <div style={{
+          fontSize: "0.62rem",
+          color: "var(--text-4)",
+          fontFamily: "var(--font-mono), ui-monospace, monospace",
+          fontVariantNumeric: "tabular-nums",
+          textAlign: "center",
+          opacity: 0.8,
+        }}>
+          {datasetLabel}
+        </div>
       )}
     </div>
   );
@@ -2821,89 +3592,100 @@ function Welcome({
   onPick: (text: string) => void;
   loading: boolean;
 }) {
+  /* Compact landing — every element scales down enough that on a typical
+   * 720–1080px viewport the user sees the eyebrow, heading, paragraph, all
+   * three suggestion cards AND the composer below without scrolling. */
   return (
     <motion.div
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
       className="agent-welcome"
-      style={{ paddingTop: "clamp(0.5rem, 4vh, 2.5rem)" }}
+      style={{ paddingTop: "clamp(0.25rem, 1.5vh, 0.85rem)" }}
     >
+      {/* ─── Mono eyebrow (dashboard section-label style) ─── */}
       <div
         style={{
-          display: "inline-flex",
+          display: "flex",
           alignItems: "center",
-          gap: "0.4rem",
-          fontSize: "0.66rem",
+          gap: "0.55rem",
+          fontFamily: "var(--font-mono), ui-monospace, monospace",
+          fontSize: "clamp(0.58rem, 1.5vw, 0.64rem)",
           fontWeight: 700,
-          letterSpacing: "0.14em",
+          letterSpacing: "0.18em",
           textTransform: "uppercase",
-          color: T.accent,
-          background: T.surface,
-          padding: "0.3rem 0.7rem 0.3rem 0.55rem",
-          borderRadius: 100,
-          marginBottom: "1rem",
-          boxShadow: T.tier1,
+          color: "var(--accent)",
+          marginBottom: "0.55rem",
         }}
       >
-        <Sparkles size={11} strokeWidth={2.25} aria-hidden="true" />
-        Agent Cabinet Müller
+        <span aria-hidden="true" style={{
+          width: 16, height: 1,
+          background: "var(--accent)",
+          opacity: 0.45,
+        }} />
+        <Sparkles size={11} strokeWidth={2.5} aria-hidden="true" />
+        <span>Agent · Cabinet Müller</span>
       </div>
+
+      {/* ─── Editorial display heading + paragraph (compacted) ─── */}
       <h1
         style={{
-          fontSize: "clamp(1.65rem, 3.2vw, 2.25rem)",
+          fontSize: "clamp(1.35rem, 3.4vw, 1.85rem)",
           fontWeight: 700,
-          letterSpacing: "-0.028em",
+          letterSpacing: "-0.025em",
           lineHeight: 1.12,
-          color: T.text,
-          margin: "0 0 0.55rem",
-          maxWidth: "22ch",
+          color: "var(--text)",
+          margin: "0 0 0.45rem",
+          maxWidth: "24ch",
         }}
       >
         Que voulez-vous savoir sur le cabinet&nbsp;?
       </h1>
       <p
         style={{
-          fontSize: "0.98rem",
-          color: T.text3,
-          lineHeight: 1.55,
-          margin: "0 0 1.8rem",
-          maxWidth: "58ch",
+          fontSize: "clamp(0.84rem, 1.8vw, 0.92rem)",
+          color: "var(--text-3)",
+          lineHeight: 1.5,
+          margin: "0 0 clamp(0.95rem, 2.2vw, 1.35rem)",
+          maxWidth: "60ch",
         }}
       >
-        L&apos;agent connaît les <strong style={{ color: T.text2 }}>50 clients</strong>,{" "}
-        <strong style={{ color: T.text2 }}>189 contrats</strong> et{" "}
-        <strong style={{ color: T.text2 }}>2 518 primes</strong>.
+        L&apos;agent connaît les <strong style={{ color: "var(--text-2)" }}>50 clients</strong>,{" "}
+        <strong style={{ color: "var(--text-2)" }}>189 contrats</strong> et{" "}
+        <strong style={{ color: "var(--text-2)" }}>2 518 primes</strong>.
         Chiffres exacts, jamais d&apos;invention.
       </p>
 
+      {/* ─── Tight section bar (no border, no helper line below) ─── */}
       <div
         style={{
           display: "flex",
           alignItems: "baseline",
           justifyContent: "space-between",
-          gap: "0.75rem",
-          marginBottom: "0.65rem",
+          gap: "0.6rem",
+          marginBottom: "0.55rem",
         }}
       >
         <div
           style={{
-            fontSize: "0.64rem",
+            fontFamily: "var(--font-mono), ui-monospace, monospace",
+            fontSize: "clamp(0.58rem, 1.5vw, 0.64rem)",
             fontWeight: 700,
-            letterSpacing: "0.14em",
+            letterSpacing: "0.18em",
             textTransform: "uppercase",
-            color: T.text4,
+            color: "var(--text-3)",
           }}
         >
           Pour démarrer
         </div>
         <div
+          className="agent-welcome-helper"
           style={{
-            fontSize: "0.66rem",
-            color: T.text4,
+            fontSize: "0.68rem",
+            color: "var(--text-4)",
           }}
         >
-          Cliquez sur une suggestion · ou tapez votre question
+          Cliquez une suggestion · ou tapez
         </div>
       </div>
 
@@ -2911,8 +3693,8 @@ function Welcome({
         className="agent-welcome-grid"
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(3, 1fr)",
-          gap: "0.7rem",
+          gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+          gap: "clamp(0.5rem, 1.3vw, 0.7rem)",
         }}
       >
         {SUGGESTIONS.map((s, i) => (
@@ -2946,50 +3728,51 @@ function SuggestionCard({
         display: "flex",
         flexDirection: "column",
         alignItems: "stretch",
-        gap: "0.5rem",
-        padding: "0.95rem 1rem 0.85rem",
-        background: T.surface,
+        gap: "0.4rem",
+        padding: "clamp(0.65rem, 1.8vw, 0.85rem) clamp(0.7rem, 1.9vw, 0.95rem) clamp(0.6rem, 1.6vw, 0.8rem)",
+        background: "var(--surface)",
         border: "none",
-        borderRadius: 14,
+        borderRadius: 12,
         textAlign: "left",
         fontFamily: "inherit",
         cursor: disabled ? "not-allowed" : "pointer",
         opacity: disabled ? 0.55 : 1,
-        boxShadow: T.tier1,
-        transition: "transform 0.22s ease, box-shadow 0.22s ease",
+        boxShadow: "var(--tier-1)",
+        transition: "transform 0.22s ease, box-shadow 0.25s ease",
         color: "inherit",
         position: "relative",
         overflow: "hidden",
-        minHeight: 112,
+        minHeight: 92,
       }}
       onMouseEnter={(e) => {
         if (disabled) return;
         e.currentTarget.style.transform = "translateY(-2px)";
-        e.currentTarget.style.boxShadow = `${T.tier2}, 0 0 0 4px ${T.accentTint2}`;
+        e.currentTarget.style.boxShadow =
+          "var(--tier-2), 0 0 0 4px var(--accent-tint)";
         const icon = e.currentTarget.querySelector(
           "[data-suggest-icon]",
         ) as HTMLElement | null;
-        if (icon) icon.style.transform = "rotate(3deg) scale(1.06)";
+        if (icon) icon.style.transform = "rotate(4deg) scale(1.08)";
       }}
       onMouseLeave={(e) => {
         if (disabled) return;
         e.currentTarget.style.transform = "translateY(0)";
-        e.currentTarget.style.boxShadow = T.tier1;
+        e.currentTarget.style.boxShadow = "var(--tier-1)";
         const icon = e.currentTarget.querySelector(
           "[data-suggest-icon]",
         ) as HTMLElement | null;
         if (icon) icon.style.transform = "rotate(0) scale(1)";
       }}
     >
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "0.6rem" }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "0.5rem" }}>
         <span
           data-suggest-icon
           style={{
-            width: 30,
-            height: 30,
-            background: T.accentTint,
-            color: T.accent,
-            borderRadius: 9,
+            width: 26,
+            height: 26,
+            background: "var(--accent-tint-2)",
+            color: "var(--accent)",
+            borderRadius: 7,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -2999,22 +3782,26 @@ function SuggestionCard({
           }}
           aria-hidden="true"
         >
-          <s.Icon size={14} strokeWidth={2.25} />
+          <s.Icon size={13} strokeWidth={2.25} />
         </span>
-        <ChevronRight size={13} strokeWidth={2.25} color={T.text4} aria-hidden="true" />
+        <ChevronRight size={12} strokeWidth={2.25} color="var(--text-4)" aria-hidden="true" />
       </div>
       <div
         style={{
-          fontSize: "0.92rem",
+          fontSize: "clamp(0.8rem, 1.8vw, 0.88rem)",
           fontWeight: 600,
-          color: T.text,
+          color: "var(--text)",
           letterSpacing: "-0.01em",
           lineHeight: 1.25,
         }}
       >
         {s.title}
       </div>
-      <div style={{ fontSize: "0.76rem", color: T.text3, lineHeight: 1.4 }}>{s.hint}</div>
+      <div style={{
+        fontSize: "clamp(0.68rem, 1.6vw, 0.74rem)",
+        color: "var(--text-3)",
+        lineHeight: 1.4,
+      }}>{s.hint}</div>
     </motion.button>
   );
 }
@@ -3028,21 +3815,64 @@ function MessageBubble({
 }: {
   message: Message;
   onMemorise?: () => void;
-  onEdit?: () => void;
+  onEdit?: (newText: string) => void;
 }) {
   const isUser = message.role === "user";
   if (isUser) return <UserMessage message={message} onEdit={onEdit} />;
   return <AssistantMessage message={message} onMemorise={onMemorise} />;
 }
 
+/* User message bubble — solid accent chip that shrink-wraps to its content
+ * (chip sizing matches Claude's behaviour). Editing is inline: clicking the
+ * Modifier button morphs the chip into an in-place textarea with Save /
+ * Cancel actions, no jump to the bottom composer. */
 function UserMessage({
   message,
   onEdit,
 }: {
   message: Message;
-  onEdit?: () => void;
+  onEdit?: (newText: string) => void;
 }) {
   const [hover, setHover] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(message.content);
+  const editorRef = useRef<HTMLTextAreaElement | null>(null);
+
+  /* Focus + autosize on entering edit mode. */
+  useEffect(() => {
+    if (!editing) return;
+    const ta = editorRef.current;
+    if (!ta) return;
+    ta.focus();
+    ta.setSelectionRange(ta.value.length, ta.value.length);
+    ta.style.height = "auto";
+    ta.style.height = Math.min(ta.scrollHeight, 320) + "px";
+  }, [editing]);
+
+  const canEdit = !!onEdit;
+  const trimmedDraft = draft.trim();
+  const canSave =
+    editing &&
+    trimmedDraft.length > 0 &&
+    trimmedDraft !== message.content.trim();
+
+  const startEdit = () => {
+    setDraft(message.content);
+    setEditing(true);
+  };
+  const cancelEdit = () => {
+    setDraft(message.content);
+    setEditing(false);
+  };
+  const saveEdit = () => {
+    if (!canSave) return;
+    onEdit?.(trimmedDraft);
+    setEditing(false);
+  };
+
+  const bubbleShadow =
+    "inset 0 1px 0 rgba(255,255,255,0.20), 0 0 0 1px rgba(0,98,204,0.25), 0 8px 20px -10px rgba(0,122,255,0.40)";
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 6 }}
@@ -3052,7 +3882,28 @@ function UserMessage({
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
     >
-      <div data-user-bubble style={{ maxWidth: "78%" }}>
+      {/* alignItems: flex-end on the column lets each child (eyebrow row,
+       * bubble) hug the right edge while still living in a stable-width
+       * track. The track itself never resizes — only the inner chip/editor
+       * crossfade — so the view↔edit transition stays flicker-free. */}
+      <div
+        data-user-bubble
+        style={{
+          maxWidth: "78%",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "flex-end",
+          minWidth: 0,
+          /* Always the editor's target width so the chip mode doesn't
+           * collapse the wrapper. The chip uses fit-content + alignSelf
+           * = flex-end to stay right-anchored within this wider track. */
+          width: "min(640px, 100%)",
+        }}
+      >
+        {/* Eyebrow with Modifier button. Always rendered with a reserved
+         * height; we only toggle visibility/opacity in edit mode so the
+         * column height stays constant and the chip↔editor crossfade has
+         * no vertical reflow to fight. */}
         <div
           style={{
             display: "flex",
@@ -3065,29 +3916,46 @@ function UserMessage({
             textTransform: "uppercase",
             color: T.text4,
             marginBottom: "0.35rem",
+            minHeight: 22,
+            opacity: editing ? 0 : 1,
+            visibility: editing ? "hidden" : "visible",
+            transition: "opacity 0.18s ease",
           }}
         >
-          {onEdit && hover && (
-            <button
-              onClick={onEdit}
+          {canEdit && !editing && (
+            <motion.button
+              className="agent-edit-trigger"
+              onClick={startEdit}
               aria-label="Modifier et renvoyer"
               title="Modifier et renvoyer"
+              /* Always tab-reachable on touch — the @media (hover:none) CSS
+               * rule overrides the desktop opacity:0 default to make the
+               * chip visible there too. */
+              tabIndex={0}
+              whileTap={{ scale: 0.94 }}
+              transition={{ duration: 0.1 }}
               style={{
                 display: "inline-flex",
                 alignItems: "center",
-                gap: "0.25rem",
-                padding: "0.15rem 0.4rem",
+                gap: "0.3rem",
+                padding: "0.3rem 0.55rem",
                 background: T.surface,
                 border: `1px solid ${T.border}`,
-                borderRadius: 5,
+                borderRadius: 7,
                 color: T.text3,
                 fontFamily: "inherit",
-                fontSize: "0.65rem",
+                fontSize: "0.72rem",
                 fontWeight: 600,
                 cursor: "pointer",
                 textTransform: "none",
                 letterSpacing: 0,
-                transition: "background 0.12s, color 0.12s, border-color 0.12s",
+                /* Min hit area satisfies WCAG/Apple HIG touch target spec on
+                 * mobile where the chip is always visible via the
+                 * @media (hover:none) override. */
+                minHeight: 32,
+                opacity: hover ? 1 : 0,
+                pointerEvents: hover ? "auto" : "none",
+                transition: "opacity 0.18s ease, background 0.12s, color 0.12s, border-color 0.12s",
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.background = T.accentTint2;
@@ -3100,29 +3968,237 @@ function UserMessage({
                 e.currentTarget.style.borderColor = T.border;
               }}
             >
-              <Pencil size={10} strokeWidth={2.25} />
+              <Pencil size={11} strokeWidth={2.25} />
               Modifier
-            </button>
+            </motion.button>
           )}
           <span>Vous</span>
         </div>
-        <div
-          style={{
-            background: T.gradient,
-            color: "#FFFFFF",
-            padding: "0.8rem 1.05rem",
-            borderRadius: "14px 14px 4px 14px",
-            fontSize: "0.92rem",
-            lineHeight: 1.55,
-            whiteSpace: "pre-wrap",
-            wordBreak: "break-word",
-            letterSpacing: "-0.005em",
-            boxShadow:
-              "inset 0 1px 0 rgba(255,255,255,0.20), 0 0 0 1px rgba(68,65,200,0.25), 0 8px 20px -10px rgba(88,86,214,0.40)",
-          }}
-        >
-          {message.content}
-        </div>
+
+        {/* In-place crossfade between view (chip) and edit (nested card).
+         *   mode="popLayout" — the exiting element is taken out of flow
+         *   so the entering element can mount in the same spot without
+         *   waiting. No `layout` prop on the children: we don't want
+         *   framer-motion to interpolate the exiting editor's rect toward
+         *   the smaller chip — that's what was producing the downward
+         *   slide-and-fade. Each element just fades in/out in place. */}
+        <AnimatePresence mode="popLayout" initial={false}>
+          {!editing && (
+            <motion.div
+              key="view"
+              initial={{ opacity: 0, scale: 0.98 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.98 }}
+              transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+              style={{
+                background: "var(--accent)",
+                color: "#FFFFFF",
+                padding: "0.8rem 1.05rem",
+                borderRadius: "14px 14px 4px 14px",
+                fontSize: "0.92rem",
+                lineHeight: 1.55,
+                whiteSpace: "pre-wrap",
+                wordBreak: "break-word",
+                letterSpacing: "-0.005em",
+                boxShadow: bubbleShadow,
+                width: "fit-content",
+                maxWidth: "100%",
+                /* Right-anchor: the chip sits on the right edge of its column,
+                 * so morphing from/to its position should pivot there. */
+                transformOrigin: "top right",
+              }}
+            >
+              {message.content}
+            </motion.div>
+          )}
+
+          {/* Edit mode — nested two-layer card to match Claude's pattern:
+           *   outer  = warm gray container (var(--surface-2)) with soft shadow
+           *   inner  = white textarea with a thin accent border (active input)
+           *   footer = sits on the warm container surface, no divider line
+           * Accent blue is scoped to the inner border + Enregistrer CTA only. */}
+          {editing && (
+            <motion.div
+              key="edit"
+              className="agent-edit-card"
+              initial={{ opacity: 0, scale: 0.98 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.98 }}
+              transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+              style={{
+                background: "var(--surface-2)",
+                color: "var(--text)",
+                padding: "0.6rem 0.6rem 0.65rem",
+                borderRadius: 16,
+                border: "1px solid var(--border-strong)",
+                boxShadow:
+                  "0 1px 2px rgba(0,0,0,0.03), 0 8px 24px -10px rgba(0,0,0,0.08), 0 20px 48px -24px rgba(0,0,0,0.10)",
+                width: "100%",
+                display: "flex",
+                flexDirection: "column",
+                gap: "0.55rem",
+                transformOrigin: "top right",
+              }}
+            >
+            {/* Inner white textarea card — thin blue border signals "active". */}
+            <div
+              className="agent-edit-input-wrap"
+              style={{
+                background: "var(--surface)",
+                borderRadius: 12,
+                border: "1px solid var(--accent)",
+                padding: "0.85rem 1rem",
+              }}
+            >
+              <textarea
+                ref={editorRef}
+                className="agent-edit-textarea"
+                value={draft}
+                onChange={(e) => {
+                  setDraft(e.target.value);
+                  const ta = e.currentTarget;
+                  ta.style.height = "auto";
+                  ta.style.height = Math.min(ta.scrollHeight, 320) + "px";
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Escape") {
+                    e.preventDefault();
+                    cancelEdit();
+                  } else if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+                    e.preventDefault();
+                    saveEdit();
+                  }
+                }}
+                aria-label="Modifier votre message"
+                style={{
+                  width: "100%",
+                  resize: "none",
+                  background: "transparent",
+                  border: "none",
+                  outline: "none",
+                  color: "var(--text)",
+                  fontFamily: "inherit",
+                  fontSize: "0.98rem",
+                  fontWeight: 500,
+                  lineHeight: 1.55,
+                  letterSpacing: "-0.005em",
+                  padding: 0,
+                  minHeight: 28,
+                  maxHeight: 320,
+                  scrollbarWidth: "none",
+                  caretColor: "var(--accent)",
+                  display: "block",
+                }}
+              />
+            </div>
+
+            {/* Footer sits on the warm container surface — no divider line. */}
+            <div
+              className="agent-edit-footer"
+              style={{
+                display: "flex",
+                justifyContent: "flex-end",
+                alignItems: "center",
+                gap: "0.5rem",
+                padding: "0.05rem 0.25rem 0.05rem 0.4rem",
+              }}
+            >
+              <span
+                className="agent-edit-hint"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "0.4rem",
+                  fontSize: "0.7rem",
+                  color: "var(--text-3)",
+                  marginRight: "auto",
+                  letterSpacing: 0,
+                  textTransform: "none",
+                  fontWeight: 400,
+                  lineHeight: 1.4,
+                }}
+              >
+                <CircleAlert
+                  size={12}
+                  strokeWidth={2}
+                  color="var(--text-4)"
+                  aria-hidden="true"
+                  style={{ flexShrink: 0 }}
+                />
+                <span>
+                  Échap pour annuler · ⌘/Ctrl + ↵ pour renvoyer
+                </span>
+              </span>
+              <motion.button
+                type="button"
+                onClick={cancelEdit}
+                whileTap={{ scale: 0.96 }}
+                transition={{ duration: 0.12 }}
+                style={{
+                  padding: "0.45rem 0.95rem",
+                  background: "var(--surface)",
+                  border: "1px solid var(--border-strong)",
+                  borderRadius: 8,
+                  color: "var(--text-2)",
+                  fontFamily: "inherit",
+                  fontSize: "0.78rem",
+                  fontWeight: 500,
+                  cursor: "pointer",
+                  transition: "background 0.15s ease, color 0.15s ease, border-color 0.15s ease",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = "var(--surface-2)";
+                  e.currentTarget.style.color = "var(--text)";
+                  e.currentTarget.style.borderColor = "var(--text-4)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = "var(--surface)";
+                  e.currentTarget.style.color = "var(--text-2)";
+                  e.currentTarget.style.borderColor = "var(--border-strong)";
+                }}
+              >
+                Annuler
+              </motion.button>
+              <motion.button
+                type="button"
+                onClick={saveEdit}
+                disabled={!canSave}
+                whileTap={canSave ? { scale: 0.96 } : undefined}
+                transition={{ duration: 0.12 }}
+                style={{
+                  padding: "0.45rem 1rem",
+                  background: canSave ? "var(--accent)" : "var(--surface-3)",
+                  border: "1px solid",
+                  borderColor: canSave ? "var(--accent-2)" : "var(--border-strong)",
+                  borderRadius: 8,
+                  color: canSave ? "#FFFFFF" : "var(--text-4)",
+                  fontFamily: "inherit",
+                  fontSize: "0.78rem",
+                  fontWeight: 600,
+                  cursor: canSave ? "pointer" : "not-allowed",
+                  letterSpacing: "-0.005em",
+                  boxShadow: canSave
+                    ? "0 1px 2px rgba(0,98,204,0.18), 0 4px 12px -4px rgba(0,122,255,0.35)"
+                    : "none",
+                  transition: "background 0.15s ease, box-shadow 0.15s ease",
+                }}
+                onMouseEnter={(e) => {
+                  if (!canSave) return;
+                  e.currentTarget.style.boxShadow =
+                    "0 1px 2px rgba(0,98,204,0.18), 0 8px 18px -6px rgba(0,122,255,0.45)";
+                }}
+                onMouseLeave={(e) => {
+                  if (!canSave) return;
+                  e.currentTarget.style.boxShadow =
+                    "0 1px 2px rgba(0,98,204,0.18), 0 4px 12px -4px rgba(0,122,255,0.35)";
+                }}
+              >
+                Enregistrer
+              </motion.button>
+            </div>
+          </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </motion.div>
   );
@@ -3172,15 +4248,16 @@ function AssistantMessage({
         style={{
           display: "flex",
           alignItems: "center",
-          gap: "0.4rem",
-          fontSize: "0.62rem",
+          gap: "0.45rem",
+          fontFamily: "var(--font-mono), ui-monospace, monospace",
+          fontSize: "clamp(0.6rem, 1.7vw, 0.66rem)",
           fontWeight: 700,
-          letterSpacing: "0.14em",
+          letterSpacing: "0.18em",
           textTransform: "uppercase",
-          color: T.accent,
+          color: "var(--accent)",
         }}
       >
-        <Sparkles size={10} strokeWidth={2.5} />
+        <Sparkles size={11} strokeWidth={2.5} />
         Agent
         {hasContent && (
           <div
@@ -3229,10 +4306,11 @@ function AssistantMessage({
       </div>
       <div
         style={{
-          background: T.surface,
+          background: "var(--surface)",
           borderRadius: "4px 14px 14px 14px",
-          padding: "1rem 1.15rem",
-          boxShadow: T.tier1,
+          padding: "clamp(0.85rem, 2.2vw, 1.1rem) clamp(0.95rem, 2.4vw, 1.2rem)",
+          boxShadow: "var(--tier-1)",
+          transition: "box-shadow 0.22s ease",
         }}
       >
         <Markdown source={message.content} />
@@ -3721,9 +4799,9 @@ function Composer({
     <div
       className="agent-composer-wrap"
       style={{
-        borderTop: `1px solid ${T.border}`,
-        background: T.bg,
-        padding: "0.75rem clamp(0.85rem, 3vw, 2rem) calc(0.85rem + env(safe-area-inset-bottom, 0px))",
+        background: "var(--bg)",
+        padding:
+          "clamp(0.5rem, 1.5vw, 0.9rem) clamp(0.85rem, 3vw, 2rem) calc(clamp(0.75rem, 2vw, 1rem) + env(safe-area-inset-bottom, 0px))",
         flexShrink: 0,
       }}
     >
@@ -3772,11 +4850,17 @@ function Composer({
             className="agent-composer"
             style={{
               position: "relative",
-              background: T.surface,
-              border: "none",
-              borderRadius: 14,
-              transition: "box-shadow 0.2s ease",
-              boxShadow: T.tier1,
+              background: "var(--surface)",
+              /* Hair-thin neutral border. The visual presence comes from the
+               * soft, wide drop-shadow (frosted halo) below — not the border. */
+              border: "1px solid var(--border-strong)",
+              borderRadius: 16,
+              transition: "box-shadow 0.2s ease, border-color 0.2s ease",
+              /* Soft "frosted" shadow — wide blur radius, low opacity gives
+               * the card a faint glow on the sides without darkening below
+               * (matches the Claude composer treatment). */
+              boxShadow:
+                "0 1px 2px rgba(0,0,0,0.03), 0 8px 24px -10px rgba(0,0,0,0.08), 0 20px 48px -24px rgba(0,0,0,0.10)",
             }}
           >
             <textarea
@@ -3796,29 +4880,34 @@ function Composer({
                 border: "none",
                 outline: "none",
                 fontFamily: "inherit",
-                fontSize: "0.95rem",
-                lineHeight: 1.5,
+                fontSize: "0.98rem",
+                fontWeight: 500,
+                lineHeight: 1.55,
                 color: T.text,
+                /* Roomier top padding so the placeholder sits high in the
+                 * field, plus a deeper bottom inset for the action buttons.
+                 * Mirrors Claude's tall, generous composer footprint. */
                 padding: voiceSupported
-                  ? "0.8rem 5.4rem 0.8rem 1rem"
-                  : "0.8rem 3.4rem 0.8rem 1rem",
-                maxHeight: 220,
-                minHeight: 46,
+                  ? "0.85rem 5.85rem 1.1rem 1.2rem"
+                  : "0.85rem 3.65rem 1.1rem 1.2rem",
+                maxHeight: 340,
+                scrollbarWidth: "none",
               }}
             />
             {voiceSupported && !loading && (
               <button
                 type="button"
+                className="agent-composer-mic"
                 onClick={recording ? stopDictation : startDictation}
                 aria-label={recording ? "Arrêter la dictée" : "Dicter une question"}
                 title={recording ? "Arrêter la dictée" : "Dicter une question"}
                 style={{
                   position: "absolute",
-                  right: 48,
-                  bottom: 8,
-                  width: 34,
-                  height: 34,
-                  borderRadius: 9,
+                  right: 52,
+                  bottom: 10,
+                  width: 36,
+                  height: 36,
+                  borderRadius: 10,
                   border: "none",
                   background: recording ? T.danger : T.surface,
                   color: recording ? "#FFFFFF" : T.text3,
@@ -3856,15 +4945,16 @@ function Composer({
             {loading ? (
               <button
                 type="button"
+                className="agent-composer-stop"
                 onClick={onStop}
                 aria-label="Arrêter la génération"
                 style={{
                   position: "absolute",
-                  right: 8,
-                  bottom: 8,
-                  width: 34,
-                  height: 34,
-                  borderRadius: 9,
+                  right: 10,
+                  bottom: 10,
+                  width: 36,
+                  height: 36,
+                  borderRadius: 10,
                   border: "none",
                   background: T.danger,
                   color: "#FFFFFF",
@@ -3896,15 +4986,16 @@ function Composer({
             ) : (
               <button
                 type="submit"
+                className="agent-composer-send"
                 disabled={!value.trim()}
                 aria-label="Envoyer"
                 style={{
                   position: "absolute",
-                  right: 8,
-                  bottom: 8,
-                  width: 34,
-                  height: 34,
-                  borderRadius: 9,
+                  right: 10,
+                  bottom: 10,
+                  width: 36,
+                  height: 36,
+                  borderRadius: 10,
                   border: "none",
                   background: !value.trim() ? T.surface3 : T.gradient,
                   color: !value.trim() ? T.text4 : "#FFFFFF",

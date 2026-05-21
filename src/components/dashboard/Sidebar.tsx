@@ -352,6 +352,29 @@ export function Sidebar({
     setOpenPopup(null);
   }, [pathname]);
 
+  /* Cross-sidebar coordination — when another sidebar on the page (e.g. the
+   * /chat history rail) opens its mobile drawer, it dispatches this event so
+   * we can close ours. Keeps the "one-at-a-time" mobile UX without lifting
+   * drawer state out of either component. Optional and source-agnostic. */
+  useEffect(() => {
+    const onCloseOthers = (e: Event) => {
+      const detail = (e as CustomEvent<{ source?: string }>).detail;
+      if (detail?.source === "app-sidebar") return;
+      setDrawerOpen(false);
+      setOpenPopup(null);
+    };
+    window.addEventListener("orkestra:close-sidebars", onCloseOthers);
+    return () => window.removeEventListener("orkestra:close-sidebars", onCloseOthers);
+  }, []);
+
+  /* Conversely, broadcast when we open the drawer so other rails can collapse. */
+  useEffect(() => {
+    if (!drawerOpen) return;
+    window.dispatchEvent(
+      new CustomEvent("orkestra:close-sidebars", { detail: { source: "app-sidebar" } }),
+    );
+  }, [drawerOpen]);
+
   /* Lock background scroll while the mobile drawer is open. Toggling a class
    * on <html> (rather than mutating body inline styles) locks both the html
    * and body scroll containers, survives re-renders, and works on iOS Safari

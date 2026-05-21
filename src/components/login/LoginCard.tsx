@@ -250,20 +250,20 @@ export default function LoginCard() {
               transition: "transform 0.22s ease, box-shadow 0.22s ease, filter 0.18s ease",
               boxShadow: loading
                 ? "none"
-                : "inset 0 1px 0 rgba(255,255,255,0.25), 0 0 0 1px rgba(68,65,200,0.30), 0 8px 24px -6px rgba(88,86,214,0.45)",
+                : "inset 0 1px 0 rgba(255,255,255,0.25), 0 0 0 1px rgba(0,98,204,0.30), 0 8px 24px -6px rgba(0,122,255,0.45)",
             }}
             onMouseEnter={(e) => {
               if (!loading) {
                 e.currentTarget.style.transform = "translateY(-1px)";
                 e.currentTarget.style.boxShadow =
-                  "inset 0 1px 0 rgba(255,255,255,0.25), 0 0 0 1px rgba(68,65,200,0.30), 0 12px 30px -6px rgba(88,86,214,0.55)";
+                  "inset 0 1px 0 rgba(255,255,255,0.25), 0 0 0 1px rgba(0,98,204,0.30), 0 12px 30px -6px rgba(0,122,255,0.55)";
               }
             }}
             onMouseLeave={(e) => {
               if (!loading) {
                 e.currentTarget.style.transform = "translateY(0)";
                 e.currentTarget.style.boxShadow =
-                  "inset 0 1px 0 rgba(255,255,255,0.25), 0 0 0 1px rgba(68,65,200,0.30), 0 8px 24px -6px rgba(88,86,214,0.45)";
+                  "inset 0 1px 0 rgba(255,255,255,0.25), 0 0 0 1px rgba(0,98,204,0.30), 0 8px 24px -6px rgba(0,122,255,0.45)";
               }
             }}
           >

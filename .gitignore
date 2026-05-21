@@ -45,3 +45,5 @@ package-lock.json
 CLAUDE.md
 
 settings.json
+
+next.config.ts

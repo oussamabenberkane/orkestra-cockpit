@@ -50,8 +50,8 @@
   /* Brand colors (legacy navy still used by login BrandPanel) */
   --color-navy: #1E2761;
   --color-malyz: #2B3AE8;
-  --color-accent-indigo: #5856D6;
-  --color-accent-indigo-2: #4441C8;
+  --color-accent-indigo: #007AFF;
+  --color-accent-indigo-2: #0062CC;
   --color-success: #34A853;
   --color-warn:    #FF9F0A;
   --color-danger:  #FF3B30;
@@ -74,11 +74,11 @@
   --text-3: #6E6E73;
   --text-4: #86868B;
 
-  /* ── Brand accent (iOS-style indigo) ─────────────────── */
-  --accent:        #5856D6;
-  --accent-2:      #4441C8;
-  --accent-tint:   rgba(88,86,214,0.10);
-  --accent-tint-2: rgba(88,86,214,0.16);
+  /* ── Brand accent (iOS system blue) ──────────────────── */
+  --accent:        #007AFF;
+  --accent-2:      #0062CC;
+  --accent-tint:   rgba(0,122,255,0.10);
+  --accent-tint-2: rgba(0,122,255,0.16);
 
   /* ── Semantic ─────────────────────────────────────────── */
   --success:      #34A853;
@@ -128,7 +128,7 @@
   --card-foreground: #1D1D1F;
   --popover: #FFFFFF;
   --popover-foreground: #1D1D1F;
-  --primary: #5856D6;
+  --primary: #007AFF;
   --primary-foreground: #FFFFFF;
   --secondary: #F5F5F7;
   --secondary-foreground: #1D1D1F;
@@ -137,7 +137,7 @@
   --accent-foreground: #1D1D1F;
   --destructive: #FF3B30;
   --input: rgba(0,0,0,0.06);
-  --ring: #5856D6;
+  --ring: #007AFF;
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
@@ -210,6 +210,97 @@
 html, body {
   overflow-x: clip;
   max-width: 100vw;
+}
+
+/* ── KPI "Ask AI" overlay ─────────────────────────────────────────────
+ * The KpiWithAsk wrapper overlays a small Sparkles button on top of the
+ * KPI card. Hide SatelliteKPI's decorative top-right arrow when wrapped
+ * so the two glyphs don't collide. */
+.kpi-with-ask .satellite-kpi-arrow {
+  display: none !important;
+}
+
+/* Force the wrapper and the compact card to fill their grid cell so the
+ * AskButton — anchored to the wrapper's right edge — always lands at
+ * the cell's right edge, not at the inner card's natural content width.
+ * Without this, a card with short content (e.g. "Rétention") shrinks
+ * and the AskButton drifts left of the cell boundary. */
+.kpi-with-ask {
+  width: 100%;
+  min-width: 0;
+}
+.kpi-with-ask .kpi-compact {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+/* Reserve right-padding on the compact (mobile/tablet) KPI cells so the
+ * label / value / delta naturally ellipsize before the corner AskButton
+ * instead of being clipped behind it. Padding scales with the button's
+ * own per-breakpoint size below. */
+.kpi-with-ask .kpi-compact {
+  padding-right: 2.4rem !important;
+}
+
+@media (max-width: 640px) {
+  .kpi-ask-btn {
+    width: 24px !important;
+    height: 24px !important;
+    top: 6px !important;
+    right: 6px !important;
+    border-radius: 7px !important;
+  }
+  .kpi-with-ask .kpi-compact {
+    padding-right: 2.05rem !important;
+  }
+}
+
+@media (max-width: 380px) {
+  .kpi-ask-btn {
+    width: 22px !important;
+    height: 22px !important;
+    top: 5px !important;
+    right: 5px !important;
+  }
+  .kpi-with-ask .kpi-compact {
+    /* At ~95px cell width every pixel matters — minimum padding that still
+     * clears the 22×22 button (button right-edge sits at 27px from cell
+     * right; 1.85rem ≈ 30px gives a 3px breathing strip). */
+    padding-right: 1.85rem !important;
+    padding-left: 0.5rem !important;
+  }
+}
+
+/* ── Action carousel — progress fill on the active dot ────────────────
+ * Used by the action-first banner on /dashboard. The active dot has a
+ * white overlay that scales from 0 → 1 over the auto-cycle interval, so
+ * the user gets a visual cue of when the next action will surface. */
+@keyframes action-carousel-fill {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+
+/* Stack the carousel under the text on narrow widths so the button row
+ * has its own line and the dots sit centred beneath it. The button
+ * overrides its desktop clamp() width with 100% so it fills the wrap. */
+@media (max-width: 640px) {
+  .action-carousel { width: 100%; }
+  .action-carousel__btn { width: 100% !important; max-width: 100%; }
+  .action-carousel__dots { justify-content: center !important; }
+}
+
+/* On wider screens, center the dots under the button (the carousel
+ * container's width matches the button's, so flex centering aligns
+ * the dot row to the button's horizontal midpoint). */
+@media (min-width: 641px) {
+  .action-carousel__dots { justify-content: center !important; }
+}
+
+/* Respect reduced-motion: cap the progress fill animation so it lands
+ * instantly rather than running as a constant motion source. */
+@media (prefers-reduced-motion: reduce) {
+  .action-carousel__progress { animation: none !important; transform: scaleX(1); }
 }
 
 /* Body scroll lock — applied by Sidebar.tsx when the mobile drawer is open.
