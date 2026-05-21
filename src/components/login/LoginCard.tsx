@@ -119,7 +119,7 @@ export default function LoginCard() {
           </h1>
           <button
             type="button"
-            onClick={() => { setEmail("demo@cabinet-muller.ch"); setPassword("Cockpit2026"); }}
+            onClick={() => { setEmail("mirko@helvebroker.ch"); setPassword("Cockpit2026"); }}
             style={{
               marginTop: "0.25rem",
               background: "var(--accent-tint)",
