@@ -71,10 +71,8 @@ function Card({ title, children }: { title: string; children: React.ReactNode })
       }}
     >
       <div
-        style={{
-          padding: "0.875rem 1.25rem",
-          borderBottom: "1px solid var(--border)",
-        }}
+        className="settings-card-head"
+        style={{ borderBottom: "1px solid var(--border)" }}
       >
         <span
           style={{
@@ -88,7 +86,7 @@ function Card({ title, children }: { title: string; children: React.ReactNode })
           {title}
         </span>
       </div>
-      <div style={{ padding: "1.125rem 1.25rem" }}>{children}</div>
+      <div className="settings-card-body">{children}</div>
     </div>
   );
 }
@@ -244,6 +242,7 @@ function SaveButton({ saved }: { saved: boolean }) {
   return (
     <motion.button
       type="submit"
+      className="settings-save-btn"
       animate={{
         background: saved ? "var(--success)" : "var(--accent)",
       }}
@@ -260,6 +259,7 @@ function SaveButton({ saved }: { saved: boolean }) {
         fontFamily: "var(--font-sans)",
         fontSize: "0.875rem",
         fontWeight: 600,
+        boxShadow: "var(--tier-1)",
       }}
     >
       <AnimatePresence mode="wait">
@@ -309,16 +309,7 @@ function ProfilSection({ onSave, saved }: { onSave: () => void; saved: boolean }
     >
       <Card title="Identité">
         {/* Avatar row */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "1rem",
-            marginBottom: "1.25rem",
-            paddingBottom: "1.125rem",
-            borderBottom: "1px solid var(--border)",
-          }}
-        >
+        <div className="settings-avatar-row">
           <div
             style={{
               width: 60,
@@ -338,6 +329,7 @@ function ProfilSection({ onSave, saved }: { onSave: () => void; saved: boolean }
             MF
             <button
               type="button"
+              aria-label="Changer la photo"
               style={{
                 position: "absolute",
                 bottom: -2,
@@ -357,7 +349,7 @@ function ProfilSection({ onSave, saved }: { onSave: () => void; saved: boolean }
               <Camera size={10} color="var(--text-3)" />
             </button>
           </div>
-          <div>
+          <div className="settings-avatar-meta">
             <p style={{ fontWeight: 600, color: "var(--text)", marginBottom: "0.15rem", fontSize: "0.95rem" }}>
               Mirko Ferretti
             </p>
@@ -367,7 +359,7 @@ function ProfilSection({ onSave, saved }: { onSave: () => void; saved: boolean }
           </div>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
+        <div className="settings-field-row-2">
           <Field label="Prénom">
             <Input value={prenom} onChange={(e) => setPrenom(e.target.value)} />
           </Field>
@@ -403,10 +395,12 @@ function ProfilSection({ onSave, saved }: { onSave: () => void; saved: boolean }
             />
             <button
               type="button"
+              aria-label={showCurrent ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+              className="settings-eye-btn"
               onClick={() => setShowCurrent((v) => !v)}
               style={{
                 position: "absolute",
-                right: "0.75rem",
+                right: "0.6rem",
                 top: "50%",
                 transform: "translateY(-50%)",
                 background: "none",
@@ -414,7 +408,10 @@ function ProfilSection({ onSave, saved }: { onSave: () => void; saved: boolean }
                 cursor: "pointer",
                 color: "var(--text-3)",
                 display: "flex",
-                padding: 0,
+                alignItems: "center",
+                justifyContent: "center",
+                padding: "0.25rem",
+                borderRadius: 6,
               }}
             >
               {showCurrent ? <EyeOff size={15} /> : <Eye size={15} />}
@@ -431,10 +428,12 @@ function ProfilSection({ onSave, saved }: { onSave: () => void; saved: boolean }
             />
             <button
               type="button"
+              aria-label={showNew ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+              className="settings-eye-btn"
               onClick={() => setShowNew((v) => !v)}
               style={{
                 position: "absolute",
-                right: "0.75rem",
+                right: "0.6rem",
                 top: "50%",
                 transform: "translateY(-50%)",
                 background: "none",
@@ -442,7 +441,10 @@ function ProfilSection({ onSave, saved }: { onSave: () => void; saved: boolean }
                 cursor: "pointer",
                 color: "var(--text-3)",
                 display: "flex",
-                padding: 0,
+                alignItems: "center",
+                justifyContent: "center",
+                padding: "0.25rem",
+                borderRadius: 6,
               }}
             >
               {showNew ? <EyeOff size={15} /> : <Eye size={15} />}
@@ -458,7 +460,7 @@ function ProfilSection({ onSave, saved }: { onSave: () => void; saved: boolean }
         </Field>
       </Card>
 
-      <div style={{ display: "flex", justifyContent: "flex-end" }}>
+      <div className="settings-save-row">
         <SaveButton saved={saved} />
       </div>
     </form>
@@ -524,7 +526,7 @@ function CabinetSection({ onSave, saved }: { onSave: () => void; saved: boolean 
         </Field>
       </Card>
 
-      <div style={{ display: "flex", justifyContent: "flex-end" }}>
+      <div className="settings-save-row">
         <SaveButton saved={saved} />
       </div>
     </form>
@@ -581,6 +583,7 @@ function AgentsSection({ onSave, saved }: { onSave: () => void; saved: boolean }
             <span style={{ fontSize: "0.73rem", color: "var(--text-4)", minWidth: 24 }}>0.0</span>
             <input
               type="range"
+              className="settings-range"
               min={0}
               max={1}
               step={0.1}
@@ -653,6 +656,7 @@ function AgentsSection({ onSave, saved }: { onSave: () => void; saved: boolean }
               <button
                 key={key}
                 type="button"
+                className="settings-tool-row"
                 onClick={() => toggleOutil(key)}
                 style={{
                   display: "flex",
@@ -704,7 +708,7 @@ function AgentsSection({ onSave, saved }: { onSave: () => void; saved: boolean }
         </div>
       </Card>
 
-      <div style={{ display: "flex", justifyContent: "flex-end" }}>
+      <div className="settings-save-row">
         <SaveButton saved={saved} />
       </div>
     </form>
@@ -725,7 +729,7 @@ export default function ParametresPage() {
   return (
     <AppShell mainStyle={{ maxWidth: "1100px" }}>
       {/* Header */}
-      <div style={{ marginBottom: "2rem" }}>
+      <div className="settings-page-head">
         <h1
           style={{
             fontSize: "clamp(1.4rem, 2.5vw, 1.75rem)",
@@ -743,52 +747,28 @@ export default function ParametresPage() {
         </p>
       </div>
 
-      <div style={{ display: "flex", gap: "1.75rem", alignItems: "flex-start" }}>
-        {/* Left nav */}
-        <nav
-          style={{
-            width: 210,
-            flexShrink: 0,
-            position: "sticky",
-            top: "2rem",
-            display: "flex",
-            flexDirection: "column",
-            gap: "0.2rem",
-          }}
-        >
+      <div className="settings-grid">
+        {/* Inner nav — sticky vertical at ≥900 px, sticky-top translucent
+            segmented bar below. Class-driven; no JS breakpoint detection. */}
+        <nav className="settings-nav" aria-label="Sections des paramètres">
           {NAV.map(({ key, label, sub, Icon, color, tint }) => {
             const isActive = active === key;
             return (
               <button
                 key={key}
+                type="button"
+                className="settings-nav-item"
+                aria-current={isActive ? "page" : undefined}
+                aria-label={`${label} — ${sub}`}
                 onClick={() => setActive(key)}
                 style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "0.7rem",
-                  padding: "0.6rem 0.75rem",
-                  borderRadius: 10,
-                  border: "none",
-                  cursor: "pointer",
-                  textAlign: "left",
-                  width: "100%",
                   background: isActive ? "var(--surface)" : "transparent",
                   boxShadow: isActive ? "var(--tier-1)" : "none",
-                  transition: "background 0.15s, box-shadow 0.15s",
                 }}
               >
                 <span
-                  style={{
-                    width: 32,
-                    height: 32,
-                    borderRadius: 8,
-                    background: isActive ? tint : "var(--surface-2)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    flexShrink: 0,
-                    transition: "background 0.15s",
-                  }}
+                  className="settings-nav-icon"
+                  style={{ background: isActive ? tint : "var(--surface-2)" }}
                 >
                   <Icon
                     size={15}
@@ -796,7 +776,7 @@ export default function ParametresPage() {
                     strokeWidth={2}
                   />
                 </span>
-                <div style={{ flex: 1, minWidth: 0 }}>
+                <div className="settings-nav-text">
                   <p
                     style={{
                       fontSize: "0.845rem",
@@ -804,20 +784,22 @@ export default function ParametresPage() {
                       color: isActive ? "var(--text)" : "var(--text-2)",
                       margin: 0,
                       lineHeight: 1.25,
+                      whiteSpace: "nowrap",
                     }}
                   >
                     {label}
                   </p>
-                  <p style={{ fontSize: "0.71rem", color: "var(--text-4)", margin: 0 }}>
+                  <p
+                    className="settings-nav-sub"
+                    style={{ fontSize: "0.71rem", color: "var(--text-4)", margin: 0 }}
+                  >
                     {sub}
                   </p>
                 </div>
                 {isActive && (
-                  <ChevronRight
-                    size={13}
-                    color="var(--text-4)"
-                    style={{ flexShrink: 0 }}
-                  />
+                  <span className="settings-nav-chevron" style={{ display: "flex", flexShrink: 0 }}>
+                    <ChevronRight size={13} color="var(--text-4)" />
+                  </span>
                 )}
               </button>
             );
@@ -825,7 +807,7 @@ export default function ParametresPage() {
         </nav>
 
         {/* Content */}
-        <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ minWidth: 0 }}>
           <AnimatePresence mode="wait">
             <motion.div
               key={active}
