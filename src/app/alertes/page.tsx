@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   AlertTriangle,
@@ -18,7 +19,6 @@ import {
   DollarSign,
   RefreshCw,
   Edit3,
-  Send,
   User,
 } from "lucide-react";
 import { AppShell } from "@/components/dashboard/AppShell";
@@ -34,26 +34,80 @@ const CATEGORY_ICONS = {
   renouvellement: RefreshCw,
 };
 
-const CATEGORY_LABELS: Record<string, string> = {
-  contrat: "Contrat",
-  sinistre: "Sinistre",
-  finance: "Finance",
-  renouvellement: "Renouvellement",
-};
+/** Single source of truth for "are we below the master/detail breakpoint". */
+function useIsCompact(maxWidth = 899) {
+  const [compact, setCompact] = useState(false);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const mq = window.matchMedia(`(max-width: ${maxWidth}px)`);
+    const sync = () => setCompact(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, [maxWidth]);
+  return compact;
+}
 
 export default function AlertesPage() {
+  const router = useRouter();
   const { alerts, unreadCount, markAsRead, markAllAsRead, dismiss } = useAlerts();
   const [tab, setTab] = useState<TabKey>("nonlu");
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const isCompact = useIsCompact();
 
   const unread = alerts.filter((a) => !a.read);
   const read = alerts.filter((a) => a.read);
   const list = tab === "nonlu" ? unread : read;
 
-  // Auto-select first item when tab or list changes if nothing selected
-  const selected =
-    list.find((a) => a.id === selectedId) ??
-    (list.length > 0 ? list[0] : null);
+  /** Desktop master/detail: auto-pick the first row so the preview is never empty.
+   *  Mobile (compact): never auto-select — the row is a nav target, not a selector. */
+  const selected = isCompact
+    ? null
+    : (list.find((a) => a.id === selectedId) ?? (list.length > 0 ? list[0] : null));
+
+  const handleRowSelect = useCallback(
+    (alertId: string) => {
+      if (isCompact) {
+        router.push(`/alertes/${alertId}`);
+      } else {
+        setSelectedId(alertId);
+      }
+    },
+    [isCompact, router]
+  );
+
+  /** Mark everything as read, then jump to "Traités" so the user lands
+   *  on the populated tab instead of an empty "Tout est à jour" state. */
+  const handleMarkAllAsRead = useCallback(() => {
+    markAllAsRead();
+    setTab("lu");
+    setSelectedId(null);
+  }, [markAllAsRead]);
+
+  /** Desktop keyboard nav — ↑ / ↓ moves the selection, Enter opens the editor. */
+  useEffect(() => {
+    if (isCompact) return;
+    const onKey = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable)) return;
+      if (list.length === 0) return;
+      const currentId = selected?.id;
+      const idx = currentId ? list.findIndex((a) => a.id === currentId) : -1;
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        const next = list[Math.min(idx + 1, list.length - 1)] ?? list[0];
+        setSelectedId(next.id);
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        const prev = list[Math.max(idx - 1, 0)] ?? list[0];
+        setSelectedId(prev.id);
+      } else if (e.key === "Enter" && selected) {
+        router.push(`/alertes/${selected.id}`);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [isCompact, list, selected, router]);
 
   return (
     <AppShell mainStyle={{ maxWidth: "1400px" }}>
@@ -72,7 +126,7 @@ export default function AlertesPage() {
             gap: "0.75rem",
           }}
         >
-          <div style={{ display: "flex", alignItems: "center", gap: "0.875rem" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.875rem", minWidth: 0 }}>
             <span
               style={{
                 display: "inline-flex",
@@ -88,10 +142,10 @@ export default function AlertesPage() {
             >
               <AlertTriangle size={20} strokeWidth={2.5} />
             </span>
-            <div>
+            <div style={{ minWidth: 0 }}>
               <h1
                 style={{
-                  fontSize: "1.3rem",
+                  fontSize: "clamp(1.1rem, 1.05rem + 0.4vw, 1.3rem)",
                   fontWeight: 700,
                   letterSpacing: "-0.022em",
                   color: "var(--text)",
@@ -101,68 +155,48 @@ export default function AlertesPage() {
               >
                 Centre d&apos;alertes
               </h1>
-              <p style={{ fontSize: "0.78rem", color: "var(--text-3)", margin: 0 }}>
+              <p
+                style={{
+                  fontSize: "0.78rem",
+                  color: "var(--text-3)",
+                  margin: 0,
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                }}
+              >
                 {unreadCount > 0
                   ? `${unreadCount} alerte${unreadCount > 1 ? "s" : ""} non lue${unreadCount > 1 ? "s" : ""} · Action requise`
                   : "Aucune alerte active"}
               </p>
             </div>
           </div>
-
-          <AnimatePresence>
-            {unreadCount > 0 && tab === "nonlu" && (
-              <motion.button
-                initial={{ opacity: 0, scale: 0.92 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.92 }}
-                onClick={markAllAsRead}
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "0.4rem",
-                  fontSize: "0.8rem",
-                  fontWeight: 600,
-                  color: "var(--text-3)",
-                  background: "var(--surface-2)",
-                  border: "none",
-                  borderRadius: "8px",
-                  padding: "0.45rem 0.875rem",
-                  cursor: "pointer",
-                  boxShadow: "var(--tier-1)",
-                  transition: "background 0.15s, color 0.15s",
-                  fontFamily: "inherit",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = "var(--success-tint)";
-                  e.currentTarget.style.color = "var(--success)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = "var(--surface-2)";
-                  e.currentTarget.style.color = "var(--text-3)";
-                }}
-              >
-                <CheckCheck size={14} />
-                Tout marquer lu
-              </motion.button>
-            )}
-          </AnimatePresence>
         </motion.div>
 
-        {/* ── Tabs ── */}
+        {/* ── Tabs row (tabs left, "Tout lu" CTA right) ── */}
         <motion.div
           initial={{ opacity: 0, y: 6 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.28, delay: 0.05, ease: [0.22, 1, 0.36, 1] }}
           style={{
-            display: "inline-flex",
-            background: "var(--surface-2)",
-            borderRadius: "10px",
-            padding: "3px",
-            gap: "2px",
-            boxShadow: "var(--tier-1)",
-            width: "fit-content",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            flexWrap: "wrap",
+            gap: "0.625rem",
           }}
         >
+          <div
+            style={{
+              display: "inline-flex",
+              background: "var(--surface-2)",
+              borderRadius: "10px",
+              padding: "3px",
+              gap: "2px",
+              boxShadow: "var(--tier-1)",
+              width: "fit-content",
+            }}
+          >
           {(
             [
               { key: "nonlu" as TabKey, label: "Non lus", count: unread.length },
@@ -223,6 +257,49 @@ export default function AlertesPage() {
               </button>
             );
           })}
+          </div>
+
+          <AnimatePresence>
+            {unreadCount > 0 && tab === "nonlu" && (
+              <motion.button
+                initial={{ opacity: 0, scale: 0.92 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.92 }}
+                onClick={handleMarkAllAsRead}
+                aria-label="Tout marquer comme lu"
+                title="Tout marquer comme lu"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "0.4rem",
+                  fontSize: "0.8rem",
+                  fontWeight: 600,
+                  color: "var(--text-3)",
+                  background: "var(--surface-2)",
+                  border: "none",
+                  borderRadius: "8px",
+                  padding: "0.45rem 0.875rem",
+                  cursor: "pointer",
+                  boxShadow: "var(--tier-1)",
+                  transition: "background 0.15s, color 0.15s",
+                  fontFamily: "inherit",
+                  flexShrink: 0,
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = "var(--success-tint)";
+                  e.currentTarget.style.color = "var(--success)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = "var(--surface-2)";
+                  e.currentTarget.style.color = "var(--text-3)";
+                }}
+              >
+                <CheckCheck size={14} />
+                <span className="alert-cta-label">Tout marquer lu</span>
+                <span className="alert-cta-label-short">Tout lu</span>
+              </motion.button>
+            )}
+          </AnimatePresence>
         </motion.div>
 
         {/* ── Two-panel layout ── */}
@@ -281,7 +358,7 @@ export default function AlertesPage() {
                       index={i}
                       isRead={tab === "lu"}
                       isSelected={selected?.id === alert.id}
-                      onSelect={() => setSelectedId(alert.id)}
+                      onSelect={() => handleRowSelect(alert.id)}
                       onMarkAsRead={markAsRead}
                       onDismiss={dismiss}
                     />
@@ -358,52 +435,61 @@ function AlertRow({
   return (
     <motion.div
       layout
+      role="button"
+      tabIndex={0}
+      aria-label={`${cfg.label} — ${alert.title}`}
+      aria-pressed={isSelected}
       initial={{ opacity: 0, x: -12 }}
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: -16, scale: 0.97 }}
       transition={{
         layout: { duration: 0.2 },
-        delay: index * 0.05,
+        delay: index * 0.04,
         duration: 0.28,
         ease: [0.22, 1, 0.36, 1],
       }}
       onClick={onSelect}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onSelect();
+        }
+      }}
+      className="alert-row"
       style={{
-        position: "relative",
-        borderRadius: "12px",
-        background: isSelected ? "var(--surface)" : "var(--surface-2)",
+        // Severity-tinted ambient wash from the top-left, fading into the card
+        // surface — replaces the previous flat left stripe. The tint is layered
+        // OVER the opaque base so alpha doesn't leak through to the page bg.
+        background: isRead
+          ? (isSelected ? "var(--surface)" : "var(--surface-2)")
+          : `linear-gradient(135deg, ${cfg.tint}, transparent 42%), ${
+              isSelected ? "var(--surface)" : "var(--surface-2)"
+            }`,
         boxShadow: isSelected ? "var(--tier-2)" : "none",
         border: `1.5px solid ${isSelected ? cfg.color + "33" : "transparent"}`,
-        overflow: "hidden",
-        cursor: "pointer",
-        opacity: isRead && !isSelected ? 0.7 : 1,
-        transition: "box-shadow 0.18s, border-color 0.18s, background 0.18s",
+        opacity: isRead && !isSelected ? 0.72 : 1,
       }}
     >
-      {/* Severity stripe */}
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          top: 0,
-          bottom: 0,
-          width: 3,
-          background: cfg.color,
-          opacity: isRead ? 0.5 : 1,
-        }}
-      />
-
-      <div style={{ padding: "0.75rem 0.875rem 0.75rem 1.125rem" }}>
+      <div style={{ padding: "0.75rem 0.875rem 0.75rem 0.875rem" }}>
         {/* Top: severity pill + ref + actions */}
         <div
           style={{
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
+            gap: "0.5rem",
             marginBottom: "0.4rem",
           }}
         >
-          <div style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "0.4rem",
+              minWidth: 0,
+              flex: 1,
+            }}
+          >
             <span
               style={{
                 display: "inline-flex",
@@ -417,6 +503,7 @@ function AlertRow({
                 background: cfg.tint,
                 padding: "0.16rem 0.45rem",
                 borderRadius: "100px",
+                flexShrink: 0,
               }}
             >
               <span
@@ -441,34 +528,28 @@ function AlertRow({
                 color: "var(--text-4)",
                 fontFamily: "var(--font-mono)",
                 letterSpacing: "0.04em",
+                minWidth: 0,
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
               }}
             >
-              <CategoryIcon size={10} strokeWidth={2} />
+              <CategoryIcon size={10} strokeWidth={2} style={{ flexShrink: 0 }} />
               {alert.id}
             </span>
           </div>
 
           <div
-            style={{ display: "flex", alignItems: "center", gap: "0.15rem" }}
+            className="alert-row-actions-mobile-hide"
+            style={{ display: "flex", alignItems: "center", gap: "0.15rem", flexShrink: 0 }}
             onClick={(e) => e.stopPropagation()}
           >
             {!isRead && (
               <button
                 onClick={() => onMarkAsRead(alert.id)}
                 title="Marquer comme lu"
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  width: 24,
-                  height: 24,
-                  borderRadius: "6px",
-                  background: "transparent",
-                  border: "none",
-                  color: "var(--text-4)",
-                  cursor: "pointer",
-                  transition: "background 0.15s, color 0.15s",
-                }}
+                aria-label="Marquer comme lu"
+                className="alert-row-action"
                 onMouseEnter={(e) => {
                   e.currentTarget.style.background = "var(--success-tint)";
                   e.currentTarget.style.color = "var(--success)";
@@ -478,25 +559,14 @@ function AlertRow({
                   e.currentTarget.style.color = "var(--text-4)";
                 }}
               >
-                <Check size={12} />
+                <Check size={13} />
               </button>
             )}
             <button
               onClick={() => onDismiss(alert.id)}
               title="Supprimer"
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                width: 24,
-                height: 24,
-                borderRadius: "6px",
-                background: "transparent",
-                border: "none",
-                color: "var(--text-4)",
-                cursor: "pointer",
-                transition: "background 0.15s, color 0.15s",
-              }}
+              aria-label="Supprimer cette alerte"
+              className="alert-row-action"
               onMouseEnter={(e) => {
                 e.currentTarget.style.background = "var(--danger-tint)";
                 e.currentTarget.style.color = "var(--danger)";
@@ -506,9 +576,12 @@ function AlertRow({
                 e.currentTarget.style.color = "var(--text-4)";
               }}
             >
-              <X size={12} />
+              <X size={13} />
             </button>
           </div>
+
+          {/* Mobile-only navigation chevron — signals "tap to open" */}
+          <ChevronRight size={16} className="alert-row-chevron" strokeWidth={2.25} />
         </div>
 
         {/* Title */}
@@ -547,9 +620,18 @@ function AlertRow({
             alignItems: "center",
             justifyContent: "space-between",
             gap: "0.5rem",
+            minWidth: 0,
           }}
         >
-          <div style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "0.4rem",
+              minWidth: 0,
+              flex: 1,
+            }}
+          >
             <div
               style={{
                 width: 20,
@@ -583,17 +665,24 @@ function AlertRow({
                 fontSize: "0.7rem",
                 fontWeight: 600,
                 color: "var(--text-3)",
-                maxWidth: 160,
                 overflow: "hidden",
                 textOverflow: "ellipsis",
                 whiteSpace: "nowrap",
+                minWidth: 0,
               }}
             >
               {alert.client.name}
             </span>
           </div>
 
-          <div style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "0.35rem",
+              flexShrink: 0,
+            }}
+          >
             {alert.emailSent && (
               <span
                 style={{
@@ -619,6 +708,7 @@ function AlertRow({
                 gap: "0.2rem",
                 fontSize: "0.65rem",
                 color: "var(--text-4)",
+                whiteSpace: "nowrap",
               }}
             >
               <Clock size={10} />
@@ -767,7 +857,7 @@ function EmailPreviewPanel({
             >
               {label}
             </span>
-            <span style={{ minWidth: 0 }}>
+            <div className="alert-email-meta-value">
               <span
                 style={{
                   fontSize: "0.82rem",
@@ -789,21 +879,19 @@ function EmailPreviewPanel({
                   &lt;{sub}&gt;
                 </span>
               )}
-            </span>
+            </div>
           </div>
         ))}
       </div>
 
-      {/* Email body */}
+      {/* Email body — height adapts to viewport; see .alert-email-body in globals.css */}
       <div
-        className="email-body"
+        className="email-body alert-email-body"
         style={{
           padding: "1.375rem 1.5rem",
           fontSize: "0.855rem",
           color: "var(--text-2)",
           lineHeight: 1.75,
-          maxHeight: 420,
-          overflowY: "auto",
         }}
         dangerouslySetInnerHTML={{ __html: alert.email.body }}
       />

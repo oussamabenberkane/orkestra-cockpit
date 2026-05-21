@@ -285,7 +285,10 @@ export default function AlertEmailEditorPage() {
           <span style={{ fontSize: "0.78rem", color: "var(--text-3)", fontFamily: "var(--font-mono)", letterSpacing: "0.04em" }}>
             {alert.id}
           </span>
-          <span style={{ marginLeft: "auto", fontSize: "0.75rem", color: "var(--text-4)", fontWeight: 500 }}>
+          <span
+            className="alert-detail-breadcrumb-tag"
+            style={{ marginLeft: "auto", fontSize: "0.75rem", color: "var(--text-4)", fontWeight: 500 }}
+          >
             Composition d&apos;e-mail
           </span>
         </motion.div>
@@ -323,7 +326,7 @@ export default function AlertEmailEditorPage() {
               >
                 <CheckCheck size={15} strokeWidth={2.5} />
               </span>
-              <div>
+              <div style={{ minWidth: 0 }}>
                 <p style={{ fontSize: "0.875rem", fontWeight: 700, color: "var(--success)", margin: 0 }}>
                   E-mail envoyé
                 </p>
@@ -336,66 +339,78 @@ export default function AlertEmailEditorPage() {
           )}
         </AnimatePresence>
 
-        {/* ── Alert context banner ── */}
+        {/* ── Alert context banner ─────────────────────────────────────
+            Layout: 3-col grid on desktop ( icon | body | meta ), collapses
+            to 2-col on mobile with the meta moved into a hairline-separated
+            footer row. See .alert-detail-banner in globals.css. */}
         <motion.div
+          className="alert-detail-banner"
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.35, delay: 0.06, ease: [0.22, 1, 0.36, 1] }}
           style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
             padding: "0.875rem 1.125rem",
             borderRadius: "12px",
             background: cfg.tint,
             border: `1px solid ${cfg.color}22`,
-            flexWrap: "wrap",
-            gap: "0.75rem",
           }}
         >
-          <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-            <span
+          <span
+            className="alert-detail-banner-icon"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: 34,
+              height: 34,
+              borderRadius: "9px",
+              background: cfg.color + "20",
+              color: cfg.color,
+              flexShrink: 0,
+            }}
+          >
+            <AlertTriangle size={16} strokeWidth={2.5} />
+          </span>
+          <div className="alert-detail-banner-body" style={{ minWidth: 0 }}>
+            <div
               style={{
-                display: "inline-flex",
+                display: "flex",
                 alignItems: "center",
-                justifyContent: "center",
-                width: 34,
-                height: 34,
-                borderRadius: "9px",
-                background: cfg.color + "20",
-                color: cfg.color,
-                flexShrink: 0,
+                gap: "0.5rem",
+                marginBottom: "0.2rem",
+                flexWrap: "wrap",
+                rowGap: "0.15rem",
               }}
             >
-              <AlertTriangle size={16} strokeWidth={2.5} />
-            </span>
-            <div>
-              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.15rem" }}>
-                <span style={{ fontSize: "0.58rem", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: cfg.color }}>
-                  {cfg.label}
-                </span>
-                <div style={{ display: "flex", alignItems: "center", gap: "0.2rem" }}>
-                  <CategoryIcon size={10} color={cfg.color + "88"} strokeWidth={2} />
-                  <span style={{ fontSize: "0.68rem", color: cfg.color + "99", fontFamily: "var(--font-mono)" }}>
-                    {alert.id}
-                  </span>
-                </div>
-                <span style={{ fontSize: "0.65rem", color: cfg.color + "88" }}>
-                  · {CATEGORY_LABELS[alert.category]}
+              <span style={{ fontSize: "0.58rem", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: cfg.color }}>
+                {cfg.label}
+              </span>
+              <div style={{ display: "flex", alignItems: "center", gap: "0.2rem" }}>
+                <CategoryIcon size={10} color={cfg.color + "88"} strokeWidth={2} />
+                <span style={{ fontSize: "0.68rem", color: cfg.color + "99", fontFamily: "var(--font-mono)" }}>
+                  {alert.id}
                 </span>
               </div>
-              <p style={{ fontSize: "0.9rem", fontWeight: 700, color: "var(--text)", margin: 0, lineHeight: 1.25 }}>
-                {alert.title}
-              </p>
+              <span style={{ fontSize: "0.65rem", color: cfg.color + "88" }}>
+                · {CATEGORY_LABELS[alert.category]}
+              </span>
             </div>
+            <p style={{ fontSize: "0.9rem", fontWeight: 700, color: "var(--text)", margin: 0, lineHeight: 1.3 }}>
+              {alert.title}
+            </p>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", fontSize: "0.72rem", color: "var(--text-3)" }}>
-            <span style={{ display: "flex", alignItems: "center", gap: "0.3rem" }}>
-              <User size={12} />
-              {alert.client.name}
+          <div
+            className="alert-detail-banner-meta"
+            style={{ display: "flex", alignItems: "center", gap: "0.75rem", fontSize: "0.72rem", color: "var(--text-3)" }}
+          >
+            <span style={{ display: "flex", alignItems: "center", gap: "0.3rem", minWidth: 0 }}>
+              <User size={12} style={{ flexShrink: 0 }} />
+              <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                {alert.client.name}
+              </span>
             </span>
-            <span style={{ color: "var(--text-4)" }}>·</span>
-            <span style={{ display: "flex", alignItems: "center", gap: "0.3rem" }}>
+            <span style={{ color: "var(--text-4)", flexShrink: 0 }}>·</span>
+            <span style={{ display: "flex", alignItems: "center", gap: "0.3rem", whiteSpace: "nowrap", flexShrink: 0 }}>
               <Clock size={12} />
               {alert.timestamp}
             </span>
@@ -487,12 +502,12 @@ export default function AlertEmailEditorPage() {
             {/* De */}
             <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", padding: "0.6rem 1.25rem", borderBottom: "1px solid rgba(0,0,0,0.04)" }}>
               <span style={{ fontSize: "0.72rem", fontWeight: 600, color: "var(--text-4)", minWidth: 44, flexShrink: 0 }}>De</span>
-              <span style={{ fontSize: "0.82rem", color: "var(--text-3)" }}>
-                Helvebroker{" "}
-                <span style={{ color: "var(--text-4)", fontFamily: "var(--font-mono)", fontSize: "0.75rem" }}>
+              <div className="alert-email-meta-value">
+                <span style={{ fontSize: "0.82rem", color: "var(--text-3)" }}>Helvebroker</span>
+                <span style={{ marginLeft: "0.4rem", color: "var(--text-4)", fontFamily: "var(--font-mono)", fontSize: "0.75rem" }}>
                   &lt;system@helvebroker.ch&gt;
                 </span>
-              </span>
+              </div>
             </div>
 
             {/* À */}
