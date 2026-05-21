@@ -299,6 +299,7 @@ function ProfilSection({ onSave, saved }: { onSave: () => void; saved: boolean }
   const [langue, setLangue] = useState("fr");
   const [showCurrent, setShowCurrent] = useState(false);
   const [showNew, setShowNew] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   return (
     <form
@@ -391,6 +392,7 @@ function ProfilSection({ onSave, saved }: { onSave: () => void; saved: boolean }
             <Input
               type={showCurrent ? "text" : "password"}
               placeholder="••••••••••"
+              autoComplete="current-password"
               style={{ paddingRight: "2.5rem" }}
             />
             <button
@@ -424,6 +426,7 @@ function ProfilSection({ onSave, saved }: { onSave: () => void; saved: boolean }
             <Input
               type={showNew ? "text" : "password"}
               placeholder="••••••••••"
+              autoComplete="new-password"
               style={{ paddingRight: "2.5rem" }}
             />
             <button
@@ -456,7 +459,37 @@ function ProfilSection({ onSave, saved }: { onSave: () => void; saved: boolean }
           label="Confirmer le nouveau mot de passe"
           hint="Au moins 8 caractères, avec une majuscule et un chiffre."
         >
-          <Input type="password" placeholder="••••••••••" />
+          <div style={{ position: "relative" }}>
+            <Input
+              type={showConfirm ? "text" : "password"}
+              placeholder="••••••••••"
+              autoComplete="new-password"
+              style={{ paddingRight: "2.5rem" }}
+            />
+            <button
+              type="button"
+              aria-label={showConfirm ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+              className="settings-eye-btn"
+              onClick={() => setShowConfirm((v) => !v)}
+              style={{
+                position: "absolute",
+                right: "0.6rem",
+                top: "50%",
+                transform: "translateY(-50%)",
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                color: "var(--text-3)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                padding: "0.25rem",
+                borderRadius: 6,
+              }}
+            >
+              {showConfirm ? <EyeOff size={15} /> : <Eye size={15} />}
+            </button>
+          </div>
         </Field>
       </Card>
 

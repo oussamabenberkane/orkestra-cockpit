@@ -819,16 +819,26 @@ html.scroll-locked body {
   .settings-range { height: 22px !important; }
 }
 
-/* Hide Edge / Chromium native password-reveal buttons inside settings
-   password fields — they already have a custom Eye toggle, so the
-   native control appearing on input is a duplicate. Scoped to
-   .settings-card-body so the login page's reveal (no custom toggle
-   there) stays intact. */
-.settings-card-body input[type="password"]::-ms-reveal,
-.settings-card-body input[type="password"]::-ms-clear,
-.settings-card-body input[type="password"]::-webkit-credentials-auto-fill-button,
-.settings-card-body input[type="password"]::-webkit-textfield-decoration-container {
+/* Hide every browser-injected input decoration inside settings
+   password fields — Edge ::-ms-reveal, the IE-legacy ::-ms-clear,
+   Safari's credential / strong-password autofill chips, the caps-lock
+   indicator, and the parent decoration container. The custom Eye
+   toggle is the only reveal affordance we want here. Selectors are
+   left intentionally broad (no [type="password"] filter) because the
+   input flips to type="text" while revealed, and some browsers keep
+   their decoration through the swap. Unknown pseudo-elements are
+   ignored by browsers that don't implement them, so this is safe. */
+.settings-card-body input::-ms-reveal,
+.settings-card-body input::-ms-clear,
+.settings-card-body input::-webkit-credentials-auto-fill-button,
+.settings-card-body input::-webkit-strong-password-auto-fill-button,
+.settings-card-body input::-webkit-caps-lock-indicator,
+.settings-card-body input::-webkit-textfield-decoration-container {
   display: none !important;
+  visibility: hidden !important;
+  width: 0 !important;
+  height: 0 !important;
+  pointer-events: none !important;
 }
 
 /* ── Rich email body rendering ──────────────────────────────── */
