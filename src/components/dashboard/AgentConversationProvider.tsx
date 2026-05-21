@@ -20,7 +20,7 @@ import {
   type ReactNode,
 } from "react";
 import type { Memory, MemoryInput } from "@/agent/memory/types";
-import { getMemoryStore } from "@/agent/memory/store";
+import { getMemoryStore, LocalStorageMemoryStore, type MemoryStore } from "@/agent/memory/store";
 import type {
   AgentEvent,
   Conversation,
@@ -65,6 +65,8 @@ function freshConversation(): Conversation {
 
 export interface SendOptions {
   memories?: Memory[];
+  model?: string;
+  temperature?: number;
 }
 
 export interface AgentConversationContextValue {
@@ -104,7 +106,10 @@ export function AgentConversationProvider({ children }: { children: ReactNode })
   const abortRef = useRef<AbortController | null>(null);
   // Memory store handle for draining `save_memory` proposals after the stream
   // finishes. Memory state itself lives in the caller (/chat).
-  const memoryStoreRef = useRef(getMemoryStore());
+  const memoryStoreRef = useRef<MemoryStore>(new LocalStorageMemoryStore());
+  useEffect(() => {
+    getMemoryStore().then((store) => { memoryStoreRef.current = store; }).catch(() => {});
+  }, []);
 
   const active =
     conversations.find((c) => c.id === activeId) ?? conversations[0];
@@ -246,10 +251,9 @@ export function AgentConversationProvider({ children }: { children: ReactNode })
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             messages: nextMessages.map(({ role, content }) => ({ role, content })),
-            // Volatile block of the system prompt — the server treats an
-            // empty array as "no memory section". Memories are owned by the
-            // caller; we just relay them.
             memories: opts?.memories ?? [],
+            ...(opts?.model ? { model: opts.model } : {}),
+            ...(opts?.temperature != null ? { temperature: opts.temperature } : {}),
           }),
           signal: controller.signal,
         });

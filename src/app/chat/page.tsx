@@ -50,7 +50,10 @@ import {
 } from "lucide-react";
 import { Markdown } from "./markdown";
 import type { Memory, MemoryInput, MemoryKind } from "@/agent/memory/types";
-import { getMemoryStore } from "@/agent/memory/store";
+import { getMemoryStore, LocalStorageMemoryStore, type MemoryStore } from "@/agent/memory/store";
+import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/components/dashboard/AuthProvider";
+import { loadAgentSettings } from "@/lib/agent-settings";
 import { isVoiceInputSupported, startVoiceInput, type VoiceSession } from "./voice-input";
 import {
   useAgentConversation,
@@ -269,7 +272,10 @@ export default function AgentTestPage() {
       return next;
     });
   }, []);
-  const onLogout = useCallback(() => router.replace("/login"), [router]);
+  const onLogout = useCallback(async () => {
+    await supabase.auth.signOut();
+    router.replace("/login");
+  }, [router]);
 
   const [input, setInput] = useState("");
   const [health, setHealth] = useState<Health | null>(null);
@@ -315,12 +321,19 @@ export default function AgentTestPage() {
   // store both so the dialog can open transparently in either path.
   const [editingMemoryId, setEditingMemoryId] = useState<string | null>(null);
 
+  const { user } = useAuth();
+
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const isFirstScroll = useRef(true);
-  // Memoised store handle — singleton inside the module, but keeping it on
-  // a ref makes the dependency surface explicit for callbacks.
-  const memoryStoreRef = useRef(getMemoryStore());
+  // Memoised store handle — starts as the local fallback, replaced with
+  // SupabaseMemoryStore once the session resolves.
+  const memoryStoreRef = useRef<MemoryStore>(new LocalStorageMemoryStore());
+  // Cached agent settings — defaults match runtime defaults, updated from
+  // Supabase on mount. Avoids a loading state for non-critical preferences.
+  const memoryEnabledRef = useRef(true);
+  const modelRef = useRef("mistral-large-latest");
+  const temperatureRef = useRef(0.2);
 
   useEffect(() => {
     fetch("/api/agent")
@@ -419,15 +432,26 @@ export default function AgentTestPage() {
     return () => mql.removeEventListener("change", sync);
   }, []);
 
-  // Load memories on mount. Persistence inside the store is synchronous
-  // (writes to localStorage on each save/update/remove), so we only need
-  // to mirror reads here.
+  // Resolve the correct store (Supabase when authenticated, localStorage
+  // otherwise) then load the initial memory list.
   useEffect(() => {
-    memoryStoreRef.current
-      .list()
-      .then(setMemories)
-      .catch(() => setMemories([]));
+    getMemoryStore().then((store) => {
+      memoryStoreRef.current = store;
+      return store.list();
+    }).then(setMemories).catch(() => setMemories([]));
   }, []);
+
+  // Load all agent settings for the current user.
+  useEffect(() => {
+    if (!user) return;
+    loadAgentSettings(user.id)
+      .then(({ memoryEnabled, model, temperature }) => {
+        memoryEnabledRef.current = memoryEnabled;
+        modelRef.current = model;
+        temperatureRef.current = temperature;
+      })
+      .catch(() => {});
+  }, [user]);
 
   // Conversation persistence is owned by AgentConversationProvider — no
   // local persist effect here.
@@ -493,7 +517,11 @@ export default function AgentTestPage() {
       const trimmed = text.trim();
       if (!trimmed || loading) return;
       setInput("");
-      await providerSend(trimmed, { memories });
+      await providerSend(trimmed, {
+        memories: memoryEnabledRef.current ? memories : [],
+        model: modelRef.current,
+        temperature: temperatureRef.current,
+      });
       await refreshMemories();
     },
     [loading, providerSend, memories, refreshMemories],
