@@ -157,7 +157,7 @@ export default function LoginCard() {
             type="email"
             value={email}
             onChange={setEmail}
-            placeholder="thomas@muller.ch"
+            placeholder="mirko@helvebroker.ch"
             autoComplete="email"
           />
           <Field
