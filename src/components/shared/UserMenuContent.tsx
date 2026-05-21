@@ -78,7 +78,7 @@ export function UserMenuContent({ onLogout, bare = false, onClose }: UserMenuCon
                 textOverflow: "ellipsis",
               }}
             >
-              Thomas Müller
+              Mirko Ferretti
             </div>
             <div
               style={{
@@ -89,7 +89,7 @@ export function UserMenuContent({ onLogout, bare = false, onClose }: UserMenuCon
                 textOverflow: "ellipsis",
               }}
             >
-              thomas@muller.ch
+              m.ferretti@helvebroker.ch
             </div>
           </div>
         </div>
@@ -291,7 +291,7 @@ export function UserMenuContent({ onLogout, bare = false, onClose }: UserMenuCon
               letterSpacing: "-0.005em",
             }}
           >
-            Thomas Müller
+            Mirko Ferretti
           </div>
           <div
             style={{

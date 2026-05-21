@@ -43,7 +43,7 @@ export const INITIAL_ALERTS: AlertItem[] = [
 <p>À ce jour, <strong>votre couverture n'est plus active</strong>. Afin de régulariser votre situation dans les meilleurs délais et d'éviter toute exposition au risque, nous vous demandons de nous contacter impérativement aujourd'hui.</p>
 <p>Notre équipe est disponible pour traiter votre dossier en priorité et procéder à la remise en vigueur de votre contrat.</p>
 <p>Veuillez agréer, Madame, Monsieur, l'expression de nos salutations distinguées.</p>
-<p><strong>Cabinet Müller &amp; Associés SA</strong><br>Département Gestion des Contrats<br>+41 22 000 00 00 · contact@cabinet-muller.ch</p>`,
+<p><strong>Helvebroker</strong><br>Département Gestion des Contrats<br>+41 22 000 00 00 · contact@helvebroker.ch</p>`,
     },
   },
   {
@@ -63,7 +63,7 @@ export const INITIAL_ALERTS: AlertItem[] = [
 <p>Afin d'assurer la continuité de votre couverture sans interruption, nous vous invitons à nous contacter dans les meilleurs délais pour procéder au renouvellement.</p>
 <p>Notre équipe reste à votre disposition pour répondre à toutes vos questions et vous accompagner dans cette démarche.</p>
 <p>Dans l'attente de vous lire, nous vous adressons nos cordiales salutations.</p>
-<p><strong>Cabinet Müller &amp; Associés SA</strong><br>Département Gestion des Contrats<br>+41 22 000 00 00 · contact@cabinet-muller.ch</p>`,
+<p><strong>Helvebroker</strong><br>Département Gestion des Contrats<br>+41 22 000 00 00 · contact@helvebroker.ch</p>`,
     },
   },
   {
@@ -84,7 +84,7 @@ export const INITIAL_ALERTS: AlertItem[] = [
 <p>Vous serez contacté dans les <strong>48 heures</strong> pour faire le point sur l'état d'avancement.</p>
 <p>Nous vous prions d'accepter nos excuses pour ce délai et vous assurons de notre mobilisation totale.</p>
 <p>Veuillez agréer, Madame, Monsieur, l'expression de nos salutations distinguées.</p>
-<p><strong>Cabinet Müller &amp; Associés SA</strong><br>Service Sinistres — Gestionnaire senior<br>+41 22 000 00 01 · sinistres@cabinet-muller.ch</p>`,
+<p><strong>Helvebroker</strong><br>Service Sinistres — Gestionnaire senior<br>+41 22 000 00 01 · sinistres@helvebroker.ch</p>`,
     },
   },
   {
@@ -104,7 +104,7 @@ export const INITIAL_ALERTS: AlertItem[] = [
 <p>Nous vous demandons de bien vouloir <strong>régulariser cette situation dans les meilleurs délais</strong> afin d'éviter toute suspension de garantie.</p>
 <p>Pour tout renseignement ou en cas de difficulté de paiement, notre service comptabilité reste à votre disposition.</p>
 <p>Veuillez agréer, Madame, Monsieur, nos salutations distinguées.</p>
-<p><strong>Cabinet Müller &amp; Associés SA</strong><br>Service Comptabilité<br>+41 22 000 00 02 · compta@cabinet-muller.ch</p>`,
+<p><strong>Helvebroker</strong><br>Service Comptabilité<br>+41 22 000 00 02 · compta@helvebroker.ch</p>`,
     },
   },
   {
@@ -124,7 +124,7 @@ export const INITIAL_ALERTS: AlertItem[] = [
 <p>Nous vous contactons afin de vous informer que votre contrat d'assurance professionnelle référence <strong>CHX-0112</strong> arrive à échéance dans <strong>30 jours</strong>.</p>
 <p>Afin d'assurer la continuité de votre couverture, nous vous invitons à nous contacter pour procéder au renouvellement.</p>
 <p>Cordialement,</p>
-<p><strong>Cabinet Müller &amp; Associés SA</strong></p>`,
+<p><strong>Helvebroker</strong></p>`,
     },
   },
   {
@@ -143,7 +143,7 @@ export const INITIAL_ALERTS: AlertItem[] = [
       body: `<p>Madame, Monsieur,</p>
 <p>Nous accusons réception de votre demande de résiliation du contrat <strong>CHX-0078</strong> et vous confirmons qu'elle a bien été prise en compte.</p>
 <p>Veuillez agréer nos salutations distinguées.</p>
-<p><strong>Cabinet Müller &amp; Associés SA</strong></p>`,
+<p><strong>Helvebroker</strong></p>`,
     },
   },
   {
@@ -162,7 +162,7 @@ export const INITIAL_ALERTS: AlertItem[] = [
       body: `<p>Madame, Monsieur,</p>
 <p>Nous avons le plaisir de vous informer que votre dossier sinistre <strong>SIN-0031</strong> a été clôturé suite à l'accord amiable conclu.</p>
 <p>Merci de votre confiance.</p>
-<p><strong>Cabinet Müller &amp; Associés SA</strong></p>`,
+<p><strong>Helvebroker</strong></p>`,
     },
   },
 ];

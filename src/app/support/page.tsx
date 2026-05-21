@@ -39,7 +39,7 @@ const TYPE_LABEL: Record<TicketType, string> = {
 };
 
 // Placeholder until auth lands.
-const CURRENT_USER_NAME = "Cabinet Müller";
+const CURRENT_USER_NAME = "Helvebroker";
 
 export default function SupportPage() {
   return (

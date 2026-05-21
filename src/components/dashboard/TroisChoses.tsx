@@ -109,7 +109,7 @@ export function TroisChoses({ items, onOpen }: TroisChosesProps) {
               color: "var(--text-3)",
               maxWidth: "36ch", lineHeight: 1.5,
             }}>
-              Bonne journée, Thomas. Vos agents IA continuent de surveiller en arrière-plan.
+              Bonne journée, Mirko. Vos agents IA continuent de surveiller en arrière-plan.
             </div>
             <button
               onClick={() => setDone(items.map(() => false))}

@@ -816,13 +816,13 @@ export function Sidebar({
                   color: "var(--text)",
                   letterSpacing: "-0.01em",
                   whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
-                }}>Thomas Müller</div>
+                }}>Mirko Ferretti</div>
                 <div style={{
                   fontSize: "0.6rem",
                   color: "var(--text-3)",
                   whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
                   marginTop: "1px",
-                }}>thomas@muller.ch</div>
+                }}>m.ferretti@helvebroker.ch</div>
               </div>
             </button>
 
@@ -935,7 +935,7 @@ export function Sidebar({
               onMouseEnter={(e) => {
                 const wrap = e.currentTarget.querySelector("[data-icon-wrap]") as HTMLElement | null;
                 if (wrap) wrap.style.background = "var(--surface-3)";
-                showTip("Thomas Müller", e.currentTarget);
+                showTip("Mirko Ferretti", e.currentTarget);
               }}
               onMouseLeave={(e) => {
                 const wrap = e.currentTarget.querySelector("[data-icon-wrap]") as HTMLElement | null;

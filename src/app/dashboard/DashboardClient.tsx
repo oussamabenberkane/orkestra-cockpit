@@ -300,7 +300,7 @@ export default function DashboardClient({
               color: "var(--text)",
               margin: 0,
               lineHeight: 1.15,
-            }}>Bonjour Thomas</h1>
+            }}>Bonjour Mirko</h1>
             <span style={{
               fontSize: "clamp(0.7rem, 1.8vw, 0.78rem)",
               color: "var(--text-3)",
@@ -973,7 +973,7 @@ function Footer() {
       color: "var(--text-3)",
       flexWrap: "wrap",
     }}>
-      <span>© 2026 Cabinet Müller &amp; Associés SA · Zürich</span>
+      <span>© 2026 Helvebroker · Zürich</span>
       <span>Sync BrokerStar 3 min · Odoo 5 min</span>
       <span>LPD Art.16 · Infomaniak CH</span>
     </footer>

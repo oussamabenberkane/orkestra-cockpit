@@ -470,7 +470,7 @@ function EmptyState({
           lineHeight: 1.5,
         }}
       >
-        Bonjour Thomas. Pose-moi une question sur le cabinet — clients, contrats,
+        Bonjour Mirko. Pose-moi une question sur le cabinet — clients, contrats,
         sinistres, renouvellements.
       </div>
       <div

@@ -115,7 +115,7 @@ export default function LoginCard() {
               lineHeight: 1.1,
             }}
           >
-            Bonjour, Thomas.
+            Bonjour, Mirko.
           </h1>
           <button
             type="button"
@@ -299,7 +299,7 @@ export default function LoginCard() {
           color: "var(--text-4)",
         }}
       >
-        © 2026 Cabinet Müller &amp; Associés SA · Zürich
+        © 2026 Helvebroker · Zürich
       </footer>
     </main>
   );

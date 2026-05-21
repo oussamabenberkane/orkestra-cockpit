@@ -37,7 +37,7 @@ const VARIABLES = [
   { key: "ref_contrat",   label: "Référence contrat",  example: "CHX-0187" },
   { key: "email_client",  label: "E-mail client",      example: "s.fontaine@…" },
   { key: "date_echeance", label: "Date d'échéance",    example: "2 juin 2026" },
-  { key: "courtier",      label: "Nom du cabinet",     example: "Cabinet Müller…" },
+  { key: "courtier",      label: "Nom du cabinet",     example: "Helvebroker" },
 ];
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -240,8 +240,8 @@ export default function AlertEmailEditorPage() {
     ref_contrat:   alert.id,
     email_client:  alert.client.email,
     date_echeance: "2 juin 2026",
-    courtier:      "Cabinet Müller & Associés SA",
-    email_courtier:"system@cabinet-muller.ch",
+    courtier:      "Helvebroker",
+    email_courtier:"system@helvebroker.ch",
   };
 
   return (
@@ -488,9 +488,9 @@ export default function AlertEmailEditorPage() {
             <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", padding: "0.6rem 1.25rem", borderBottom: "1px solid rgba(0,0,0,0.04)" }}>
               <span style={{ fontSize: "0.72rem", fontWeight: 600, color: "var(--text-4)", minWidth: 44, flexShrink: 0 }}>De</span>
               <span style={{ fontSize: "0.82rem", color: "var(--text-3)" }}>
-                Cabinet Müller &amp; Associés SA{" "}
+                Helvebroker{" "}
                 <span style={{ color: "var(--text-4)", fontFamily: "var(--font-mono)", fontSize: "0.75rem" }}>
-                  &lt;system@cabinet-muller.ch&gt;
+                  &lt;system@helvebroker.ch&gt;
                 </span>
               </span>
             </div>

@@ -418,7 +418,7 @@ function Hero({
                 letterSpacing: "-0.005em",
               }}
             >
-              Démo Cabinet Müller &amp; Associés SA — pas de mot de passe requis.
+              Démo Helvebroker — pas de mot de passe requis.
             </span>
           </motion.div>
 
@@ -752,7 +752,7 @@ function Footer() {
           flexWrap: "wrap",
         }}
       >
-        <span>© 2026 Cabinet Müller &amp; Associés SA · Zürich</span>
+        <span>© 2026 Helvebroker · Zürich</span>
         <span>LPD Art.16 · Infomaniak CH · Mistral Large</span>
       </div>
     </footer>

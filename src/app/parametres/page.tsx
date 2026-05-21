@@ -292,9 +292,9 @@ function SaveButton({ saved }: { saved: boolean }) {
 // ── Profil section ─────────────────────────────────────────────────────────
 
 function ProfilSection({ onSave, saved }: { onSave: () => void; saved: boolean }) {
-  const [prenom, setPrenom] = useState("Thomas");
-  const [nom, setNom] = useState("Müller");
-  const [email, setEmail] = useState("thomas.muller@cabinet-muller.ch");
+  const [prenom, setPrenom] = useState("Mirko");
+  const [nom, setNom] = useState("Ferretti");
+  const [email, setEmail] = useState("m.ferretti@helvebroker.ch");
   const [phone, setPhone] = useState("+41 79 123 45 67");
   const [langue, setLangue] = useState("fr");
   const [showCurrent, setShowCurrent] = useState(false);
@@ -335,7 +335,7 @@ function ProfilSection({ onSave, saved }: { onSave: () => void; saved: boolean }
               position: "relative",
             }}
           >
-            TM
+            MF
             <button
               type="button"
               style={{
@@ -359,10 +359,10 @@ function ProfilSection({ onSave, saved }: { onSave: () => void; saved: boolean }
           </div>
           <div>
             <p style={{ fontWeight: 600, color: "var(--text)", marginBottom: "0.15rem", fontSize: "0.95rem" }}>
-              Thomas Müller
+              Mirko Ferretti
             </p>
             <p style={{ fontSize: "0.78rem", color: "var(--text-3)" }}>
-              Courtier senior · Cabinet Müller &amp; Associés SA
+              Courtier senior · Helvebroker
             </p>
           </div>
         </div>
@@ -468,9 +468,9 @@ function ProfilSection({ onSave, saved }: { onSave: () => void; saved: boolean }
 // ── Cabinet section ────────────────────────────────────────────────────────
 
 function CabinetSection({ onSave, saved }: { onSave: () => void; saved: boolean }) {
-  const [raisonSociale, setRaisonSociale] = useState("Cabinet Müller & Associés SA");
+  const [raisonSociale, setRaisonSociale] = useState("Helvebroker SA");
   const [rcs, setRcs] = useState("CH-660.0.013.546-6");
-  const [site, setSite] = useState("www.cabinet-muller.ch");
+  const [site, setSite] = useState("www.helvebroker.ch");
   const [adresse, setAdresse] = useState("Rue de la Paix 12");
   const [ville, setVille] = useState("1204 Genève");
   const [pays, setPays] = useState("ch");

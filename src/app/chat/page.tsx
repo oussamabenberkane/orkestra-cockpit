@@ -3624,7 +3624,7 @@ function Welcome({
           opacity: 0.45,
         }} />
         <Sparkles size={11} strokeWidth={2.5} aria-hidden="true" />
-        <span>Agent · Cabinet Müller</span>
+        <span>Agent · Helvebroker</span>
       </div>
 
       {/* ─── Editorial display heading + paragraph (compacted) ─── */}

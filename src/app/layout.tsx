@@ -21,7 +21,7 @@ const jetBrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: "Orkestra — Cockpit BFSI",
   description:
-    "Cabinet Müller & Associés SA — Pilotez votre cabinet avec intelligence",
+    "Helvebroker — Pilotez votre cabinet avec intelligence",
 };
 
 export default function RootLayout({

@@ -3,7 +3,7 @@
 import React from "react";
 
 /**
- * Tiny zero-dep markdown renderer for the Cabinet Müller agent answers.
+ * Tiny zero-dep markdown renderer for the Helvebroker agent answers.
  * Handles the subset Gemini actually emits: bold, italic, inline + fenced
  * code, headings (# ## ###), unordered + ordered lists, GFM pipe tables,
  * blockquotes, paragraphs. Plus domain-aware decoration for cabinet IDs,

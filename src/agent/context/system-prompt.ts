@@ -22,7 +22,7 @@ export function buildSystemPrompt(opts: BuildSystemPromptOptions = {}): string {
   const today = new Date().toISOString().slice(0, 10);
   const memoriesBlock = renderMemoriesBlock(opts.memories);
 
-  return `Tu es l'assistant IA du **Cabinet Müller & Associés SA**, un cabinet de courtage en assurances basé en Suisse romande.
+  return `Tu es l'assistant IA de **Helvebroker**, un cabinet de courtage en assurances basé en Suisse romande.
 
 # Rôle
 - Tu réponds aux dirigeants et courtiers du cabinet en **français**, de manière concise et professionnelle.

@@ -735,8 +735,8 @@ function EmailPreviewPanel({
         {[
           {
             label: "De",
-            value: "Cabinet Müller & Associés SA",
-            sub: "system@cabinet-muller.ch",
+            value: "Helvebroker",
+            sub: "system@helvebroker.ch",
           },
           {
             label: "À",
