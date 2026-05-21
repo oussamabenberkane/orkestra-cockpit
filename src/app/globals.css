@@ -668,6 +668,36 @@ html.scroll-locked body {
   overflow-y: auto;
 }
 
+/* Email meta value rows: scroll horizontally when De/À/Objet content overflows
+   (mainly the long sender/recipient + monospace email pair on narrow viewports).
+   The right-edge mask fades the last few px so the cut-off feels intentional,
+   and a slim 4px scrollbar makes the affordance discoverable. */
+.alert-email-meta-value {
+  flex: 1;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  white-space: nowrap;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) transparent;
+  padding-bottom: 2px;
+  mask-image: linear-gradient(90deg, #000 calc(100% - 18px), transparent);
+  -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 18px), transparent);
+}
+.alert-email-meta-value::-webkit-scrollbar {
+  height: 4px;
+}
+.alert-email-meta-value::-webkit-scrollbar-track {
+  background: transparent;
+}
+.alert-email-meta-value::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 100px;
+}
+.alert-email-meta-value::-webkit-scrollbar-thumb:hover {
+  background: var(--text-4);
+}
+
 /* Header CTA label: full text on wide screens, abbreviated on narrow. */
 .alert-cta-label { display: inline; }
 .alert-cta-label-short { display: none; }

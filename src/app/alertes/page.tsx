@@ -76,6 +76,14 @@ export default function AlertesPage() {
     [isCompact, router]
   );
 
+  /** Mark everything as read, then jump to "Traités" so the user lands
+   *  on the populated tab instead of an empty "Tout est à jour" state. */
+  const handleMarkAllAsRead = useCallback(() => {
+    markAllAsRead();
+    setTab("lu");
+    setSelectedId(null);
+  }, [markAllAsRead]);
+
   /** Desktop keyboard nav — ↑ / ↓ moves the selection, Enter opens the editor. */
   useEffect(() => {
     if (isCompact) return;
@@ -163,65 +171,32 @@ export default function AlertesPage() {
               </p>
             </div>
           </div>
-
-          <AnimatePresence>
-            {unreadCount > 0 && tab === "nonlu" && (
-              <motion.button
-                initial={{ opacity: 0, scale: 0.92 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.92 }}
-                onClick={markAllAsRead}
-                aria-label="Tout marquer comme lu"
-                title="Tout marquer comme lu"
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "0.4rem",
-                  fontSize: "0.8rem",
-                  fontWeight: 600,
-                  color: "var(--text-3)",
-                  background: "var(--surface-2)",
-                  border: "none",
-                  borderRadius: "8px",
-                  padding: "0.45rem 0.875rem",
-                  cursor: "pointer",
-                  boxShadow: "var(--tier-1)",
-                  transition: "background 0.15s, color 0.15s",
-                  fontFamily: "inherit",
-                  flexShrink: 0,
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = "var(--success-tint)";
-                  e.currentTarget.style.color = "var(--success)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = "var(--surface-2)";
-                  e.currentTarget.style.color = "var(--text-3)";
-                }}
-              >
-                <CheckCheck size={14} />
-                <span className="alert-cta-label">Tout marquer lu</span>
-                <span className="alert-cta-label-short">Tout lu</span>
-              </motion.button>
-            )}
-          </AnimatePresence>
         </motion.div>
 
-        {/* ── Tabs ── */}
+        {/* ── Tabs row (tabs left, "Tout lu" CTA right) ── */}
         <motion.div
           initial={{ opacity: 0, y: 6 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.28, delay: 0.05, ease: [0.22, 1, 0.36, 1] }}
           style={{
-            display: "inline-flex",
-            background: "var(--surface-2)",
-            borderRadius: "10px",
-            padding: "3px",
-            gap: "2px",
-            boxShadow: "var(--tier-1)",
-            width: "fit-content",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            flexWrap: "wrap",
+            gap: "0.625rem",
           }}
         >
+          <div
+            style={{
+              display: "inline-flex",
+              background: "var(--surface-2)",
+              borderRadius: "10px",
+              padding: "3px",
+              gap: "2px",
+              boxShadow: "var(--tier-1)",
+              width: "fit-content",
+            }}
+          >
           {(
             [
               { key: "nonlu" as TabKey, label: "Non lus", count: unread.length },
@@ -282,6 +257,49 @@ export default function AlertesPage() {
               </button>
             );
           })}
+          </div>
+
+          <AnimatePresence>
+            {unreadCount > 0 && tab === "nonlu" && (
+              <motion.button
+                initial={{ opacity: 0, scale: 0.92 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.92 }}
+                onClick={handleMarkAllAsRead}
+                aria-label="Tout marquer comme lu"
+                title="Tout marquer comme lu"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "0.4rem",
+                  fontSize: "0.8rem",
+                  fontWeight: 600,
+                  color: "var(--text-3)",
+                  background: "var(--surface-2)",
+                  border: "none",
+                  borderRadius: "8px",
+                  padding: "0.45rem 0.875rem",
+                  cursor: "pointer",
+                  boxShadow: "var(--tier-1)",
+                  transition: "background 0.15s, color 0.15s",
+                  fontFamily: "inherit",
+                  flexShrink: 0,
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = "var(--success-tint)";
+                  e.currentTarget.style.color = "var(--success)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = "var(--surface-2)";
+                  e.currentTarget.style.color = "var(--text-3)";
+                }}
+              >
+                <CheckCheck size={14} />
+                <span className="alert-cta-label">Tout marquer lu</span>
+                <span className="alert-cta-label-short">Tout lu</span>
+              </motion.button>
+            )}
+          </AnimatePresence>
         </motion.div>
 
         {/* ── Two-panel layout ── */}
@@ -439,27 +457,20 @@ function AlertRow({
       }}
       className="alert-row"
       style={{
-        background: isSelected ? "var(--surface)" : "var(--surface-2)",
+        // Severity-tinted ambient wash from the top-left, fading into the card
+        // surface — replaces the previous flat left stripe. The tint is layered
+        // OVER the opaque base so alpha doesn't leak through to the page bg.
+        background: isRead
+          ? (isSelected ? "var(--surface)" : "var(--surface-2)")
+          : `linear-gradient(135deg, ${cfg.tint}, transparent 42%), ${
+              isSelected ? "var(--surface)" : "var(--surface-2)"
+            }`,
         boxShadow: isSelected ? "var(--tier-2)" : "none",
         border: `1.5px solid ${isSelected ? cfg.color + "33" : "transparent"}`,
         opacity: isRead && !isSelected ? 0.72 : 1,
       }}
     >
-      {/* Severity stripe — thicker on selection for clearer left-edge signal */}
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          top: 0,
-          bottom: 0,
-          width: isSelected ? 4 : 3,
-          background: cfg.color,
-          opacity: isRead ? 0.5 : 1,
-          transition: "width 0.18s",
-        }}
-      />
-
-      <div style={{ padding: "0.75rem 0.875rem 0.75rem 1.125rem" }}>
+      <div style={{ padding: "0.75rem 0.875rem 0.75rem 0.875rem" }}>
         {/* Top: severity pill + ref + actions */}
         <div
           style={{
@@ -846,7 +857,7 @@ function EmailPreviewPanel({
             >
               {label}
             </span>
-            <span style={{ minWidth: 0 }}>
+            <div className="alert-email-meta-value">
               <span
                 style={{
                   fontSize: "0.82rem",
@@ -868,7 +879,7 @@ function EmailPreviewPanel({
                   &lt;{sub}&gt;
                 </span>
               )}
-            </span>
+            </div>
           </div>
         ))}
       </div>
