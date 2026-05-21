@@ -721,6 +721,44 @@ html.scroll-locked body {
   .alert-email-body { padding-left: 1.25rem; padding-right: 1.25rem; }
 }
 
+/* ── Alert detail page (/alertes/[id]) responsive layout ──────────
+   The context banner uses a 3-col grid (icon | body | meta) on desktop.
+   On mobile it collapses to 2-col with a hairline-separated footer row
+   for the client/timestamp metadata — clearer hierarchy than the wrap. */
+
+.alert-detail-banner {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.75rem;
+}
+.alert-detail-banner-meta {
+  min-width: 0;
+}
+
+@media (max-width: 720px) {
+  .alert-detail-banner {
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-areas:
+      "icon body"
+      "meta meta";
+    align-items: flex-start;
+    row-gap: 0.625rem;
+  }
+  .alert-detail-banner-icon { grid-area: icon; align-self: flex-start; }
+  .alert-detail-banner-body { grid-area: body; }
+  .alert-detail-banner-meta {
+    grid-area: meta;
+    padding-top: 0.625rem;
+    border-top: 1px solid rgba(0, 0, 0, 0.06);
+    width: 100%;
+    flex-wrap: wrap;
+  }
+  /* Breadcrumb's trailing "Composition d'e-mail" tag duplicates the page
+     intent and crowds the narrow breadcrumb — hide it. */
+  .alert-detail-breadcrumb-tag { display: none; }
+}
+
 /* ── Paramètres (settings) responsive helpers ────────────────────
    Desktop: 210px sticky vertical nav + content column.
    Below 900 px: nav collapses to a sticky-top, translucent
