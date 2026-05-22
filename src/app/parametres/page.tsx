@@ -1,7 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { CSSProperties } from "react";
+import { useAuth } from "@/components/dashboard/AuthProvider";
+import { loadAgentSettings, saveAgentSettings } from "@/lib/agent-settings";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   User,
@@ -576,8 +578,9 @@ const TOOLS: { key: string; label: string; desc: string }[] = [
 ];
 
 function AgentsSection({ onSave, saved }: { onSave: () => void; saved: boolean }) {
+  const { user } = useAuth();
   const [model, setModel] = useState("mistral-large-latest");
-  const [temperature, setTemperature] = useState(0.7);
+  const [temperature, setTemperature] = useState(0.2);
   const [langueReponse, setLangueReponse] = useState("fr");
   const [memoire, setMemoire] = useState(true);
   const [outils, setOutils] = useState<Record<string, boolean>>({
@@ -587,24 +590,36 @@ function AgentsSection({ onSave, saved }: { onSave: () => void; saved: boolean }
     search_web: false,
   });
 
+  useEffect(() => {
+    if (!user) return;
+    loadAgentSettings(user.id).then(({ memoryEnabled, model: m, temperature: t }) => {
+      setMemoire(memoryEnabled);
+      setModel(m);
+      setTemperature(t);
+    }).catch(() => {});
+  }, [user]);
+
   const toggleOutil = (key: string) => {
     setOutils((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (user) {
+      await saveAgentSettings(user.id, { memoryEnabled: memoire, model, temperature }).catch(() => {});
+    }
+    onSave();
+  };
+
   return (
-    <form
-      onSubmit={(e) => {
-        e.preventDefault();
-        onSave();
-      }}
+    <form onSubmit={handleSubmit}
     >
       <Card title="Modèle de langage">
         <Field label="Modèle actif">
           <Select value={model} onChange={(e) => setModel(e.target.value)}>
             <option value="mistral-large-latest">Mistral Large (défaut)</option>
-            <option value="mistral-medium">Mistral Medium</option>
-            <option value="mistral-small">Mistral Small</option>
-            <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
+            <option value="mistral-small-latest">Mistral Small</option>
+            <option value="codestral-latest">Codestral</option>
           </Select>
         </Field>
 

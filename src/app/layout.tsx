@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Manrope, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { AgentConversationProvider } from "@/components/dashboard/AgentConversationProvider";
+import { AuthProvider } from "@/components/dashboard/AuthProvider";
 import { NotificationsProvider } from "@/components/dashboard/NotificationsProvider";
 
 const manrope = Manrope({
@@ -32,9 +33,11 @@ export default function RootLayout({
   return (
     <html lang="fr" className={`${manrope.variable} ${jetBrainsMono.variable}`}>
       <body>
-        <NotificationsProvider>
-          <AgentConversationProvider>{children}</AgentConversationProvider>
-        </NotificationsProvider>
+        <AuthProvider>
+          <NotificationsProvider>
+            <AgentConversationProvider>{children}</AgentConversationProvider>
+          </NotificationsProvider>
+        </AuthProvider>
       </body>
     </html>
   );

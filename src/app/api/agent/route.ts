@@ -78,9 +78,9 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  let body: { messages?: unknown; memories?: unknown } = {};
+  let body: { messages?: unknown; memories?: unknown; model?: unknown; temperature?: unknown } = {};
   try {
-    body = (await req.json()) as { messages?: unknown; memories?: unknown };
+    body = (await req.json()) as typeof body;
   } catch {
     return Response.json({ error: "Invalid JSON body" }, { status: 400 });
   }
@@ -92,11 +92,17 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Memories are optional and browser-owned. Anything malformed is ignored
-  // rather than rejected — a missing memory block must never break the run.
   const memories = Array.isArray(body.memories)
     ? (body.memories as Memory[])
     : undefined;
+
+  const model = typeof body.model === "string" && body.model ? body.model : undefined;
+  const temperature =
+    typeof body.temperature === "number" &&
+    body.temperature >= 0 &&
+    body.temperature <= 1
+      ? body.temperature
+      : undefined;
 
   const params = new URL(req.url).searchParams;
   const mode = params.get("mode");
@@ -108,20 +114,18 @@ export async function POST(req: NextRequest) {
         messages: body.messages as never,
         signal: req.signal,
         memories,
+        model,
+        temperature,
       });
       return Response.json(result);
     }
     if (stream === "events") {
-      // NDJSON event stream — one JSON object per line, surfacing tool-call
-      // and tool-result events as soon as they happen (text-deltas too).
-      // Used by the /agent-test page to render live tool activity instead of
-      // the post-hoc summary the `?stream=text` trailer carries. Schema is
-      // kept stable across the run; see the page's parser for the matching
-      // fields.
       const result = runAgentStream({
         messages: body.messages as never,
         signal: req.signal,
         memories,
+        model,
+        temperature,
       });
       const encoder = new TextEncoder();
       const readable = new ReadableStream<Uint8Array>({
@@ -215,6 +219,8 @@ export async function POST(req: NextRequest) {
         messages: body.messages as never,
         signal: req.signal,
         memories,
+        model,
+        temperature,
       });
       const encoder = new TextEncoder();
       const readable = new ReadableStream<Uint8Array>({
@@ -277,6 +283,8 @@ export async function POST(req: NextRequest) {
       messages: body.messages as never,
       signal: req.signal,
       memories,
+      model,
+      temperature,
     });
     return result.toDataStreamResponse();
   } catch (err) {

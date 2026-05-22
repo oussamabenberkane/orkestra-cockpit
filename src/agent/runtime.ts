@@ -11,7 +11,8 @@ import { buildSystemPrompt } from "./context/system-prompt";
 import type { Memory } from "./memory/types";
 import { agentTools } from "./tools";
 
-const MODEL_ID = process.env.AGENT_MODEL ?? "mistral-large-latest";
+const DEFAULT_MODEL_ID = process.env.AGENT_MODEL ?? "mistral-large-latest";
+const DEFAULT_TEMPERATURE = 0.2;
 // const MODEL_ID = process.env.AGENT_MODEL ?? "gemini-2.0-flash";
 
 // Hard ceiling on a single agent run. The target is a true hang (a dead
@@ -34,9 +35,7 @@ function withTimeout(signal?: AbortSignal): AbortSignal {
   return signal ? AbortSignal.any([signal, timeout]) : timeout;
 }
 
-// Lazily build the provider so importing this module is cheap and doesn't crash
-// when the key is absent (e.g. during typecheck or unit tests).
-function getModel() {
+function getModel(modelId?: string) {
   const apiKey = process.env.MISTRAL_API_KEY;
   if (!apiKey || apiKey === "your-mistral-api-key-here") {
     throw new Error(
@@ -44,7 +43,7 @@ function getModel() {
     );
   }
   const mistral = createMistral({ apiKey });
-  return mistral(MODEL_ID);
+  return mistral(modelId ?? DEFAULT_MODEL_ID);
 
   // --- Gemini variant (kept for quick rollback) ---
   // const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
@@ -58,17 +57,13 @@ function getModel() {
 }
 
 export interface AgentRunInput {
-  // Full message history sent by the client. The system prompt is injected
-  // here, so callers should NOT include one themselves.
   messages: CoreMessage[];
-  // Optional caller abort signal — typically the HTTP request signal, so a
-  // client disconnect (or the /agent-test stop button) cancels generation.
-  // Always combined with an internal timeout via `withTimeout`.
   signal?: AbortSignal;
-  // Optional user-scoped memories injected at the end of the system prompt.
-  // The browser is the source of truth; the route forwards what the page
-  // sends. Empty/undefined ⇒ no memory section.
   memories?: Memory[];
+  /** Override the model. Defaults to AGENT_MODEL env var → mistral-large-latest. */
+  model?: string;
+  /** Override the temperature (0–1). Defaults to 0.2. */
+  temperature?: number;
 }
 
 // Per-step logger — one line per LLM round-trip. Tracks elapsed time so we
@@ -107,18 +102,14 @@ function createStepLogger() {
   };
 }
 
-// Streamed response — what the future chat UI will consume via @ai-sdk/react.
-export function runAgentStream({ messages, signal, memories }: AgentRunInput) {
+export function runAgentStream({ messages, signal, memories, model, temperature }: AgentRunInput) {
   return streamText({
-    model: getModel(),
+    model: getModel(model),
     system: buildSystemPrompt({ memories }),
     messages,
     tools: agentTools,
-    // Multi-step: the LLM may call several tools before answering. Cap at 8
-    // — typical questions need 1-3 calls, SQL self-correct rarely exceeds 2
-    // retries. Bumped down from 16 to bound cost on degenerate loops.
     maxSteps: 8,
-    temperature: 0.2,
+    temperature: temperature ?? DEFAULT_TEMPERATURE,
     maxRetries: AGENT_MAX_RETRIES,
     abortSignal: withTimeout(signal),
     onStepFinish: createStepLogger(),
@@ -131,16 +122,14 @@ export function runAgentStream({ messages, signal, memories }: AgentRunInput) {
   });
 }
 
-// One-shot non-streaming variant — handy for smoke tests and server-side use
-// where you just want the final text.
-export async function runAgentOnce({ messages, signal, memories }: AgentRunInput) {
+export async function runAgentOnce({ messages, signal, memories, model, temperature }: AgentRunInput) {
   const result = await generateText({
-    model: getModel(),
+    model: getModel(model),
     system: buildSystemPrompt({ memories }),
     messages,
     tools: agentTools,
     maxSteps: 8,
-    temperature: 0.2,
+    temperature: temperature ?? DEFAULT_TEMPERATURE,
     maxRetries: AGENT_MAX_RETRIES,
     abortSignal: withTimeout(signal),
     onStepFinish: createStepLogger(),
