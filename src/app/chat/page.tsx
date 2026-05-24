@@ -488,10 +488,17 @@ export default function AgentTestPage() {
     return () => el.removeEventListener("scroll", onScroll);
   }, [activeId]);
 
-  // Autogrow textarea. When the field is empty we leave `height` unset so
-  // CSS `min-height` (44px on ≤1024, 90px on desktop) is the single source
-  // of truth — that eliminates the "tall on load, short after first
-  // keystroke" wobble caused by inline JS height fighting the cascade.
+  // Autogrow textarea.
+  //   Empty:  leave `height` unset so CSS `min-height` (88px ≤1024, 90px
+  //           desktop) is the single source of truth — kills the "tall on
+  //           load" first-paint flash.
+  //   Typed:  clamp the inline height to [min, cap], where `min` mirrors
+  //           the CSS baseline. Without this floor, some browsers report
+  //           `scrollHeight` as the bare content height (~30px for one
+  //           character), the inline `height` wins the layout pass before
+  //           the CSS `min-height` kicks back in, and the field visibly
+  //           shrinks on the first keystroke. Mirrors fix on every
+  //           breakpoint so desktop, tablet, and phone all stay stable.
   useEffect(() => {
     const ta = textareaRef.current;
     if (!ta) return;
@@ -499,13 +506,13 @@ export default function AgentTestPage() {
       ta.style.height = "";
       return;
     }
-    ta.style.height = "auto";
-    const cap =
+    const compact =
       typeof window !== "undefined" &&
-      window.matchMedia("(max-width: 1024px)").matches
-        ? 200
-        : 340;
-    ta.style.height = Math.min(ta.scrollHeight, cap) + "px";
+      window.matchMedia("(max-width: 1024px)").matches;
+    const min = compact ? 88 : 90;
+    const cap = compact ? 200 : 340;
+    ta.style.height = "auto";
+    ta.style.height = `${Math.max(min, Math.min(ta.scrollHeight, cap))}px`;
   }, [input]);
 
   // iOS Safari: when the on-screen keyboard opens, the layout viewport stays
