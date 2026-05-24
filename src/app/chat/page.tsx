@@ -1128,10 +1128,13 @@ export default function AgentTestPage() {
             padding-bottom: 0 !important;
             border-bottom-color: transparent !important;
           }
-          /* Scroll container — minimal breathing space, no bottom gap. */
+          /* Scroll container — minimal top space, plus a subtle ~10px gap
+           * at the bottom so long conversations don't have their last bubble
+           * touching the composer. Small enough that it doesn't reflow short
+           * threads. */
           .agent-scroll {
             padding-top: 0.65rem !important;
-            padding-bottom: 0.1rem !important;
+            padding-bottom: 0.65rem !important;
           }
           /* Welcome itself — no extra top space. */
           .agent-welcome { padding-top: 0 !important; }
