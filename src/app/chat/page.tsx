@@ -503,7 +503,7 @@ export default function AgentTestPage() {
     const cap =
       typeof window !== "undefined" &&
       window.matchMedia("(max-width: 1024px)").matches
-        ? 160
+        ? 200
         : 340;
     ta.style.height = Math.min(ta.scrollHeight, cap) + "px";
   }, [input]);
@@ -1226,10 +1226,13 @@ export default function AgentTestPage() {
         @media (max-width: 1024px) {
           textarea.agent-input {
             font-size: 16px !important;     /* prevent iOS auto-zoom on focus */
-            min-height: 44px !important;
+            /* Two-row baseline (~88px = 2 × line-height + padding) — matches
+             * Claude's web composer. Placeholder sits at the top, send/mic
+             * buttons stay at bottom-right via their absolute positioning. */
+            min-height: 88px !important;
             line-height: 1.4 !important;
-            padding: 0.55rem 2.85rem 0.55rem 0.95rem !important;
-            max-height: 160px !important;
+            padding: 0.65rem 2.85rem 0.65rem 0.95rem !important;
+            max-height: 200px !important;
           }
           .agent-composer { border-radius: 18px !important; }
           .agent-composer-meta { display: none !important; }
@@ -1252,10 +1255,10 @@ export default function AgentTestPage() {
            * comfortably inside. */
           textarea.agent-input {
             font-size: 16px !important;
-            min-height: 44px !important;
+            min-height: 88px !important;
             line-height: 1.4 !important;
-            padding: 0.45rem 2.85rem 0.45rem 0.95rem !important;
-            max-height: 140px !important;
+            padding: 0.6rem 2.85rem 0.6rem 0.95rem !important;
+            max-height: 180px !important;
           }
           .agent-composer { border-radius: 22px !important; }
           /* No top gap between grid and composer; safe-area handles bottom. */
