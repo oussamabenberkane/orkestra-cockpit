@@ -1268,12 +1268,13 @@ export default function AgentTestPage() {
         @media (max-width: 1024px) {
           textarea.agent-input {
             font-size: 16px !important;     /* prevent iOS auto-zoom on focus */
-            /* Two-row baseline (~88px = 2 × line-height + padding) — matches
-             * Claude's web composer. Placeholder sits at the top, send/mic
-             * buttons stay at bottom-right via their absolute positioning. */
+            /* Two-row baseline (~88px). With the buttons now in their own
+             * row beneath the textarea (.agent-composer-actions), the
+             * textarea is back to symmetric horizontal padding — text uses
+             * the full width without wrapping around button hit-boxes. */
             min-height: 88px !important;
             line-height: 1.4 !important;
-            padding: 0.65rem 2.85rem 0.65rem 0.95rem !important;
+            padding: 0.7rem 1rem 0.55rem 1rem !important;
             max-height: 200px !important;
           }
           .agent-composer { border-radius: 18px !important; }
@@ -1297,9 +1298,12 @@ export default function AgentTestPage() {
            * comfortably inside. */
           textarea.agent-input {
             font-size: 16px !important;
+            /* Phone matches the tablet baseline — both rely on the new
+             * actions row below the textarea for the buttons, so the
+             * textarea is plain symmetric padding now. */
             min-height: 88px !important;
             line-height: 1.4 !important;
-            padding: 0.6rem 2.85rem 0.6rem 0.95rem !important;
+            padding: 0.65rem 1rem 0.5rem 1rem !important;
             max-height: 180px !important;
           }
           .agent-composer { border-radius: 22px !important; }
@@ -1308,29 +1312,14 @@ export default function AgentTestPage() {
             padding: 0.08rem 0.7rem calc(0.45rem + env(safe-area-inset-bottom, 0px)) !important;
           }
           .agent-composer-meta { display: none !important; }
-          /* Action buttons — 32×32, anchored to bottom:4px so they sit
-           * inside the ~35px card with 3px clearance on each side. */
+          /* Action buttons — 32×32 in the dedicated actions row below the
+           * textarea. No right/bottom needed since they're flex children. */
           .agent-composer-send,
-          .agent-composer-stop {
-            width: 32px !important;
-            height: 32px !important;
-            right: 6px !important;
-            bottom: 4px !important;
-            border-radius: 9px !important;
-          }
+          .agent-composer-stop,
           .agent-composer-mic {
             width: 32px !important;
             height: 32px !important;
-            right: 44px !important;
-            bottom: 4px !important;
             border-radius: 9px !important;
-          }
-        }
-        /* Slightly narrower tap region on the smallest devices — mic shifts
-         * left to give the send button breathing room from the screen edge. */
-        @media (max-width: 380px) {
-          textarea.agent-input {
-            padding-right: 2.55rem !important;
           }
         }
 
@@ -5034,7 +5023,13 @@ function Composer({
           <div
             className="agent-composer"
             style={{
-              position: "relative",
+              /* Two-row layout: textarea on top, action buttons in their own
+               * row below. Replaces the previous absolute-positioned buttons
+               * that visually overlapped the textarea's bottom-right corner —
+               * text can now use the full width without wrapping around the
+               * buttons, and the buttons sit in a clear dedicated strip. */
+              display: "flex",
+              flexDirection: "column",
               background: "var(--surface)",
               /* Hair-thin neutral border. The visual presence comes from the
                * soft, wide drop-shadow (frosted halo) below — not the border. */
@@ -5069,140 +5064,143 @@ function Composer({
                 fontWeight: 500,
                 lineHeight: 1.55,
                 color: T.text,
-                /* Roomier top padding so the placeholder sits high in the
-                 * field, plus a deeper bottom inset for the action buttons.
-                 * Mirrors Claude's tall, generous composer footprint. */
-                padding: voiceSupported
-                  ? "0.85rem 5.85rem 1.1rem 1.2rem"
-                  : "0.85rem 3.65rem 1.1rem 1.2rem",
+                /* Symmetric horizontal padding — no need to reserve the
+                 * right side for buttons anymore (they live in their own
+                 * row below). Text wraps at the natural right edge. */
+                padding: "0.85rem 1.2rem 0.55rem 1.2rem",
                 maxHeight: 340,
                 scrollbarWidth: "none",
               }}
             />
-            {voiceSupported && !loading && (
-              <button
-                type="button"
-                className="agent-composer-mic"
-                onClick={recording ? stopDictation : startDictation}
-                aria-label={recording ? "Arrêter la dictée" : "Dicter une question"}
-                title={recording ? "Arrêter la dictée" : "Dicter une question"}
-                style={{
-                  position: "absolute",
-                  right: 52,
-                  bottom: 10,
-                  width: 36,
-                  height: 36,
-                  borderRadius: 10,
-                  border: "none",
-                  background: recording ? T.danger : T.surface,
-                  color: recording ? "#FFFFFF" : T.text3,
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  boxShadow: recording
-                    ? "0 0 0 1px rgba(255,59,48,0.45), 0 4px 14px -4px rgba(255,59,48,0.40)"
-                    : T.tier1,
-                  transition: "background 0.15s, color 0.15s, box-shadow 0.18s",
-                }}
-                onMouseEnter={(e) => {
-                  if (recording) return;
-                  e.currentTarget.style.color = T.accent;
-                }}
-                onMouseLeave={(e) => {
-                  if (recording) return;
-                  e.currentTarget.style.color = T.text3;
-                }}
-              >
-                {recording ? (
-                  <motion.span
-                    animate={{ scale: [1, 1.18, 1] }}
-                    transition={{ repeat: Infinity, duration: 1.1 }}
-                    style={{ display: "inline-flex" }}
-                  >
-                    <MicOff size={15} strokeWidth={2.25} />
-                  </motion.span>
-                ) : (
-                  <Mic size={15} strokeWidth={2.25} />
-                )}
-              </button>
-            )}
-            {loading ? (
-              <button
-                type="button"
-                className="agent-composer-stop"
-                onClick={onStop}
-                aria-label="Arrêter la génération"
-                style={{
-                  position: "absolute",
-                  right: 10,
-                  bottom: 10,
-                  width: 36,
-                  height: 36,
-                  borderRadius: 10,
-                  border: "none",
-                  background: T.danger,
-                  color: "#FFFFFF",
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  transition: "background 0.15s, transform 0.1s",
-                  boxShadow:
-                    "inset 0 1px 0 rgba(255,255,255,0.25), 0 0 0 1px rgba(255,59,48,0.30), 0 4px 14px -4px rgba(255,59,48,0.40)",
-                }}
-                onMouseDown={(e) => {
-                  e.currentTarget.style.transform = "scale(0.94)";
-                }}
-                onMouseUp={(e) => (e.currentTarget.style.transform = "scale(1)")}
-                onMouseLeave={(e) =>
-                  (e.currentTarget.style.transform = "scale(1)")
-                }
-              >
-                <span
+            <div
+              className="agent-composer-actions"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "flex-end",
+                gap: "0.4rem",
+                padding: "0 0.6rem 0.55rem 0.6rem",
+              }}
+            >
+              {voiceSupported && !loading && (
+                <button
+                  type="button"
+                  className="agent-composer-mic"
+                  onClick={recording ? stopDictation : startDictation}
+                  aria-label={recording ? "Arrêter la dictée" : "Dicter une question"}
+                  title={recording ? "Arrêter la dictée" : "Dicter une question"}
                   style={{
-                    width: 10,
-                    height: 10,
-                    borderRadius: 2,
-                    background: "#FFFFFF",
+                    width: 36,
+                    height: 36,
+                    borderRadius: 10,
+                    border: "none",
+                    background: recording ? T.danger : T.surface,
+                    color: recording ? "#FFFFFF" : T.text3,
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    flexShrink: 0,
+                    boxShadow: recording
+                      ? "0 0 0 1px rgba(255,59,48,0.45), 0 4px 14px -4px rgba(255,59,48,0.40)"
+                      : T.tier1,
+                    transition: "background 0.15s, color 0.15s, box-shadow 0.18s",
                   }}
-                />
-              </button>
-            ) : (
-              <button
-                type="submit"
-                className="agent-composer-send"
-                disabled={!value.trim()}
-                aria-label="Envoyer"
-                style={{
-                  position: "absolute",
-                  right: 10,
-                  bottom: 10,
-                  width: 36,
-                  height: 36,
-                  borderRadius: 10,
-                  border: "none",
-                  background: !value.trim() ? T.surface3 : T.gradient,
-                  color: !value.trim() ? T.text4 : "#FFFFFF",
-                  cursor: !value.trim() ? "not-allowed" : "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  transition: "background 0.15s, transform 0.1s, box-shadow 0.18s",
-                  boxShadow: !value.trim() ? "none" : T.gradientShadow,
-                }}
-                onMouseDown={(e) => {
-                  if (value.trim())
+                  onMouseEnter={(e) => {
+                    if (recording) return;
+                    e.currentTarget.style.color = T.accent;
+                  }}
+                  onMouseLeave={(e) => {
+                    if (recording) return;
+                    e.currentTarget.style.color = T.text3;
+                  }}
+                >
+                  {recording ? (
+                    <motion.span
+                      animate={{ scale: [1, 1.18, 1] }}
+                      transition={{ repeat: Infinity, duration: 1.1 }}
+                      style={{ display: "inline-flex" }}
+                    >
+                      <MicOff size={15} strokeWidth={2.25} />
+                    </motion.span>
+                  ) : (
+                    <Mic size={15} strokeWidth={2.25} />
+                  )}
+                </button>
+              )}
+              {loading ? (
+                <button
+                  type="button"
+                  className="agent-composer-stop"
+                  onClick={onStop}
+                  aria-label="Arrêter la génération"
+                  style={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: 10,
+                    border: "none",
+                    background: T.danger,
+                    color: "#FFFFFF",
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    flexShrink: 0,
+                    transition: "background 0.15s, transform 0.1s",
+                    boxShadow:
+                      "inset 0 1px 0 rgba(255,255,255,0.25), 0 0 0 1px rgba(255,59,48,0.30), 0 4px 14px -4px rgba(255,59,48,0.40)",
+                  }}
+                  onMouseDown={(e) => {
                     e.currentTarget.style.transform = "scale(0.94)";
-                }}
-                onMouseUp={(e) => (e.currentTarget.style.transform = "scale(1)")}
-                onMouseLeave={(e) =>
-                  (e.currentTarget.style.transform = "scale(1)")
-                }
-              >
-                <ArrowUp size={15} strokeWidth={2.5} />
-              </button>
-            )}
+                  }}
+                  onMouseUp={(e) => (e.currentTarget.style.transform = "scale(1)")}
+                  onMouseLeave={(e) =>
+                    (e.currentTarget.style.transform = "scale(1)")
+                  }
+                >
+                  <span
+                    style={{
+                      width: 10,
+                      height: 10,
+                      borderRadius: 2,
+                      background: "#FFFFFF",
+                    }}
+                  />
+                </button>
+              ) : (
+                <button
+                  type="submit"
+                  className="agent-composer-send"
+                  disabled={!value.trim()}
+                  aria-label="Envoyer"
+                  style={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: 10,
+                    border: "none",
+                    background: !value.trim() ? T.surface3 : T.gradient,
+                    color: !value.trim() ? T.text4 : "#FFFFFF",
+                    cursor: !value.trim() ? "not-allowed" : "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    flexShrink: 0,
+                    transition: "background 0.15s, transform 0.1s, box-shadow 0.18s",
+                    boxShadow: !value.trim() ? "none" : T.gradientShadow,
+                  }}
+                  onMouseDown={(e) => {
+                    if (value.trim())
+                      e.currentTarget.style.transform = "scale(0.94)";
+                  }}
+                  onMouseUp={(e) => (e.currentTarget.style.transform = "scale(1)")}
+                  onMouseLeave={(e) =>
+                    (e.currentTarget.style.transform = "scale(1)")
+                  }
+                >
+                  <ArrowUp size={15} strokeWidth={2.5} />
+                </button>
+              )}
+            </div>
           </div>
         </form>
         <div
