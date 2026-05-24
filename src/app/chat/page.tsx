@@ -3969,6 +3969,21 @@ function UserMessage({
   const [draft, setDraft] = useState(message.content);
   const editorRef = useRef<HTMLTextAreaElement | null>(null);
 
+  /* Mobile + tablet + any touch-only device: keep the "Modifier" chip
+   * permanently visible/interactive. The desktop hover-reveal is fragile on
+   * iPad and hybrid laptops where `(hover: none)` doesn't match but `hover`
+   * mouse events still never fire — the !important CSS fallback below was
+   * not enough on its own. */
+  const [alwaysShowEdit, setAlwaysShowEdit] = useState(false);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const mq = window.matchMedia("(max-width: 1024px), (hover: none)");
+    const sync = () => setAlwaysShowEdit(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
+
   /* Focus + autosize on entering edit mode. */
   useEffect(() => {
     if (!editing) return;
@@ -4084,8 +4099,8 @@ function UserMessage({
                  * mobile where the chip is always visible via the
                  * @media (hover:none) override. */
                 minHeight: 32,
-                opacity: hover ? 1 : 0,
-                pointerEvents: hover ? "auto" : "none",
+                opacity: hover || alwaysShowEdit ? 1 : 0,
+                pointerEvents: hover || alwaysShowEdit ? "auto" : "none",
                 transition: "opacity 0.18s ease, background 0.12s, color 0.12s, border-color 0.12s",
               }}
               onMouseEnter={(e) => {
