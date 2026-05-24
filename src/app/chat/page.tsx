@@ -488,22 +488,24 @@ export default function AgentTestPage() {
     return () => el.removeEventListener("scroll", onScroll);
   }, [activeId]);
 
-  // autogrow textarea — honour the runtime min-height (CSS-driven, varies per
-  // breakpoint) and cap at a width-aware ceiling. Without this, on tablet
-  // portrait (>720px) the desktop `min-height: 90px` made `scrollHeight`
-  // return 90 on an empty textarea, so the initial paint was a ~90px box
-  // that snapped down to ~44px the moment the user typed a single character.
+  // Autogrow textarea. When the field is empty we leave `height` unset so
+  // CSS `min-height` (44px on ≤1024, 90px on desktop) is the single source
+  // of truth — that eliminates the "tall on load, short after first
+  // keystroke" wobble caused by inline JS height fighting the cascade.
   useEffect(() => {
     const ta = textareaRef.current;
     if (!ta) return;
+    if (!input) {
+      ta.style.height = "";
+      return;
+    }
     ta.style.height = "auto";
-    const floor = parseFloat(getComputedStyle(ta).minHeight) || 0;
     const cap =
       typeof window !== "undefined" &&
       window.matchMedia("(max-width: 1024px)").matches
         ? 160
         : 340;
-    ta.style.height = Math.max(floor, Math.min(ta.scrollHeight, cap)) + "px";
+    ta.style.height = Math.min(ta.scrollHeight, cap) + "px";
   }, [input]);
 
   // iOS Safari: when the on-screen keyboard opens, the layout viewport stays
@@ -1250,9 +1252,9 @@ export default function AgentTestPage() {
            * comfortably inside. */
           textarea.agent-input {
             font-size: 16px !important;
-            min-height: 42px !important;
+            min-height: 44px !important;
             line-height: 1.4 !important;
-            padding: 0.42rem 2.85rem 0.42rem 0.95rem !important;
+            padding: 0.45rem 2.85rem 0.45rem 0.95rem !important;
             max-height: 140px !important;
           }
           .agent-composer { border-radius: 22px !important; }
