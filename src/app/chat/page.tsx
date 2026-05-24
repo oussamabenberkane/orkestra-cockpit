@@ -539,6 +539,38 @@ export default function AgentTestPage() {
     };
   }, []);
 
+  // Lock the document while /chat is mounted. iOS Safari's default focus-
+  // into-view scrolls the WHOLE document up when the keyboard opens — even
+  // though .agent-root is overflow:hidden, html/body still are not, so the
+  // user can swipe up and watch the composer slide above the visible area.
+  // Pinning html/body to viewport height with overflow:hidden eliminates
+  // that escape hatch: only .agent-scroll (the message list) can scroll,
+  // and the composer stays anchored above the keyboard.
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    const html = document.documentElement;
+    const body = document.body;
+    const prev = {
+      htmlOverflow: html.style.overflow,
+      htmlHeight: html.style.height,
+      bodyOverflow: body.style.overflow,
+      bodyHeight: body.style.height,
+      bodyOverscroll: body.style.overscrollBehavior,
+    };
+    html.style.overflow = "hidden";
+    html.style.height = "100%";
+    body.style.overflow = "hidden";
+    body.style.height = "100%";
+    body.style.overscrollBehavior = "none";
+    return () => {
+      html.style.overflow = prev.htmlOverflow;
+      html.style.height = prev.htmlHeight;
+      body.style.overflow = prev.bodyOverflow;
+      body.style.height = prev.bodyHeight;
+      body.style.overscrollBehavior = prev.bodyOverscroll;
+    };
+  }, []);
+
   // When the textarea is focused (keyboard opens on mobile), nudge the
   // message list to its latest turn. Otherwise the visualViewport contraction
   // would leave the user looking at the middle of the conversation instead of
