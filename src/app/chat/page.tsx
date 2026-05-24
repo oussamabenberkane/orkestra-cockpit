@@ -200,11 +200,16 @@ const SIDEBAR_COLLAPSED_KEY = "orkestra.agent-test.sidebar-collapsed.v1";
 // carries across routes.
 const APP_SIDEBAR_KEY = "orkestra.sidebar.collapsed";
 
-// Below this width both sidebars become overlay drawers and the chat history
-// rail defaults to closed on first visit. Matches /dashboard's mobile
-// breakpoint so the two rails feel consistent across routes. Keep this in
-// sync with the @media (max-width: 720px) blocks at the bottom of the file.
-const SIDEBAR_BREAKPOINT = 720;
+// Below this width the right history rail becomes an overlay drawer (slides
+// over the main column instead of taking layout width). Set wider than the
+// /dashboard breakpoint because the chat column needs more horizontal room
+// for messages — squeezing a docked 256–288px rail in alongside it on
+// 1024–1224px viewports leaves the conversation too narrow. The shared left
+// app sidebar keeps its own 720 breakpoint (hardcoded in
+// components/dashboard/Sidebar.tsx), so on 720–1223px viewports the left
+// stays docked while the right behaves as a drawer. Keep this value in sync
+// with the .agent-sidebar @media block at the bottom of the file.
+const SIDEBAR_BREAKPOINT = 1224;
 
 // French label shown in the live activity indicator while a tool is
 // running. Falls back to the raw tool name if a label isn't mapped.
@@ -298,8 +303,14 @@ export default function AgentTestPage() {
   // so it can't clobber saved data with the default state before rehydration.
   const [hydrated, setHydrated] = useState(false);
   // Tracks whether the layout breakpoint considers us "mobile" (drawer mode).
-  // Updated on resize so the sidebar render mode reacts live.
+  // Updated on resize so the sidebar render mode reacts live. Threshold
+  // matches SIDEBAR_BREAKPOINT (1224), so tablets share the drawer UX.
   const [isMobileLayout, setIsMobileLayout] = useState(false);
+  // Phone-form-factor flag (≤720) — only flips MemoryDrawer's slide direction
+  // to bottom-sheet. The right history rail uses the wider isMobileLayout
+  // above; the memory drawer keeps the narrower threshold because a bottom
+  // sheet on a 1024-wide tablet would be awkward.
+  const [isPhoneLayout, setIsPhoneLayout] = useState(false);
   // True only while the user is scrolled away from the bottom of the message
   // list. Drives the "scroll to bottom" pill and pauses autoscroll on stream.
   const [showScrollBottom, setShowScrollBottom] = useState(false);
@@ -430,6 +441,18 @@ export default function AgentTestPage() {
     const mql = window.matchMedia(`(max-width: ${SIDEBAR_BREAKPOINT - 1}px)`);
     const sync = (e: MediaQueryListEvent | MediaQueryList) => {
       setIsMobileLayout(e.matches);
+    };
+    sync(mql);
+    mql.addEventListener("change", sync);
+    return () => mql.removeEventListener("change", sync);
+  }, []);
+
+  // Phone-only matchMedia for the MemoryDrawer's bottom-sheet behavior.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const mql = window.matchMedia("(max-width: 719px)");
+    const sync = (e: MediaQueryListEvent | MediaQueryList) => {
+      setIsPhoneLayout(e.matches);
     };
     sync(mql);
     mql.addEventListener("change", sync);
@@ -955,7 +978,7 @@ export default function AgentTestPage() {
           <MemoryDrawer
             key="memory-drawer"
             memories={memories}
-            isMobile={isMobileLayout}
+            isMobile={isPhoneLayout}
             onClose={() => setMemoryDrawerOpen(false)}
             onReplaySavedView={(m) => {
               setMemoryDrawerOpen(false);
@@ -1009,22 +1032,25 @@ export default function AgentTestPage() {
       </AnimatePresence>
 
       <style>{`
-        /* History rail width responds to viewport — narrower on tablet, full
-           drawer width on mobile so the touch targets stay comfortable. */
+        /* History rail width — docked at >1223 uses 288px; drawer at ≤1223
+           uses a touch-friendly width capped so it doesn't dominate the
+           viewport. The wider drawer breakpoint matches SIDEBAR_BREAKPOINT
+           above (chat column would be too narrow with a docked rail on
+           1024–1224 tablets). */
         :root, .agent-root { --agent-sidebar-w: 288px; }
-        @media (max-width: 1100px) {
-          .agent-root { --agent-sidebar-w: 256px; }
+        @media (max-width: 1223px) {
+          .agent-root { --agent-sidebar-w: min(86vw, 360px); }
         }
         @media (max-width: 720px) {
           .agent-root { --agent-sidebar-w: min(86vw, 320px); }
         }
 
-        /* Mobile drawer — pins to the right edge so it slides in opposite the
-           shared app sidebar on the left. Scrim catches taps outside the
-           drawer; one-at-a-time coordination with the app sidebar happens via
-           the orkestra:close-sidebars custom event. */
+        /* Overlay drawer (≤1223) — pins to the right edge so it slides in
+           opposite the shared app sidebar on the left. Scrim catches taps
+           outside the drawer; one-at-a-time coordination with the app
+           sidebar happens via the orkestra:close-sidebars custom event. */
         .agent-sidebar-scrim { display: none; }
-        @media (max-width: 720px) {
+        @media (max-width: 1223px) {
           .agent-sidebar {
             position: fixed !important;
             top: 0;
@@ -1032,8 +1058,8 @@ export default function AgentTestPage() {
             right: 0;
             z-index: 50;
             box-shadow: -8px 0 32px rgba(0,0,0,0.16);
-            /* Mobile drawer always uses the full var width regardless of the
-             * desktop "collapsed" preference. The slim rail is hidden below. */
+            /* Drawer always uses the full var width regardless of the desktop
+             * "collapsed" preference. The slim rail is hidden below. */
             width: var(--agent-sidebar-w, 320px) !important;
             /* Slide-in/out animation tied to data-open. Without this rule the
              * drawer is fixed:right:0 with no visibility binding, so clicking
@@ -1060,26 +1086,26 @@ export default function AgentTestPage() {
             -webkit-backdrop-filter: blur(2px);
             z-index: 49;
           }
-          /* Slim rail is desktop-only. On mobile the drawer renders the full
-           * content directly. */
+          /* Slim rail is docked-mode-only. In drawer mode the panel renders
+           * its full content directly. */
           .agent-sidebar-rail { display: none !important; }
           .agent-sidebar-content { display: flex !important; }
         }
 
-        /* Desktop collapse mode — slim icon rail only, full content hidden.
-         * !important is required because the rail and content elements set
-         * display:flex inline; that wins over a regular CSS rule even
-         * inside a media query. */
-        @media (min-width: 721px) {
+        /* Docked collapse mode (>1223) — slim icon rail only, full content
+         * hidden. !important is required because the rail and content
+         * elements set display:flex inline; that wins over a regular CSS
+         * rule even inside a media query. */
+        @media (min-width: 1224px) {
           .agent-sidebar[data-collapsed="true"] .agent-sidebar-content {
             display: none !important;
           }
           .agent-sidebar[data-collapsed="false"] .agent-sidebar-rail {
             display: none !important;
           }
-          /* Topbar's history toggle is desktop-redundant once the sidebar
-           * carries its own collapse/expand chevron. Keep it for the mobile
-           * drawer where the panel itself is hidden when closed. */
+          /* Topbar's history toggle is docked-mode-redundant once the
+           * sidebar carries its own collapse/expand chevron. Keep it for
+           * the drawer mode where the panel itself is hidden when closed. */
           .agent-topbar-history-toggle { display: none !important; }
         }
 
@@ -1269,9 +1295,13 @@ export default function AgentTestPage() {
             gap: 0.45rem !important;
           }
           .agent-welcome-grid > button {
-            aspect-ratio: 1 / 1;
-            min-height: 0 !important;
-            padding: 0.5rem 0.4rem !important;
+            /* Size cards to their content (icon + 2-line title slot) instead
+             * of forcing a square. At 400–720px the column width balloons
+             * past 130px, which made aspect-ratio:1/1 produce 130–220px-tall
+             * squares with mostly empty space. A fixed min-height keeps the
+             * row uniform without stretching with the viewport. */
+            min-height: 96px !important;
+            padding: 0.6rem 0.4rem !important;
             border-radius: 12px !important;
             display: flex !important;
             flex-direction: column !important;
