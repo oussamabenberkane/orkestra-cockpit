@@ -488,13 +488,66 @@ export default function AgentTestPage() {
     return () => el.removeEventListener("scroll", onScroll);
   }, [activeId]);
 
-  // autogrow textarea
+  // autogrow textarea — honour the runtime min-height (CSS-driven, varies per
+  // breakpoint) and cap at a width-aware ceiling. Without this, on tablet
+  // portrait (>720px) the desktop `min-height: 90px` made `scrollHeight`
+  // return 90 on an empty textarea, so the initial paint was a ~90px box
+  // that snapped down to ~44px the moment the user typed a single character.
   useEffect(() => {
     const ta = textareaRef.current;
     if (!ta) return;
     ta.style.height = "auto";
-    ta.style.height = Math.min(ta.scrollHeight, 340) + "px";
+    const floor = parseFloat(getComputedStyle(ta).minHeight) || 0;
+    const cap =
+      typeof window !== "undefined" &&
+      window.matchMedia("(max-width: 1024px)").matches
+        ? 160
+        : 340;
+    ta.style.height = Math.max(floor, Math.min(ta.scrollHeight, cap)) + "px";
   }, [input]);
+
+  // iOS Safari: when the on-screen keyboard opens, the layout viewport stays
+  // at 100dvh but the *visible* viewport shrinks. Without this, the composer
+  // gets pushed under the keyboard and dismissing it leaves a grey gap at the
+  // bottom while the page settles. Pinning .agent-root to visualViewport
+  // keeps the shell glued to whatever the user can actually see.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const root = document.querySelector(".agent-root") as HTMLElement | null;
+    if (!root) return;
+    const sync = () => {
+      root.style.height = `${vv.height}px`;
+    };
+    sync();
+    vv.addEventListener("resize", sync);
+    vv.addEventListener("scroll", sync);
+    return () => {
+      vv.removeEventListener("resize", sync);
+      vv.removeEventListener("scroll", sync);
+      root.style.height = "";
+    };
+  }, []);
+
+  // When the textarea is focused (keyboard opens on mobile), nudge the
+  // message list to its latest turn. Otherwise the visualViewport contraction
+  // would leave the user looking at the middle of the conversation instead of
+  // the answer they just sent. Runs once per focus, after a tick so the
+  // viewport has had time to settle.
+  useEffect(() => {
+    const ta = textareaRef.current;
+    if (!ta) return;
+    const onFocus = () => {
+      window.setTimeout(() => {
+        const el = scrollRef.current;
+        if (!el) return;
+        el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
+      }, 220);
+    };
+    ta.addEventListener("focus", onFocus);
+    return () => ta.removeEventListener("focus", onFocus);
+  }, []);
 
   // /chat-local memory observers: after a stream resolves, the
   // AgentConversationProvider may have drained save_memory proposals into the
@@ -1042,8 +1095,31 @@ export default function AgentTestPage() {
         @media (max-width: 720px) {
           /* Remove min-height:100vh which on iOS Safari (address bar visible)
            * is larger than the dynamic viewport, pushing the composer off-screen.
-           * height:100dvh (inline) correctly tracks the visible area. */
-          .agent-root { min-height: 0 !important; }
+           * height:100dvh (inline) correctly tracks the visible area.
+           *
+           * Also lock the column + main so only .agent-scroll can scroll. Without
+           * this, iOS Safari's focus-into-view scrolls the whole agent-column
+           * past the viewport when the keyboard opens, pushing the composer
+           * out of view and leaving a grey strip behind when it closes. The
+           * visualViewport effect (in the page component) keeps .agent-root
+           * pinned to the visible viewport; these rules make sure nothing
+           * between it and .agent-scroll can scroll the layout up. */
+          .agent-root {
+            min-height: 0 !important;
+            overflow: hidden !important;
+          }
+          .agent-column {
+            overflow: hidden !important;
+            min-height: 0 !important;
+          }
+          .agent-column > main {
+            overflow: hidden !important;
+            min-height: 0 !important;
+          }
+          .agent-scroll {
+            overscroll-behavior: contain !important;
+            -webkit-overflow-scrolling: touch;
+          }
           .agent-topbar {
             min-height: 0 !important;
             padding-top: 0 !important;
@@ -1136,6 +1212,25 @@ export default function AgentTestPage() {
          * the centered tile labels. */
         @media (max-width: 540px) {
           .agent-welcome-helper { display: none !important; }
+        }
+
+        /* ─── Composer: tablet + mobile single-row pill (≤1024px) ───
+         * iPad portrait sits between 768 and 1024px; the old layout left it
+         * on the desktop two-row composer which felt oversized. This block
+         * brings the 44px pill all the way up to the iPad-Pro-portrait edge,
+         * matching the .dashboard-hero / .kpi-strip-compact breakpoint
+         * convention used elsewhere in the app. The narrower 720px block
+         * below overrides this with phone-specific button geometry. */
+        @media (max-width: 1024px) {
+          textarea.agent-input {
+            font-size: 16px !important;     /* prevent iOS auto-zoom on focus */
+            min-height: 44px !important;
+            line-height: 1.4 !important;
+            padding: 0.55rem 2.85rem 0.55rem 0.95rem !important;
+            max-height: 160px !important;
+          }
+          .agent-composer { border-radius: 18px !important; }
+          .agent-composer-meta { display: none !important; }
         }
 
         /* ─── Composer: standard mobile single-row pill ───
