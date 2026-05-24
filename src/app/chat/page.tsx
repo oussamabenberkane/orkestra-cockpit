@@ -303,6 +303,10 @@ export default function AgentTestPage() {
   // True only while the user is scrolled away from the bottom of the message
   // list. Drives the "scroll to bottom" pill and pauses autoscroll on stream.
   const [showScrollBottom, setShowScrollBottom] = useState(false);
+  // Live composer height — used to position the scroll-to-bottom pill exactly
+  // above the composer regardless of breakpoint or autogrow state. Static CSS
+  // offsets were fragile when the textarea grew. Default ≈ resting composer.
+  const [composerHeight, setComposerHeight] = useState(160);
   // Memory has graduated out of the sidebar into its own on-demand drawer
   // (right side on desktop, bottom sheet on mobile). The TopBar pill toggles
   // it; the dialog handlers below still drive create/edit independently.
@@ -569,6 +573,23 @@ export default function AgentTestPage() {
       body.style.height = prev.bodyHeight;
       body.style.overscrollBehavior = prev.bodyOverscroll;
     };
+  }, []);
+
+  // Track the composer wrap's live height so the scroll-to-bottom pill can
+  // sit exactly above it regardless of breakpoint, autogrow state, or
+  // safe-area insets. ResizeObserver fires on every height change — textarea
+  // typing, viewport rotation, address-bar collapse all flow through.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const el = document.querySelector(
+      ".agent-composer-wrap",
+    ) as HTMLElement | null;
+    if (!el) return;
+    const update = () => setComposerHeight(el.offsetHeight);
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(el);
+    return () => observer.disconnect();
   }, []);
 
   // When the textarea is focused (keyboard opens on mobile), nudge the
@@ -848,6 +869,7 @@ export default function AgentTestPage() {
             {showScrollBottom && (
               <motion.button
                 key="scroll-to-bottom"
+                className="agent-scroll-to-bottom"
                 initial={{ opacity: 0, y: 8, scale: 0.92 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: 8, scale: 0.92 }}
@@ -861,7 +883,11 @@ export default function AgentTestPage() {
                 title="Revenir au dernier message"
                 style={{
                   position: "absolute",
-                  bottom: "calc(env(safe-area-inset-bottom, 0px) + 92px)",
+                  /* Anchored 12px above the composer's measured top edge.
+                   * `composerHeight` already includes its safe-area padding,
+                   * so this offset works for every breakpoint and tracks the
+                   * autogrow textarea live via ResizeObserver. */
+                  bottom: `${composerHeight + 12}px`,
                   right: "clamp(1rem, 3vw, 2rem)",
                   width: 36,
                   height: 36,
@@ -1111,9 +1137,59 @@ export default function AgentTestPage() {
         textarea.agent-input { min-height: 90px; }
         textarea.agent-input::placeholder { color: ${T.text4}; }
         textarea.agent-input:disabled { cursor: not-allowed; opacity: 0.6; }
-        /* Hide the textarea scrollbar — pairs with scrollbarWidth: "none" in
-         * the inline style. Scrolling still works; the bar just doesn't render. */
-        textarea.agent-input::-webkit-scrollbar { display: none; }
+        /* Thin primary-accent scrollbar — only visible once content exceeds
+         * the textarea's max-height. Firefox uses scrollbar-width/-color;
+         * WebKit/Chromium gets the explicit ::-webkit-scrollbar rules.
+         *
+         * Clipping note: .agent-composer carries the visible rounded border
+         * (radius 16px) but no overflow clip, so the textarea's scrollbar
+         * was rendering into the curved corner. The 'overflow: hidden' below
+         * makes the rounded shape an actual mask — anything that lands in
+         * the corner now gets clipped cleanly instead of looking sliced.
+         *
+         * The thumb's transparent border (with background-clip: content-box)
+         * insets the visible bar ~3px from the right edge so it sits inside
+         * the curve. The 16px top/bottom track margin keeps the thumb out of
+         * the curved corner area entirely, so even with the up/down buttons
+         * fully removed there's no visual collision. */
+        .agent-composer { overflow: hidden; }
+        textarea.agent-input {
+          scrollbar-width: thin;
+          scrollbar-color: var(--accent) transparent;
+        }
+        textarea.agent-input::-webkit-scrollbar { width: 10px; }
+        textarea.agent-input::-webkit-scrollbar-track {
+          background: transparent;
+          margin: 12px 0;
+        }
+        textarea.agent-input::-webkit-scrollbar-thumb {
+          background: var(--accent);
+          border-radius: 999px;
+          border: 3px solid transparent;
+          background-clip: content-box;
+        }
+        textarea.agent-input::-webkit-scrollbar-thumb:hover {
+          background: var(--accent-2);
+          background-clip: content-box;
+        }
+        /* Kill the up/down arrow buttons in every shape Chromium hands them
+         * out (single-button, double-button, start/end, increment/decrement).
+         * One bare ::-webkit-scrollbar-button rule isn't always enough on
+         * Windows builds — the slot is still reserved unless every variant
+         * is zeroed out. */
+        textarea.agent-input::-webkit-scrollbar-button,
+        textarea.agent-input::-webkit-scrollbar-button:single-button,
+        textarea.agent-input::-webkit-scrollbar-button:vertical:start:decrement,
+        textarea.agent-input::-webkit-scrollbar-button:vertical:start:increment,
+        textarea.agent-input::-webkit-scrollbar-button:vertical:end:decrement,
+        textarea.agent-input::-webkit-scrollbar-button:vertical:end:increment {
+          display: none !important;
+          width: 0 !important;
+          height: 0 !important;
+          -webkit-appearance: none !important;
+          appearance: none !important;
+          background: transparent !important;
+        }
 
         /* Hide the keyboard hint on narrow screens — the kbd glyphs aren't
            useful on touch devices that don't have a real Enter key. */
@@ -1277,7 +1353,7 @@ export default function AgentTestPage() {
             padding: 0.7rem 1rem 0.55rem 1rem !important;
             max-height: 200px !important;
           }
-          .agent-composer { border-radius: 18px !important; }
+          .agent-composer { border-radius: 12px !important; }
           .agent-composer-meta { display: none !important; }
         }
 
@@ -1305,8 +1381,18 @@ export default function AgentTestPage() {
             line-height: 1.4 !important;
             padding: 0.65rem 1rem 0.5rem 1rem !important;
             max-height: 180px !important;
+            /* Hide the scrollbar entirely on phone — touch scroll handles
+             * the overflow naturally, and the rendered scrollbar (plus its
+             * end-cap buttons) was too visually noisy at this width.
+             * Content still scrolls; only the chrome is gone. */
+            scrollbar-width: none !important;
           }
-          .agent-composer { border-radius: 22px !important; }
+          textarea.agent-input::-webkit-scrollbar {
+            display: none !important;
+            width: 0 !important;
+            height: 0 !important;
+          }
+          .agent-composer { border-radius: 12px !important; }
           /* No top gap between grid and composer; safe-area handles bottom. */
           .agent-composer-wrap {
             padding: 0.08rem 0.7rem calc(0.45rem + env(safe-area-inset-bottom, 0px)) !important;
@@ -5034,7 +5120,7 @@ function Composer({
               /* Hair-thin neutral border. The visual presence comes from the
                * soft, wide drop-shadow (frosted halo) below — not the border. */
               border: "1px solid var(--border-strong)",
-              borderRadius: 16,
+              borderRadius: 12,
               transition: "box-shadow 0.2s ease, border-color 0.2s ease",
               /* Soft "frosted" shadow — wide blur radius, low opacity gives
                * the card a faint glow on the sides without darkening below
@@ -5069,7 +5155,6 @@ function Composer({
                  * row below). Text wraps at the natural right edge. */
                 padding: "0.85rem 1.2rem 0.55rem 1.2rem",
                 maxHeight: 340,
-                scrollbarWidth: "none",
               }}
             />
             <div
@@ -5178,7 +5263,11 @@ function Composer({
                     height: 36,
                     borderRadius: 10,
                     border: "none",
-                    background: !value.trim() ? T.surface3 : T.gradient,
+                    /* Solid primary accent — the brand blue (--accent /
+                     * #007AFF). Replaces the previous to-bottom gradient
+                     * so the button reads as a single confident colour
+                     * rather than a soft pill. */
+                    background: !value.trim() ? T.surface3 : "var(--accent)",
                     color: !value.trim() ? T.text4 : "#FFFFFF",
                     cursor: !value.trim() ? "not-allowed" : "pointer",
                     display: "flex",
@@ -5186,7 +5275,9 @@ function Composer({
                     justifyContent: "center",
                     flexShrink: 0,
                     transition: "background 0.15s, transform 0.1s, box-shadow 0.18s",
-                    boxShadow: !value.trim() ? "none" : T.gradientShadow,
+                    boxShadow: !value.trim()
+                      ? "none"
+                      : "0 1px 2px rgba(0,98,204,0.20), 0 4px 14px -4px rgba(0,122,255,0.45)",
                   }}
                   onMouseDown={(e) => {
                     if (value.trim())
