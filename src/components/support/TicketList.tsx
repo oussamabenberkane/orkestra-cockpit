@@ -113,12 +113,13 @@ function TicketRow({
           display: "flex",
           alignItems: "flex-start",
           justifyContent: "space-between",
-          gap: "0.75rem",
+          gap: "0.5rem 0.75rem",
           marginBottom: "0.55rem",
           flexWrap: "wrap",
+          minWidth: 0,
         }}
       >
-        <div style={{ minWidth: 0, flex: 1 }}>
+        <div style={{ minWidth: 0, flex: "1 1 60%" }}>
           <div
             style={{
               display: "flex",
@@ -126,6 +127,7 @@ function TicketRow({
               gap: "0.45rem",
               marginBottom: "0.35rem",
               flexWrap: "wrap",
+              minWidth: 0,
             }}
           >
             <span
@@ -139,17 +141,24 @@ function TicketRow({
                 border: "1px solid var(--border)",
                 padding: "0.14rem 0.45rem",
                 borderRadius: "6px",
+                maxWidth: "100%",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
               }}
             >
               #{ticket.id}
             </span>
-            <span style={{ fontSize: "0.72rem", color: "var(--text-4)" }}>
+            <span style={{
+              fontSize: "0.72rem", color: "var(--text-4)",
+              minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+            }}>
               {categoryLabel(ticket.category, ticket.customCategory)}
             </span>
           </div>
           <h3
             style={{
-              fontSize: "0.98rem",
+              fontSize: "clamp(0.92rem, 3vw, 0.98rem)",
               fontWeight: 700,
               color: "var(--text)",
               margin: 0,
@@ -157,15 +166,17 @@ function TicketRow({
               overflow: "hidden",
               textOverflow: "ellipsis",
               display: "-webkit-box",
-              WebkitLineClamp: 1,
+              WebkitLineClamp: 2,
               WebkitBoxOrient: "vertical",
+              wordBreak: "break-word",
+              overflowWrap: "anywhere",
             }}
           >
             {ticket.subject}
           </h3>
         </div>
 
-        <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", flexShrink: 0 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", flexShrink: 0, flexWrap: "wrap" }}>
           <StatusBadge status={ticket.status} size="sm" />
           <TypeBadge type={ticket.type} size="sm" />
         </div>
@@ -217,16 +228,24 @@ function TicketRow({
         style={{
           display: "flex",
           alignItems: "center",
-          gap: "1rem",
+          flexWrap: "wrap",
+          gap: "0.3rem 1rem",
           fontSize: "0.72rem",
           color: "var(--text-4)",
+          minWidth: 0,
         }}
       >
-        <span style={{ display: "inline-flex", alignItems: "center", gap: "0.3rem" }}>
+        <span style={{
+          display: "inline-flex", alignItems: "center", gap: "0.3rem",
+          whiteSpace: "nowrap",
+        }}>
           <MessageSquare size={12} />
           {messageCount} {messageCount === 1 ? "message" : "messages"}
         </span>
-        <span style={{ display: "inline-flex", alignItems: "center", gap: "0.3rem" }}>
+        <span style={{
+          display: "inline-flex", alignItems: "center", gap: "0.3rem",
+          whiteSpace: "nowrap",
+        }}>
           <Clock size={12} />
           Mis à jour {updated}
         </span>

@@ -799,7 +799,7 @@ export function Sidebar({
                   fontFamily: "var(--font-mono)",
                   fontSize: "0.68rem", fontWeight: 700,
                   letterSpacing: "0.02em",
-                  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.22), 0 2px 6px rgba(88,86,214,0.35)",
+                  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.22), 0 2px 6px rgba(0,98,204,0.35)",
                 }}>TM</span>
                 <span aria-hidden style={{
                   position: "absolute",

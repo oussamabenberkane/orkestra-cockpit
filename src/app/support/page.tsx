@@ -3,7 +3,7 @@
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { LifeBuoy, Plus, Filter, X } from "lucide-react";
+import { LifeBuoy, MessageSquarePlus, Filter, X, Check } from "lucide-react";
 import { AppShell } from "@/components/dashboard/AppShell";
 import { TicketList } from "@/components/support/TicketList";
 import { TicketThread } from "@/components/support/TicketThread";
@@ -222,6 +222,7 @@ function SupportContent() {
         initial={{ opacity: 0, y: -8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
+        className="support-header-row"
         style={{
           display: "flex",
           alignItems: "center",
@@ -230,7 +231,7 @@ function SupportContent() {
           gap: "0.75rem",
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: "0.875rem" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.875rem", minWidth: 0, flex: 1 }}>
           <span
             style={{
               display: "inline-flex",
@@ -246,10 +247,10 @@ function SupportContent() {
           >
             <LifeBuoy size={20} strokeWidth={2.5} />
           </span>
-          <div>
+          <div style={{ minWidth: 0 }}>
             <h1
               style={{
-                fontSize: "1.3rem",
+                fontSize: "clamp(1.1rem, 4.5vw, 1.3rem)",
                 fontWeight: 700,
                 letterSpacing: "-0.022em",
                 color: "var(--text)",
@@ -259,7 +260,11 @@ function SupportContent() {
             >
               Centre de support
             </h1>
-            <p style={{ fontSize: "0.78rem", color: "var(--text-3)", margin: 0 }}>
+            <p style={{
+              fontSize: "clamp(0.72rem, 2.4vw, 0.78rem)",
+              color: "var(--text-3)",
+              margin: 0,
+            }}>
               Contactez l&apos;équipe Malyz ou suivez vos tickets en cours.
             </p>
           </div>
@@ -269,28 +274,31 @@ function SupportContent() {
           <button
             type="button"
             onClick={() => setCreateOpen(true)}
+            className="support-new-ticket-btn cta-primary"
             style={{
               display: "inline-flex",
               alignItems: "center",
-              gap: "0.45rem",
-              fontSize: "0.82rem",
+              gap: "0.5rem",
+              fontSize: "0.85rem",
               fontWeight: 600,
               color: "#fff",
               background:
                 "linear-gradient(180deg, var(--accent) 0%, var(--accent-2) 100%)",
               border: "1px solid var(--accent-2)",
               borderRadius: "10px",
-              padding: "0.55rem 1.05rem",
+              padding: "0.65rem 1.1rem",
+              minHeight: 44,
               cursor: "pointer",
               boxShadow:
-                "inset 0 1px 0 rgba(255,255,255,0.2), 0 1px 2px rgba(88,86,214,0.22), 0 6px 16px -8px rgba(88,86,214,0.5)",
-              transition: "transform 0.15s",
+                "inset 0 1px 0 rgba(255,255,255,0.22), 0 1px 2px rgba(0,98,204,0.25), 0 8px 18px -8px rgba(0,122,255,0.55)",
+              transition: "transform 0.15s, box-shadow 0.18s",
+              whiteSpace: "nowrap",
             }}
             onMouseDown={(e) => (e.currentTarget.style.transform = "scale(0.985)")}
             onMouseUp={(e) => (e.currentTarget.style.transform = "scale(1)")}
             onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
           >
-            <Plus size={14} />
+            <MessageSquarePlus size={15} strokeWidth={2.25} />
             Nouveau ticket
           </button>
         )}
@@ -326,79 +334,41 @@ function SupportContent() {
             transition={{ duration: 0.18 }}
             style={{ display: "flex", flexDirection: "column", gap: "1.1rem" }}
           >
-            {/* KPI strip */}
+            {/* KPI strip — three compact squares, always on one row */}
             <div className="support-stats">
-              <StatCard label="Tickets ouverts" value={stats.open} tone="accent" />
+              <StatCard label="Ouverts" value={stats.open} tone="accent" />
               <StatCard label="En cours" value={stats.inProgress} tone="warn" />
               <StatCard label="Résolus" value={stats.resolved} tone="success" />
             </div>
 
-            {/* Filters */}
-            <div
-              style={{
-                background: "var(--surface)",
-                border: "1px solid var(--border)",
-                borderRadius: "16px",
-                boxShadow: "var(--tier-1)",
-                padding: "1rem 1.1rem",
-              }}
-            >
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  marginBottom: "0.85rem",
-                }}
-              >
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "0.4rem",
-                    color: "var(--text-2)",
-                  }}
-                >
-                  <Filter size={14} color="var(--text-3)" />
-                  <span
-                    style={{
-                      fontSize: "0.82rem",
-                      fontWeight: 700,
-                      color: "var(--text)",
-                    }}
-                  >
-                    Filtres
+            {/* Filters — refined card with chip rails */}
+            <div className="support-filters-card">
+              <div className="support-filters-header">
+                <div className="support-filters-title">
+                  <span className="support-filters-icon" aria-hidden>
+                    <Filter size={13} strokeWidth={2.25} />
                   </span>
+                  <span>Filtres</span>
+                  {hasFilters && (
+                    <span className="support-filters-count">
+                      {statusFilter.length + (typeFilter ? 1 : 0)}
+                    </span>
+                  )}
                 </div>
                 {hasFilters && (
                   <button
                     type="button"
                     onClick={clearFilters}
-                    style={{
-                      display: "inline-flex",
-                      alignItems: "center",
-                      gap: "0.3rem",
-                      fontSize: "0.74rem",
-                      fontWeight: 600,
-                      color: "var(--accent)",
-                      background: "transparent",
-                      border: "none",
-                      cursor: "pointer",
-                    }}
+                    className="support-clear-btn"
+                    aria-label="Effacer tous les filtres"
                   >
-                    <X size={12} />
+                    <X size={12} strokeWidth={2.5} />
                     Tout effacer
                   </button>
                 )}
               </div>
 
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "0.75rem",
-                }}
-              >
+              <div className="support-filters-rails">
                 <FilterRow
                   label="Statut"
                   options={STATUSES.map((s) => ({ value: s, label: STATUS_LABEL[s] }))}
@@ -481,17 +451,215 @@ function SupportContent() {
         busy={creating}
       />
 
-      {/* Responsive helpers */}
+      {/* Design tokens + responsive helpers */}
       <style jsx global>{`
+        /* ── Stats squares — 3 in a row at ALL widths ────────────────────── */
         .support-stats {
           display: grid;
           grid-template-columns: repeat(3, minmax(0, 1fr));
-          gap: 0.75rem;
+          gap: clamp(0.45rem, 1.5vw, 0.75rem);
         }
+        .support-stat-square {
+          position: relative;
+          aspect-ratio: 1 / 1;
+          background: var(--surface);
+          border: 1px solid var(--border);
+          border-radius: 14px;
+          box-shadow: var(--tier-1);
+          padding: clamp(0.55rem, 2.5vw, 0.9rem);
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          gap: clamp(0.25rem, 1vw, 0.45rem);
+          text-align: center;
+          min-width: 0;
+          overflow: hidden;
+          transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .support-stat-square:hover {
+          transform: translateY(-1px);
+          box-shadow:
+            inset 0 1px 0 rgba(255,255,255,1),
+            0 0 0 1px rgba(0,0,0,0.05),
+            0 2px 4px rgba(0,0,0,0.05),
+            0 10px 24px -10px rgba(0,0,0,0.14);
+        }
+        .support-stat-square__bar {
+          position: absolute;
+          top: 0;
+          left: 14%;
+          right: 14%;
+          height: 3px;
+          border-radius: 0 0 100px 100px;
+          opacity: 0.85;
+        }
+        .support-stat-square__value {
+          font-family: var(--font-mono);
+          font-weight: 700;
+          color: var(--text);
+          font-variant-numeric: tabular-nums;
+          font-size: clamp(1.55rem, 8vw, 2.1rem);
+          line-height: 1;
+          letter-spacing: -0.04em;
+        }
+        .support-stat-square__label {
+          font-size: clamp(0.55rem, 1.9vw, 0.62rem);
+          font-weight: 700;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+          padding: 0.14rem 0.55rem;
+          border-radius: 100px;
+          max-width: 100%;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+
+        /* ── Filters card — refined chip rails ───────────────────────────── */
+        .support-filters-card {
+          background: var(--surface);
+          border: 1px solid var(--border);
+          border-radius: 16px;
+          box-shadow: var(--tier-1);
+          padding: clamp(0.85rem, 3vw, 1.1rem) clamp(0.95rem, 3.5vw, 1.2rem);
+        }
+        .support-filters-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 0.5rem;
+          margin-bottom: 0.95rem;
+        }
+        .support-filters-title {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.5rem;
+          font-size: 0.82rem;
+          font-weight: 700;
+          color: var(--text);
+          letter-spacing: -0.005em;
+        }
+        .support-filters-icon {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          width: 22px;
+          height: 22px;
+          border-radius: 7px;
+          background: var(--accent-tint);
+          color: var(--accent);
+        }
+        .support-filters-count {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          min-width: 18px;
+          height: 18px;
+          padding: 0 5px;
+          background: var(--accent);
+          color: #fff;
+          border-radius: 100px;
+          font-family: var(--font-mono);
+          font-size: 0.62rem;
+          font-weight: 700;
+          line-height: 1;
+        }
+        .support-clear-btn {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.3rem;
+          font-size: 0.74rem;
+          font-weight: 600;
+          color: var(--text-3);
+          background: transparent;
+          border: none;
+          border-radius: 7px;
+          padding: 0.35rem 0.55rem;
+          cursor: pointer;
+          white-space: nowrap;
+          transition: background 0.15s, color 0.15s;
+        }
+        .support-clear-btn:hover {
+          background: var(--danger-tint);
+          color: var(--danger);
+        }
+        .support-filters-rails {
+          display: flex;
+          flex-direction: column;
+          gap: 0.7rem;
+        }
+        .support-filter-row {
+          display: grid;
+          grid-template-columns: 70px minmax(0, 1fr);
+          align-items: center;
+          gap: 0.65rem;
+          min-width: 0;
+        }
+        .support-filter-row__label {
+          font-size: 0.66rem;
+          font-weight: 700;
+          color: var(--text-4);
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+        }
+        .support-filter-row__chips {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 0.35rem;
+          min-width: 0;
+        }
+        .support-chip {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.3rem;
+          font-family: inherit;
+          font-size: 0.76rem;
+          font-weight: 500;
+          color: var(--text-2);
+          background: var(--surface);
+          border: 1px solid var(--border);
+          border-radius: 8px;
+          padding: 0.4rem 0.7rem;
+          min-height: 34px;
+          cursor: pointer;
+          transition: background 0.15s, color 0.15s, border-color 0.15s, box-shadow 0.15s;
+          white-space: nowrap;
+          box-shadow: var(--tier-1);
+        }
+        .support-chip:hover {
+          border-color: var(--border-strong);
+          background: var(--surface-2);
+        }
+        .support-chip.is-active {
+          color: var(--accent);
+          font-weight: 600;
+          background: var(--accent-tint);
+          border-color: var(--accent-tint-2);
+          box-shadow: inset 0 1px 0 rgba(255,255,255,0.6), 0 0 0 1px rgba(0,122,255,0.18);
+        }
+        .support-chip__check {
+          color: var(--accent);
+        }
+
+        /* Stack labels above chips on narrow tablets/phones — keep things readable. */
         @media (max-width: 640px) {
-          .support-stats {
-            grid-template-columns: 1fr;
+          .support-filter-row {
+            grid-template-columns: minmax(0, 1fr);
+            gap: 0.4rem;
           }
+        }
+
+        /* Touch target floor on mobile / touch devices. */
+        @media (max-width: 720px), (hover: none) {
+          .support-chip { min-height: 40px; }
+          .support-clear-btn { min-height: 40px; }
+        }
+
+        /* ── Header row ──────────────────────────────────────────────────── */
+        @media (max-width: 480px) {
+          .support-new-ticket-btn { width: 100%; justify-content: center; }
+          .support-header-row { row-gap: 0.5rem !important; }
         }
       `}</style>
     </div>
@@ -517,43 +685,18 @@ function StatCard({
         : { fg: "var(--success)", bg: "var(--success-tint)" };
 
   return (
-    <div
-      style={{
-        background: "var(--surface)",
-        border: "1px solid var(--border)",
-        borderRadius: "16px",
-        boxShadow: "var(--tier-1)",
-        padding: "0.95rem 1.1rem",
-        display: "flex",
-        flexDirection: "column",
-        gap: "0.4rem",
-      }}
-    >
+    <div className="support-stat-square">
       <span
-        style={{
-          fontSize: "0.62rem",
-          fontWeight: 700,
-          letterSpacing: "0.1em",
-          textTransform: "uppercase",
-          color: palette.fg,
-          background: palette.bg,
-          padding: "0.16rem 0.5rem",
-          borderRadius: "100px",
-          alignSelf: "flex-start",
-        }}
+        className="support-stat-square__bar"
+        aria-hidden
+        style={{ background: palette.fg }}
+      />
+      <span className="support-stat-square__value">{value}</span>
+      <span
+        className="support-stat-square__label"
+        style={{ color: palette.fg, background: palette.bg }}
       >
         {label}
-      </span>
-      <span
-        style={{
-          fontFamily: "var(--font-mono)",
-          fontSize: "1.55rem",
-          fontWeight: 700,
-          color: "var(--text)",
-          fontVariantNumeric: "tabular-nums",
-        }}
-      >
-        {value}
       </span>
     </div>
   );
@@ -571,21 +714,9 @@ function FilterRow({
   onToggle: (v: string) => void;
 }) {
   return (
-    <div>
-      <span
-        style={{
-          display: "block",
-          fontSize: "0.7rem",
-          fontWeight: 700,
-          color: "var(--text-3)",
-          letterSpacing: "0.06em",
-          textTransform: "uppercase",
-          marginBottom: "0.45rem",
-        }}
-      >
-        {label}
-      </span>
-      <div style={{ display: "flex", flexWrap: "wrap", gap: "0.4rem" }}>
+    <div className="support-filter-row">
+      <span className="support-filter-row__label">{label}</span>
+      <div className="support-filter-row__chips">
         {options.map((opt) => {
           const active = isActive(opt.value);
           return (
@@ -593,24 +724,12 @@ function FilterRow({
               key={opt.value}
               type="button"
               onClick={() => onToggle(opt.value)}
-              style={{
-                fontSize: "0.78rem",
-                fontWeight: 600,
-                padding: "0.4rem 0.85rem",
-                borderRadius: "11px",
-                cursor: "pointer",
-                border: active
-                  ? "1px solid var(--accent-2)"
-                  : "1px solid var(--border)",
-                background: active
-                  ? "linear-gradient(180deg, var(--accent) 0%, var(--accent-2) 100%)"
-                  : "var(--surface)",
-                color: active ? "#fff" : "var(--text-2)",
-                boxShadow: active ? "var(--tier-press)" : "var(--tier-1)",
-                transition: "background 0.15s, color 0.15s, border-color 0.15s",
-                fontFamily: "inherit",
-              }}
+              aria-pressed={active}
+              className={`support-chip ${active ? "is-active" : ""}`}
             >
+              {active && (
+                <Check size={11} strokeWidth={3} className="support-chip__check" aria-hidden />
+              )}
               {opt.label}
             </button>
           );

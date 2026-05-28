@@ -83,29 +83,33 @@ export function TicketThread({
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
-      style={{ display: "flex", flexDirection: "column", gap: "1rem" }}
+      className="support-thread"
+      style={{ display: "flex", flexDirection: "column", gap: "1rem", minWidth: 0 }}
     >
       {/* Header card */}
       <div
+        className="support-thread-card"
         style={{
           background: "var(--surface)",
           border: "1px solid var(--border)",
           borderRadius: "16px",
           boxShadow: "var(--tier-2)",
-          padding: "1.1rem 1.25rem",
+          padding: "clamp(0.9rem, 3vw, 1.1rem) clamp(0.95rem, 3.5vw, 1.25rem)",
+          minWidth: 0,
         }}
       >
-        <div style={{ display: "flex", gap: "0.75rem", alignItems: "flex-start" }}>
+        <div style={{ display: "flex", gap: "0.75rem", alignItems: "flex-start", minWidth: 0 }}>
           <button
             type="button"
             onClick={onBack}
             aria-label="Retour à la liste"
+            className="support-thread-back"
             style={{
               display: "inline-flex",
               alignItems: "center",
               justifyContent: "center",
-              width: 32,
-              height: 32,
+              width: 36,
+              height: 36,
               borderRadius: "8px",
               background: "var(--surface-2)",
               border: "1px solid var(--border)",
@@ -157,13 +161,14 @@ export function TicketThread({
             </div>
             <h2
               style={{
-                fontSize: "1.15rem",
+                fontSize: "clamp(1rem, 4vw, 1.15rem)",
                 fontWeight: 700,
                 letterSpacing: "-0.022em",
                 color: "var(--text)",
                 margin: "0 0 0.5rem",
                 lineHeight: 1.25,
-                overflowWrap: "break-word",
+                overflowWrap: "anywhere",
+                wordBreak: "break-word",
               }}
             >
               {ticket.subject}
@@ -194,6 +199,7 @@ export function TicketThread({
             <button
               type="button"
               onClick={() => onCloseTicket?.(ticket.id)}
+              className="support-thread-close"
               style={{
                 fontSize: "0.78rem",
                 fontWeight: 600,
@@ -201,9 +207,11 @@ export function TicketThread({
                 background: "var(--surface)",
                 border: "1px solid var(--border)",
                 borderRadius: "9px",
-                padding: "0.45rem 0.85rem",
+                padding: "0.55rem 0.9rem",
+                minHeight: 40,
                 cursor: "pointer",
                 transition: "background 0.15s, color 0.15s, border-color 0.15s",
+                whiteSpace: "nowrap",
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.background = "var(--danger-tint)";
@@ -230,16 +238,18 @@ export function TicketThread({
           borderRadius: "16px",
           boxShadow: "var(--tier-1)",
           overflow: "hidden",
+          minWidth: 0,
         }}
       >
         <div
           style={{
-            padding: "1.1rem",
-            maxHeight: 560,
+            padding: "clamp(0.75rem, 2.5vw, 1rem)",
+            maxHeight: "clamp(360px, 65vh, 620px)",
             overflowY: "auto",
             display: "flex",
             flexDirection: "column",
-            gap: "0.85rem",
+            gap: "0.55rem",
+            minWidth: 0,
           }}
         >
           {ticket.messages.map((m) => (
@@ -257,15 +267,17 @@ export function TicketThread({
       {/* Reply card */}
       {!isClosed ? (
         <div
+          className="support-reply-card"
           style={{
             background: "var(--surface)",
             border: "1px solid var(--border)",
             borderRadius: "16px",
             boxShadow: "var(--tier-1)",
-            padding: "1.1rem",
+            padding: "clamp(0.85rem, 3vw, 1.1rem)",
             display: "flex",
             flexDirection: "column",
             gap: "0.8rem",
+            minWidth: 0,
           }}
         >
           <h3
@@ -301,35 +313,11 @@ export function TicketThread({
             </div>
           )}
 
-          <div
-            style={{
-              display: "flex",
-              gap: "0.5rem",
-              justifyContent: "space-between",
-              alignItems: "center",
-              flexWrap: "wrap",
-            }}
-          >
-            <label
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "0.4rem",
-                fontSize: "0.78rem",
-                fontWeight: 600,
-                color: "var(--text-2)",
-                background: "var(--surface-2)",
-                border: "1px solid var(--border)",
-                borderRadius: "9px",
-                padding: "0.5rem 0.85rem",
-                cursor: "pointer",
-                transition: "background 0.15s",
-              }}
-              onMouseEnter={(e) => (e.currentTarget.style.background = "var(--surface-3)")}
-              onMouseLeave={(e) => (e.currentTarget.style.background = "var(--surface-2)")}
-            >
-              <Upload size={14} />
-              Joindre un fichier
+          <div className="support-reply-footer">
+            <label className="support-reply-attach">
+              <Upload size={14} strokeWidth={2.25} />
+              <span className="support-reply-attach__full">Joindre un fichier</span>
+              <span className="support-reply-attach__short">Joindre</span>
               <input
                 type="file"
                 multiple
@@ -339,71 +327,91 @@ export function TicketThread({
               />
             </label>
 
-            <div
-              style={{ display: "flex", alignItems: "center", gap: "0.75rem", flexWrap: "wrap" }}
+            <button
+              type="button"
+              onClick={handleSend}
+              disabled={busy || (!body.trim() && attachments.length === 0)}
+              className="support-reply-submit cta-primary"
+              onMouseDown={(e) => (e.currentTarget.style.transform = "scale(0.985)")}
+              onMouseUp={(e) => (e.currentTarget.style.transform = "scale(1)")}
+              onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
             >
-              <span style={{ fontSize: "0.7rem", color: "var(--text-4)" }}>
-                <kbd
-                  style={{
-                    fontFamily: "var(--font-mono)",
-                    fontSize: "0.65rem",
-                    background: "var(--surface-2)",
-                    border: "1px solid var(--border)",
-                    borderRadius: "4px",
-                    padding: "0.05rem 0.35rem",
-                    marginRight: 2,
-                  }}
-                >
-                  Ctrl
-                </kbd>
-                +
-                <kbd
-                  style={{
-                    fontFamily: "var(--font-mono)",
-                    fontSize: "0.65rem",
-                    background: "var(--surface-2)",
-                    border: "1px solid var(--border)",
-                    borderRadius: "4px",
-                    padding: "0.05rem 0.35rem",
-                    marginLeft: 2,
-                  }}
-                >
-                  Entrée
-                </kbd>{" "}
-                pour envoyer
-              </span>
-              <button
-                type="button"
-                onClick={handleSend}
-                disabled={busy || (!body.trim() && attachments.length === 0)}
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "0.4rem",
-                  fontSize: "0.82rem",
-                  fontWeight: 600,
-                  color: "#fff",
-                  background:
-                    "linear-gradient(180deg, var(--accent) 0%, var(--accent-2) 100%)",
-                  border: "1px solid var(--accent-2)",
-                  borderRadius: "9px",
-                  padding: "0.55rem 1.05rem",
-                  cursor: busy ? "wait" : "pointer",
-                  opacity:
-                    busy || (!body.trim() && attachments.length === 0) ? 0.55 : 1,
-                  boxShadow:
-                    "inset 0 1px 0 rgba(255,255,255,0.2), 0 1px 2px rgba(88,86,214,0.22), 0 6px 16px -8px rgba(88,86,214,0.5)",
-                  transition: "opacity 0.15s, transform 0.15s",
-                }}
-                onMouseDown={(e) => (e.currentTarget.style.transform = "scale(0.985)")}
-                onMouseUp={(e) => (e.currentTarget.style.transform = "scale(1)")}
-                onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
-              >
-                <Send size={13} />
-                {busy ? "Envoi…" : "Envoyer"}
-              </button>
-            </div>
+              <Send size={14} strokeWidth={2.25} />
+              {busy ? "Envoi…" : "Envoyer"}
+            </button>
           </div>
+
+          <style jsx>{`
+            .support-reply-footer {
+              display: flex;
+              gap: 0.5rem;
+              align-items: stretch;
+              min-width: 0;
+            }
+            .support-reply-attach {
+              display: inline-flex;
+              align-items: center;
+              justify-content: center;
+              gap: 0.45rem;
+              flex: 1 1 auto;
+              min-width: 0;
+              font-size: 0.82rem;
+              font-weight: 600;
+              color: var(--text-2);
+              background: var(--surface-2);
+              border: 1px solid var(--border);
+              border-radius: 10px;
+              padding: 0.6rem 0.9rem;
+              min-height: 44px;
+              cursor: pointer;
+              transition: background 0.15s, color 0.15s, border-color 0.15s;
+              white-space: nowrap;
+              user-select: none;
+            }
+            .support-reply-attach:hover {
+              background: var(--accent-tint);
+              color: var(--accent);
+              border-color: var(--accent-tint-2);
+            }
+            .support-reply-attach__short { display: none; }
+
+            .support-reply-submit {
+              display: inline-flex;
+              align-items: center;
+              justify-content: center;
+              gap: 0.45rem;
+              flex: 0 0 auto;
+              font-family: inherit;
+              font-size: 0.85rem;
+              font-weight: 600;
+              color: #fff;
+              background: linear-gradient(180deg, var(--accent) 0%, var(--accent-2) 100%);
+              border: 1px solid var(--accent-2);
+              border-radius: 10px;
+              padding: 0.6rem 1.25rem;
+              min-height: 44px;
+              cursor: pointer;
+              box-shadow:
+                inset 0 1px 0 rgba(255,255,255,0.22),
+                0 1px 2px rgba(0,98,204,0.22),
+                0 8px 18px -8px rgba(0,122,255,0.5);
+              transition: transform 0.15s, opacity 0.15s, box-shadow 0.2s;
+              white-space: nowrap;
+            }
+            .support-reply-submit:disabled {
+              opacity: 0.55;
+              cursor: wait;
+            }
+
+            /* Narrow phones — keep both on the same row by shortening
+               the attach label and tightening padding. */
+            @media (max-width: 420px) {
+              .support-reply-attach__full { display: none; }
+              .support-reply-attach__short { display: inline; }
+              .support-reply-attach { padding: 0.5rem 0.7rem; gap: 0.35rem; }
+              .support-reply-submit { padding: 0.55rem 0.95rem; }
+            }
+          `}</style>
         </div>
       ) : (
         <div
@@ -437,26 +445,31 @@ function MessageBubble({
 }) {
   return (
     <div
+      className="support-msg"
       style={{
         display: "flex",
-        gap: "0.6rem",
+        gap: "0.5rem",
         flexDirection: isOwn ? "row-reverse" : "row",
+        minWidth: 0,
+        alignItems: "flex-end",
       }}
     >
       <div
         style={{
           flexShrink: 0,
-          width: 32,
-          height: 32,
+          width: 26,
+          height: 26,
           borderRadius: "50%",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          background: isOwn ? "var(--accent-tint)" : "var(--info-tint)",
-          color: isOwn ? "var(--accent)" : "var(--info)",
+          background: isOwn ? "var(--accent-tint)" : "var(--surface-3)",
+          color: isOwn ? "var(--accent)" : "var(--text-3)",
+          marginBottom: 2,
         }}
+        aria-hidden
       >
-        {isOwn ? <User size={14} /> : <Headphones size={14} />}
+        {isOwn ? <User size={12} strokeWidth={2.25} /> : <Headphones size={12} strokeWidth={2.25} />}
       </div>
 
       <div
@@ -466,44 +479,48 @@ function MessageBubble({
           display: "flex",
           flexDirection: "column",
           alignItems: isOwn ? "flex-end" : "flex-start",
-          gap: "0.25rem",
+          gap: "0.2rem",
+          maxWidth: "100%",
         }}
       >
         <div
           style={{
             display: "flex",
             alignItems: "center",
-            gap: "0.45rem",
-            fontSize: "0.7rem",
-            color: "var(--text-3)",
+            gap: "0.35rem",
+            fontSize: "0.62rem",
+            color: "var(--text-4)",
+            padding: "0 0.4rem",
           }}
         >
-          <span style={{ fontWeight: 700, color: "var(--text-2)" }}>
+          <span style={{ fontWeight: 600, color: "var(--text-3)" }}>
             {isOwn ? currentUserName : message.senderName}
           </span>
-          <span style={{ color: "var(--text-4)" }}>·</span>
-          <span>{formatLong(new Date(message.createdAt))}</span>
+          <span style={{ opacity: 0.5 }}>·</span>
+          <span>{formatShort(new Date(message.createdAt))}</span>
         </div>
 
         <div
           style={{
-            maxWidth: "85%",
-            padding: "0.7rem 0.9rem",
-            borderRadius: "12px",
+            maxWidth: "min(78%, 100%)",
+            padding: "0.5rem 0.7rem",
+            borderRadius: "14px",
             background: isOwn
               ? "linear-gradient(180deg, var(--accent) 0%, var(--accent-2) 100%)"
               : "var(--surface-2)",
             color: isOwn ? "#fff" : "var(--text)",
             border: isOwn ? "1px solid var(--accent-2)" : "1px solid var(--border)",
-            borderTopRightRadius: isOwn ? 4 : 12,
-            borderTopLeftRadius: isOwn ? 12 : 4,
-            fontSize: "0.85rem",
-            lineHeight: 1.5,
+            borderBottomRightRadius: isOwn ? 4 : 14,
+            borderBottomLeftRadius: isOwn ? 14 : 4,
+            fontSize: "0.78rem",
+            lineHeight: 1.45,
             wordBreak: "break-word",
+            overflowWrap: "anywhere",
             whiteSpace: "pre-wrap",
+            minWidth: 0,
             boxShadow: isOwn
-              ? "inset 0 1px 0 rgba(255,255,255,0.15), 0 1px 2px rgba(88,86,214,0.18)"
-              : "none",
+              ? "inset 0 1px 0 rgba(255,255,255,0.18), 0 1px 2px rgba(0,98,204,0.2), 0 4px 10px -4px rgba(0,122,255,0.32)"
+              : "var(--tier-1)",
           }}
         >
           {message.body}
@@ -511,10 +528,10 @@ function MessageBubble({
           {message.attachments.length > 0 && (
             <div
               style={{
-                marginTop: "0.55rem",
+                marginTop: "0.45rem",
                 display: "flex",
                 flexDirection: "column",
-                gap: "0.35rem",
+                gap: "0.3rem",
               }}
             >
               {message.attachments.map((a) => (
@@ -527,23 +544,26 @@ function MessageBubble({
                   style={{
                     display: "inline-flex",
                     alignItems: "center",
-                    gap: "0.45rem",
-                    fontSize: "0.75rem",
-                    padding: "0.35rem 0.5rem",
-                    borderRadius: "8px",
-                    background: isOwn ? "rgba(255,255,255,0.16)" : "var(--surface)",
+                    gap: "0.4rem",
+                    fontSize: "0.7rem",
+                    padding: "0.3rem 0.45rem",
+                    borderRadius: "7px",
+                    background: isOwn ? "rgba(255,255,255,0.18)" : "var(--surface)",
                     border: isOwn
-                      ? "1px solid rgba(255,255,255,0.25)"
+                      ? "1px solid rgba(255,255,255,0.26)"
                       : "1px solid var(--border)",
                     color: isOwn ? "#fff" : "var(--text-2)",
                     textDecoration: "none",
                   }}
                 >
-                  <FileText size={12} />
-                  <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis" }}>
+                  <FileText size={11} />
+                  <span style={{
+                    flex: 1, overflow: "hidden", textOverflow: "ellipsis",
+                    whiteSpace: "nowrap", minWidth: 0,
+                  }}>
                     {a.name}
                   </span>
-                  <Download size={12} />
+                  <Download size={11} />
                 </a>
               ))}
             </div>
@@ -624,6 +644,24 @@ function formatLong(date: Date): string {
     day: "numeric",
     month: "short",
     year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(date);
+}
+
+/** Compact chat-style timestamp: "14:32" for today, "12 mai 14:32" otherwise. */
+function formatShort(date: Date): string {
+  const now = new Date();
+  const sameDay =
+    date.getFullYear() === now.getFullYear() &&
+    date.getMonth() === now.getMonth() &&
+    date.getDate() === now.getDate();
+  if (sameDay) {
+    return new Intl.DateTimeFormat("fr-CH", { hour: "2-digit", minute: "2-digit" }).format(date);
+  }
+  return new Intl.DateTimeFormat("fr-CH", {
+    day: "numeric",
+    month: "short",
     hour: "2-digit",
     minute: "2-digit",
   }).format(date);
