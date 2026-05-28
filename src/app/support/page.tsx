@@ -598,14 +598,17 @@ function SupportContent() {
           line-height: 1;
         }
 
-        /* Menu */
+        /* Menu — sizes to its content with the trigger's width as a floor,
+           so a wide trigger never sits above a narrower menu and a short
+           trigger doesn't get a pointlessly wide popover. */
         .s-dd__menu {
           position: absolute;
           top: calc(100% + 6px);
           left: 0;
           z-index: 60;
-          min-width: 220px;
-          max-width: min(280px, calc(100vw - 24px));
+          width: max-content;
+          min-width: 100%;
+          max-width: min(260px, calc(100vw - 24px));
           background: var(--surface);
           border: 1px solid var(--border);
           border-radius: 12px;
@@ -621,7 +624,6 @@ function SupportContent() {
         }
         .s-dd__option {
           display: grid;
-          grid-template-columns: 18px minmax(0, 1fr) auto;
           align-items: center;
           gap: 0.55rem;
           width: 100%;
@@ -636,6 +638,14 @@ function SupportContent() {
           text-align: left;
           cursor: pointer;
           transition: background 0.12s;
+        }
+        /* Multi-select: leading checkbox column. */
+        .s-dd__option--multi {
+          grid-template-columns: 18px minmax(0, 1fr) auto;
+        }
+        /* Single-select: no checkbox — label sits flush-left. */
+        .s-dd__option--single {
+          grid-template-columns: minmax(0, 1fr) auto;
         }
         .s-dd__option:hover { background: var(--surface-2); }
         .s-dd__option.is-active {
@@ -882,17 +892,15 @@ function Dropdown({
                         onToggle(opt.value);
                         if (!multi) setOpen(false);
                       }}
-                      className={`s-dd__option ${active ? "is-active" : ""}`}
+                      className={`s-dd__option ${multi ? "s-dd__option--multi" : "s-dd__option--single"} ${active ? "is-active" : ""}`}
                     >
-                      <span className="s-dd__check" aria-hidden>
-                        {multi ? (
+                      {multi && (
+                        <span className="s-dd__check" aria-hidden>
                           <span className="s-dd__check--empty">
                             {active && <Check size={10} strokeWidth={3.5} color="#fff" />}
                           </span>
-                        ) : (
-                          active && <Check size={13} strokeWidth={3} />
-                        )}
-                      </span>
+                        </span>
+                      )}
                       <span className="s-dd__option-label">{opt.label}</span>
                       {opt.count >= 1 ? (
                         <span className="s-dd__count">{opt.count}</span>
