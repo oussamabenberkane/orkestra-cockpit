@@ -41,7 +41,8 @@ export function Sparkline({
       width={width}
       height={height}
       viewBox={`0 0 ${width} ${height}`}
-      style={{ display: "block", overflow: "visible" }}
+      preserveAspectRatio="none"
+      style={{ display: "block", overflow: "visible", maxWidth: "100%" }}
       aria-hidden
     >
       {areaPath && <path d={areaPath} fill={fill} stroke="none" />}
@@ -52,6 +53,7 @@ export function Sparkline({
         strokeWidth={strokeWidth}
         strokeLinecap="round"
         strokeLinejoin="round"
+        vectorEffect="non-scaling-stroke"
       />
     </svg>
   );
