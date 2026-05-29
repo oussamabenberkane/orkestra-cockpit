@@ -250,9 +250,9 @@ export default function AlertEmailEditorPage() {
 
         {/* ── Breadcrumb ── */}
         <motion.div
-          initial={{ opacity: 0, y: -8 }}
+          initial={{ opacity: 0, y: -4 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+          transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
           style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}
         >
           <Link
@@ -297,10 +297,10 @@ export default function AlertEmailEditorPage() {
         <AnimatePresence>
           {isSent && (
             <motion.div
-              initial={{ opacity: 0, y: -6, scale: 0.98 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
+              initial={{ opacity: 0, y: -4 }}
+              animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+              transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
               style={{
                 display: "flex",
                 alignItems: "center",
@@ -345,9 +345,9 @@ export default function AlertEmailEditorPage() {
             footer row. See .alert-detail-banner in globals.css. */}
         <motion.div
           className="alert-detail-banner"
-          initial={{ opacity: 0, y: 8 }}
+          initial={{ opacity: 0, y: 4 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.35, delay: 0.06, ease: [0.22, 1, 0.36, 1] }}
+          transition={{ duration: 0.26, delay: 0.04, ease: [0.22, 1, 0.36, 1] }}
           style={{
             padding: "0.875rem 1.125rem",
             borderRadius: "12px",
@@ -419,9 +419,9 @@ export default function AlertEmailEditorPage() {
 
         {/* ── Email composer card ── */}
         <motion.div
-          initial={{ opacity: 0, y: 14 }}
+          initial={{ opacity: 0, y: 6 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.12, ease: [0.22, 1, 0.36, 1] }}
+          transition={{ duration: 0.3, delay: 0.08, ease: [0.22, 1, 0.36, 1] }}
           style={{
             borderRadius: "16px",
             background: "var(--surface)",
@@ -619,10 +619,10 @@ export default function AlertEmailEditorPage() {
                 {showVarMenu && (
                   <motion.div
                     className="alert-variables-menu"
-                    initial={{ opacity: 0, y: 4, scale: 0.96 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: 4, scale: 0.96 }}
-                    transition={{ duration: 0.15, ease: [0.22, 1, 0.36, 1] }}
+                    initial={{ opacity: 0, y: -2 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -2 }}
+                    transition={{ duration: 0.16, ease: [0.22, 1, 0.36, 1] }}
                     onClick={(e) => e.stopPropagation()}
                   >
                     {VARIABLES.map((v) => (
@@ -721,7 +721,7 @@ export default function AlertEmailEditorPage() {
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                transition={{ duration: 0.18 }}
+                transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
                 className="email-body alert-email-preview"
                 style={{
                   fontSize: "0.875rem",
