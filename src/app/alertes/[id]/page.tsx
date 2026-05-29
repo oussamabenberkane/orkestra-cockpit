@@ -435,16 +435,17 @@ export default function AlertEmailEditorPage() {
         >
           {/* Card header */}
           <div
+            className="alert-email-card-head"
             style={{
               display: "flex",
               alignItems: "center",
               justifyContent: "space-between",
-              padding: "0.75rem 1.25rem",
+              gap: "0.5rem",
               background: "var(--surface-2)",
               borderBottom: "1px solid var(--border)",
             }}
           >
-            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", minWidth: 0 }}>
               <span
                 style={{
                   display: "inline-flex",
@@ -460,7 +461,7 @@ export default function AlertEmailEditorPage() {
               >
                 <Send size={11} strokeWidth={2.5} />
               </span>
-              <span style={{ fontSize: "0.7rem", fontWeight: 700, color: "var(--text-2)", letterSpacing: "0.06em", textTransform: "uppercase" }}>
+              <span style={{ fontSize: "0.7rem", fontWeight: 700, color: "var(--text-2)", letterSpacing: "0.06em", textTransform: "uppercase", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                 E-mail automatique
               </span>
             </div>
@@ -476,6 +477,8 @@ export default function AlertEmailEditorPage() {
                   background: "var(--success-tint)",
                   padding: "0.22rem 0.65rem",
                   borderRadius: "100px",
+                  whiteSpace: "nowrap",
+                  flexShrink: 0,
                 }}
               >
                 <CheckCheck size={10} strokeWidth={2.5} />
@@ -490,6 +493,8 @@ export default function AlertEmailEditorPage() {
                   background: "var(--accent-tint)",
                   padding: "0.2rem 0.55rem",
                   borderRadius: "100px",
+                  whiteSpace: "nowrap",
+                  flexShrink: 0,
                 }}
               >
                 Brouillon
@@ -500,8 +505,11 @@ export default function AlertEmailEditorPage() {
           {/* Meta fields */}
           <div style={{ borderBottom: "1px solid var(--border)" }}>
             {/* De */}
-            <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", padding: "0.6rem 1.25rem", borderBottom: "1px solid rgba(0,0,0,0.04)" }}>
-              <span style={{ fontSize: "0.72rem", fontWeight: 600, color: "var(--text-4)", minWidth: 44, flexShrink: 0 }}>De</span>
+            <div
+              className="alert-email-meta-row-de"
+              style={{ display: "flex", alignItems: "center", gap: "0.75rem", borderBottom: "1px solid rgba(0,0,0,0.04)" }}
+            >
+              <span className="alert-email-meta-label" style={{ fontSize: "0.72rem", fontWeight: 600, color: "var(--text-4)" }}>De</span>
               <div className="alert-email-meta-value">
                 <span style={{ fontSize: "0.82rem", color: "var(--text-3)" }}>Helvebroker</span>
                 <span style={{ marginLeft: "0.4rem", color: "var(--text-4)", fontFamily: "var(--font-mono)", fontSize: "0.75rem" }}>
@@ -511,45 +519,51 @@ export default function AlertEmailEditorPage() {
             </div>
 
             {/* À */}
-            <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", padding: "0.5rem 1.25rem", borderBottom: "1px solid rgba(0,0,0,0.04)" }}>
-              <span style={{ fontSize: "0.72rem", fontWeight: 600, color: "var(--text-4)", minWidth: 44, flexShrink: 0 }}>À</span>
-              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flex: 1 }}>
-                <span style={{ display: "inline-flex", alignItems: "center", fontSize: "0.78rem", fontWeight: 600, color: "var(--text-2)", background: "var(--surface-2)", padding: "0.2rem 0.6rem", borderRadius: "6px", flexShrink: 0 }}>
+            <div
+              className="alert-email-meta-row"
+              style={{ display: "flex", alignItems: "center", gap: "0.75rem", borderBottom: "1px solid rgba(0,0,0,0.04)" }}
+            >
+              <span className="alert-email-meta-label" style={{ fontSize: "0.72rem", fontWeight: 600, color: "var(--text-4)" }}>À</span>
+              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flex: 1, minWidth: 0 }}>
+                <span style={{ display: "inline-flex", alignItems: "center", fontSize: "0.78rem", fontWeight: 600, color: "var(--text-2)", background: "var(--surface-2)", padding: "0.2rem 0.6rem", borderRadius: "6px", flexShrink: 0, maxWidth: "55%", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                   {alert.client.name}
                 </span>
                 <input
                   value={recipientEmail}
                   onChange={(e) => setRecipientEmail(e.target.value)}
                   readOnly={isSent}
-                  style={{ flex: 1, fontSize: "0.78rem", color: "var(--text-3)", fontFamily: "var(--font-mono)", background: "transparent", border: "none", outline: "none", minWidth: 0 }}
+                  style={{ flex: 1, fontSize: "0.78rem", color: "var(--text-3)", fontFamily: "var(--font-mono)", background: "transparent", border: "none", outline: "none", minWidth: 0, width: "100%" }}
                 />
               </div>
             </div>
 
             {/* Objet */}
-            <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", padding: "0.5rem 1.25rem" }}>
-              <span style={{ fontSize: "0.72rem", fontWeight: 600, color: "var(--text-4)", minWidth: 44, flexShrink: 0 }}>Objet</span>
+            <div
+              className="alert-email-meta-row"
+              style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}
+            >
+              <span className="alert-email-meta-label" style={{ fontSize: "0.72rem", fontWeight: 600, color: "var(--text-4)" }}>Objet</span>
               <input
                 value={subject}
                 onChange={(e) => setSubject(e.target.value)}
                 readOnly={isSent}
                 placeholder="Objet de l'e-mail"
-                style={{ flex: 1, fontSize: "0.875rem", fontWeight: 600, color: "var(--text)", background: "transparent", border: "none", outline: "none", fontFamily: "inherit" }}
+                style={{ flex: 1, fontSize: "0.875rem", fontWeight: 600, color: "var(--text)", background: "transparent", border: "none", outline: "none", fontFamily: "inherit", minWidth: 0, width: "100%" }}
               />
             </div>
           </div>
 
           {/* Toolbar */}
           <div
+            className="alert-email-toolbar"
             style={{
               display: "flex",
               alignItems: "center",
               gap: "0.15rem",
-              padding: "0.5rem 0.875rem",
               borderBottom: "1px solid var(--border)",
               background: "var(--surface-2)",
               flexWrap: "wrap",
-              rowGap: "0.25rem",
+              rowGap: "0.3rem",
             }}
           >
             <ToolbarBtn onClick={() => format("bold")} title="Gras">
@@ -604,23 +618,12 @@ export default function AlertEmailEditorPage() {
               <AnimatePresence>
                 {showVarMenu && (
                   <motion.div
+                    className="alert-variables-menu"
                     initial={{ opacity: 0, y: 4, scale: 0.96 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: 4, scale: 0.96 }}
                     transition={{ duration: 0.15, ease: [0.22, 1, 0.36, 1] }}
                     onClick={(e) => e.stopPropagation()}
-                    style={{
-                      position: "absolute",
-                      top: "calc(100% + 6px)",
-                      left: 0,
-                      background: "var(--surface)",
-                      borderRadius: "11px",
-                      boxShadow: "var(--tier-2)",
-                      border: "1px solid var(--border)",
-                      padding: "0.3rem",
-                      zIndex: 50,
-                      minWidth: 230,
-                    }}
                   >
                     {VARIABLES.map((v) => (
                       <button
@@ -644,15 +647,15 @@ export default function AlertEmailEditorPage() {
                         onMouseEnter={(e) => { e.currentTarget.style.background = "var(--surface-2)"; }}
                         onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
                       >
-                        <div>
-                          <div style={{ fontSize: "0.75rem", fontWeight: 600, color: "var(--text)", marginBottom: "0.1rem", lineHeight: 1.25 }}>
+                        <div style={{ minWidth: 0, flex: 1 }}>
+                          <div style={{ fontSize: "0.75rem", fontWeight: 600, color: "var(--text)", marginBottom: "0.1rem", lineHeight: 1.25, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                             {v.label}
                           </div>
-                          <div style={{ fontSize: "0.63rem", color: "var(--accent)", fontFamily: "var(--font-mono)" }}>
+                          <div style={{ fontSize: "0.63rem", color: "var(--accent)", fontFamily: "var(--font-mono)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                             {"{{" + v.key + "}}"}
                           </div>
                         </div>
-                        <span style={{ fontSize: "0.65rem", color: "var(--text-4)", flexShrink: 0 }}>
+                        <span style={{ fontSize: "0.65rem", color: "var(--text-4)", flexShrink: 0, maxWidth: "45%", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                           {v.example}
                         </span>
                       </button>
@@ -701,10 +704,9 @@ export default function AlertEmailEditorPage() {
               suppressContentEditableWarning
               onInput={syncBody}
               onBlur={syncBody}
-              className="email-body"
+              className="email-body alert-email-editor"
               style={{
                 display: previewMode ? "none" : "block",
-                padding: "1.5rem 1.75rem",
                 fontSize: "0.875rem",
                 color: "var(--text-2)",
                 lineHeight: 1.78,
@@ -720,9 +722,8 @@ export default function AlertEmailEditorPage() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.18 }}
-                className="email-body"
+                className="email-body alert-email-preview"
                 style={{
-                  padding: "1.5rem 1.75rem",
                   fontSize: "0.875rem",
                   color: "var(--text-2)",
                   lineHeight: 1.78,
@@ -738,8 +739,8 @@ export default function AlertEmailEditorPage() {
 
           {/* Actions bar */}
           <div
+            className="alert-email-actions"
             style={{
-              padding: "0.875rem 1.25rem",
               borderTop: "1px solid var(--border)",
               display: "flex",
               alignItems: "center",
@@ -772,7 +773,7 @@ export default function AlertEmailEditorPage() {
               </button>
             )}
 
-            <div style={{ flex: 1 }} />
+            <div className="alert-email-actions-spacer" style={{ flex: 1 }} />
 
             {!isSent && (
               <button
@@ -840,12 +841,14 @@ export default function AlertEmailEditorPage() {
                   cursor: "pointer",
                   boxShadow: "var(--tier-1)",
                   fontFamily: "inherit",
+                  whiteSpace: "nowrap",
                 }}
                 onMouseEnter={(e) => { e.currentTarget.style.opacity = "0.88"; }}
                 onMouseLeave={(e) => { e.currentTarget.style.opacity = "1"; }}
               >
                 <Send size={13} />
-                Envoyer l&apos;e-mail
+                <span className="alert-send-label-long">Envoyer l&apos;e-mail</span>
+                <span className="alert-send-label-short">Envoyer</span>
               </button>
             )}
           </div>

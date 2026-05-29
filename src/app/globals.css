@@ -670,32 +670,24 @@ html.scroll-locked body {
 
 /* Email meta value rows: scroll horizontally when De/À/Objet content overflows
    (mainly the long sender/recipient + monospace email pair on narrow viewports).
-   The right-edge mask fades the last few px so the cut-off feels intentional,
-   and a slim 4px scrollbar makes the affordance discoverable. */
+   The right-edge mask fades the last few px so the cut-off feels intentional.
+   No visible scrollbar — matches the native input scroll behaviour used by
+   the À / Objet fields, so the three rows feel identical. */
 .alert-email-meta-value {
   flex: 1;
   min-width: 0;
   overflow-x: auto;
   overflow-y: hidden;
   white-space: nowrap;
-  scrollbar-width: thin;
-  scrollbar-color: var(--border-strong) transparent;
-  padding-bottom: 2px;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
   mask-image: linear-gradient(90deg, #000 calc(100% - 18px), transparent);
   -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 18px), transparent);
 }
 .alert-email-meta-value::-webkit-scrollbar {
-  height: 4px;
-}
-.alert-email-meta-value::-webkit-scrollbar-track {
-  background: transparent;
-}
-.alert-email-meta-value::-webkit-scrollbar-thumb {
-  background: var(--border-strong);
-  border-radius: 100px;
-}
-.alert-email-meta-value::-webkit-scrollbar-thumb:hover {
-  background: var(--text-4);
+  display: none;
+  height: 0;
+  width: 0;
 }
 
 /* Header CTA label: full text on wide screens, abbreviated on narrow. */
@@ -757,6 +749,118 @@ html.scroll-locked body {
   /* Breadcrumb's trailing "Composition d'e-mail" tag duplicates the page
      intent and crowds the narrow breadcrumb — hide it. */
   .alert-detail-breadcrumb-tag { display: none; }
+}
+
+/* ── Alert detail — email composer card chrome ──────────────────
+   Class hooks so the card's internal paddings can shrink at narrow
+   widths without rewriting the inline-styled rows. Default values
+   match the desktop comfort spacing; @media overrides tighten them
+   on mobile so the card stays usable from 320 px upwards. */
+
+.alert-email-card-head    { padding: 0.75rem 1.25rem; }
+.alert-email-meta-row     { padding: 0.5rem  1.25rem; }
+.alert-email-meta-row-de  { padding: 0.6rem  1.25rem; }
+.alert-email-toolbar      { padding: 0.5rem  0.875rem; }
+.alert-email-editor       { padding: 1.5rem  1.75rem; }
+.alert-email-preview      { padding: 1.5rem  1.75rem; }
+.alert-email-actions      { padding: 0.875rem 1.25rem; }
+
+/* Editor needs to wrap long words/URLs instead of pushing a horizontal
+   scroll. overflow-wrap covers modern browsers, word-wrap is the legacy
+   alias still required by some Webkit builds. */
+.alert-email-editor,
+.alert-email-preview {
+  overflow-wrap: anywhere;
+  word-wrap: break-word;
+}
+
+/* Field labels (De, À, Objet) — minWidth ladder so the label column
+   shrinks gracefully on narrow phones, leaving more room for the value. */
+.alert-email-meta-label   { min-width: 44px; flex-shrink: 0; }
+
+@media (max-width: 640px) {
+  .alert-email-card-head    { padding: 0.6rem  0.95rem; }
+  .alert-email-meta-row,
+  .alert-email-meta-row-de  { padding: 0.5rem  0.95rem; gap: 0.6rem !important; }
+  .alert-email-toolbar      { padding: 0.5rem  0.65rem; }
+  .alert-email-editor,
+  .alert-email-preview      { padding: 1.15rem 1rem; }
+  .alert-email-actions      { padding: 0.75rem 0.95rem; gap: 0.45rem !important; }
+  .alert-email-meta-label   { min-width: 36px; }
+}
+
+@media (max-width: 380px) {
+  .alert-email-card-head    { padding: 0.55rem 0.75rem; }
+  .alert-email-meta-row,
+  .alert-email-meta-row-de  { padding: 0.45rem 0.75rem; gap: 0.5rem !important; }
+  .alert-email-toolbar      { padding: 0.45rem 0.5rem; }
+  .alert-email-editor,
+  .alert-email-preview      { padding: 1rem 0.85rem; }
+  .alert-email-actions      { padding: 0.65rem 0.75rem; }
+  .alert-email-meta-label   { min-width: 32px; }
+}
+
+/* Variables dropdown — right-edge aligned to the Variables button so the
+   menu never spills past the card's right edge (which is clipped by the
+   card's overflow:hidden). Width is clamped so the menu fits even at
+   320 px viewports while staying readable on desktop. */
+.alert-variables-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  left: auto;
+  background: var(--surface);
+  border-radius: 11px;
+  box-shadow: var(--tier-2);
+  border: 1px solid var(--border);
+  padding: 0.3rem;
+  z-index: 50;
+  min-width: 230px;
+  max-width: min(280px, calc(100vw - 32px));
+}
+@media (max-width: 380px) {
+  .alert-variables-menu { min-width: 0; width: calc(100vw - 48px); }
+}
+
+/* Action bar — stack buttons vertically below 480 px so each gets full
+   width instead of producing a jagged 2-or-3-line wrap. The flex spacer
+   collapses and Brouillon / Ignorer / Send each fill the row. Send stays
+   visually primary, so order is preserved. */
+@media (max-width: 480px) {
+  .alert-email-actions {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem !important;
+  }
+  .alert-email-actions-spacer { display: none; }
+  .alert-email-actions > button {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* Send button label — full text on wide screens, "Envoyer" only on
+   the narrowest phones so the button doesn't grow past the row. */
+.alert-send-label-long  { display: inline; }
+.alert-send-label-short { display: none; }
+@media (max-width: 380px) {
+  .alert-send-label-long  { display: none; }
+  .alert-send-label-short { display: inline; }
+}
+
+/* Touch targets — Apple HIG / WCAG ≥44 px on touch devices. The toolbar
+   icon buttons are intentionally smaller on hover-capable screens (denser
+   editing UI); on touch we bump them up so each glyph is independently
+   tappable without trip-hits on neighbours. */
+@media (hover: none) {
+  .alert-email-toolbar button {
+    min-height: 36px;
+    min-width: 36px;
+  }
+  .alert-email-actions button,
+  .alert-email-actions > a {
+    min-height: 44px;
+  }
 }
 
 /* ── Paramètres (settings) responsive helpers ────────────────────
