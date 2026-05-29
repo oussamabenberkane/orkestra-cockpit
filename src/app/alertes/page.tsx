@@ -473,14 +473,18 @@ function AlertRow({
       }}
       className="alert-row"
       style={{
-        // Severity-tinted ambient wash from the top-left, fading into the card
-        // surface — replaces the previous flat left stripe. The tint is layered
-        // OVER the opaque base so alpha doesn't leak through to the page bg.
-        background: isRead
-          ? (isSelected ? "var(--surface)" : "var(--surface-2)")
-          : `linear-gradient(135deg, ${cfg.tint}, transparent 42%), ${
-              isSelected ? "var(--surface)" : "var(--surface-2)"
-            }`,
+        // Unread rows get a flat soft tint of the primary brand blue
+        // (var(--accent) #007AFF) mixed into the neutral card surface at ~6%
+        // — uniform across all severities so the row list reads as a single
+        // calm "unread" mood, with the severity pill at top-left carrying the
+        // loud per-row signal. Read rows stay fully neutral so the unread
+        // tint pops in contrast. Selected rows flip to opaque --surface so
+        // selection wins the hierarchy.
+        background: isSelected
+          ? "var(--surface)"
+          : isRead
+            ? "var(--surface-2)"
+            : "color-mix(in srgb, var(--surface-2) 97%, var(--accent))",
         boxShadow: isSelected ? "var(--tier-2)" : "none",
         border: `1.5px solid ${isSelected ? cfg.color + "33" : "transparent"}`,
         opacity: isRead && !isSelected ? 0.72 : 1,
