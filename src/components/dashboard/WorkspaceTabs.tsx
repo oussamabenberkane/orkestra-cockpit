@@ -7,33 +7,16 @@ import { useWorkspace, WORKSPACES, type Workspace } from "@/lib/workspaces";
  * The active tab reads from WorkspaceContext (persisted to localStorage),
  * so switching here also re-renders the sidebar nav and dashboard data.
  *
- * Each tab carries its own accent color so the switcher reads in palette
- * even at a glance: BFSI uses the brand blue (advisory/financial), and
- * Commodities uses an amber/warn tone (trading desk). Active state tints
- * the pill with the tab's color; inactive keeps the colored icon as a
- * cue while the label stays neutral.
+ * Visual: blue container, white labels at rest; the active tab is a
+ * white pill with dark text. Simple, high-contrast, palette-aware via
+ * --accent (always the brand blue across palettes).
  *
  * Icon choices: Landmark (institutional columns) reads as BFSI;
  * LineChart (P&L curves) reads as a commodity trading desk. */
 
-const META: Record<Workspace, {
-  Icon: LucideIcon;
-  fallback: string;
-  color: string;
-  tint: string;
-}> = {
-  broker:    {
-    Icon: Landmark,
-    fallback: "BFSI",
-    color: "var(--info)",
-    tint:  "var(--info-tint)",
-  },
-  commodity: {
-    Icon: LineChart,
-    fallback: "Commodities",
-    color: "var(--warn)",
-    tint:  "var(--warn-tint)",
-  },
+const META: Record<Workspace, { Icon: LucideIcon; fallback: string }> = {
+  broker:    { Icon: Landmark,  fallback: "BFSI" },
+  commodity: { Icon: LineChart, fallback: "Commodities" },
 };
 
 export function WorkspaceTabs() {
@@ -54,19 +37,18 @@ export function WorkspaceTabs() {
         aria-label="Espace de travail"
         style={{
           display: "inline-flex",
-          background: "var(--surface-2)",
-          border: "1px solid var(--border)",
+          background: "var(--accent)",
           borderRadius: 9,
-          padding: 2,
+          padding: 3,
           gap: 2,
-          boxShadow: "var(--tier-1)",
+          boxShadow: "0 1px 2px rgba(15,23,42,0.08), 0 6px 14px -6px rgba(15,23,42,0.18)",
           width: "fit-content",
           maxWidth: "calc(100vw - 2rem)",
         }}
       >
         {WORKSPACES.map((ws) => {
           const active = ws === workspace;
-          const { Icon, fallback, color, tint } = META[ws];
+          const { Icon, fallback } = META[ws];
           /* Use the live shape label for the active tab (single source of
            * truth), and the static fallback for the inactive one (so the
            * UI doesn't have to re-derive both workspaces' labels). */
@@ -81,34 +63,32 @@ export function WorkspaceTabs() {
               style={{
                 display: "inline-flex",
                 alignItems: "center",
-                gap: "0.36rem",
+                gap: "0.4rem",
                 fontFamily: "inherit",
-                fontSize: "0.76rem",
-                fontWeight: active ? 700 : 500,
-                color: active ? color : "var(--text-3)",
-                background: active ? tint : "transparent",
+                fontSize: "0.78rem",
+                fontWeight: active ? 650 : 500,
+                color: active ? "#0F172A" : "#FFFFFF",
+                background: active ? "#FFFFFF" : "transparent",
                 border: "none",
                 borderRadius: 7,
-                padding: "0.32rem 0.7rem",
+                padding: "0.36rem 0.85rem",
                 cursor: active ? "default" : "pointer",
-                boxShadow: active
-                  ? `inset 0 0 0 1px color-mix(in srgb, ${color} 28%, transparent), 0 1px 2px rgba(15,23,42,0.06)`
-                  : "none",
+                boxShadow: active ? "0 1px 2px rgba(15,23,42,0.12)" : "none",
                 transition: "background 0.18s, color 0.18s, box-shadow 0.18s",
                 letterSpacing: "-0.005em",
                 whiteSpace: "nowrap",
               }}
               onMouseEnter={(e) => {
-                if (!active) (e.currentTarget as HTMLButtonElement).style.color = "var(--text-2)";
+                if (!active) (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.14)";
               }}
               onMouseLeave={(e) => {
-                if (!active) (e.currentTarget as HTMLButtonElement).style.color = "var(--text-3)";
+                if (!active) (e.currentTarget as HTMLButtonElement).style.background = "transparent";
               }}
             >
               <Icon
                 size={13}
                 strokeWidth={2.25}
-                color={color}
+                color={active ? "var(--accent)" : "#FFFFFF"}
                 style={{ flexShrink: 0 }}
               />
               {label}
