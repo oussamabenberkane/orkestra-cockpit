@@ -179,7 +179,7 @@ const commoditySourceBadges: SourceBadge[] = [
 ];
 
 export const commodityWorkspace: WorkspaceShape = {
-  label: "Matières premières",
+  label: "Commodities",
   heroByPeriod: commodityHeroByPeriod,
   satellites: commoditySatellites,
   troisItems: commodityTroisItems,

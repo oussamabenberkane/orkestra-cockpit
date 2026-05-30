@@ -16,7 +16,7 @@ import type { WorkspaceShape } from "./types";
  *  inside DashboardClient when available). The nav structure below replaces
  *  the const that previously lived inline in Sidebar.tsx. */
 export const brokerWorkspace: WorkspaceShape = {
-  label: "Broker",
+  label: "BFSI",
   heroByPeriod,
   satellites,
   troisItems,
