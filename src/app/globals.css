@@ -627,22 +627,28 @@
 }
 
 /* ════════════════════════════════════════════════════════════
- * 7 · AZURE — light app · bright blue-600 sidebar
- *     A brighter sibling of Cobalt. Same architecture: light main app,
- *     deeply-saturated colored sidebar, --surface-2/-3 scoped flip,
- *     .rail-on-white scope for white cards on the rail. The sidebar
- *     surface lifts from Cobalt's blue-800 (#1E3A8A) up to blue-600
- *     (#2563EB) — the same blue the dashboard header uses on Cobalt,
- *     now applied as the rail surface itself. The brighter rail reads
- *     more forward and energetic; the accent steps DOWN to blue-800
- *     so action elements on white cards keep weight against the
- *     lighter rail.
+ * 7 · AZURE — all-blue · #2563EB everywhere (rail, accent, buttons)
+ *     Monochromatic blue palette. The hero blue (#2563EB) is the SAME
+ *     value used for:
+ *       - the sidebar rail surface (scoped --surface-2 below)
+ *       - the --accent token (primary buttons, source pills, sparkline
+ *         accents, focus rings, the active dock pill, the Aujourd'hui
+ *         chip on the hero chart, the modal "OUVRIR" CTA, …)
+ *       - the --info slot (collapsed into accent so two competing blues
+ *         don't fight; the Portefeuille tile and BrokerStar source pill
+ *         now read as the same hero blue)
+ *     Hover and press states use blue-700 (#1D4ED8) — one Tailwind
+ *     shade darker — as the only shade variation, plus the standard
+ *     alpha-tinted variants for chip backgrounds. The whole chrome
+ *     reads as one unified blue surface rather than the rail / accent
+ *     sibling-hue split that Cobalt uses.
  *
- *     Rail-accent and nav hues mirror Cobalt's bright-on-dark palette
- *     (sky-200, mint, rose, amber, lavender) — all chosen with enough
- *     luminance to read against blue-600. See the shared .rail-on-white
- *     selector below: Azure and Cobalt collapse onto the same body so
- *     popup contrast resets apply to both palettes from one rule.
+ *     Semantic slots that need to actually MEAN something keep their
+ *     own hues — success (emerald), warn (orange), danger (red),
+ *     purple (violet) — otherwise the "+12% YoY", "2 impayés", and
+ *     bell-badge count would lose their semantic colour cue. The nav
+ *     icons in the rail unify around light-blue variants so the
+ *     sidebar's icon row stops carrying the multi-hue rainbow.
  * ═══════════════════════════════════════════════════════════ */
 :root[data-palette="azure"] {
   color-scheme: light;
@@ -659,14 +665,15 @@
   --text-3: #475569;
   --text-4: #64748B;
 
-  /* Accent steps DOWN one tone from the sidebar so action elements on
-   * white cards (primary buttons, focused inputs, KPI sparklines) carry
-   * more weight than the rail surface itself. Same blue family, deeper
-   * variant — Azure's inverse of Cobalt's rail/accent relationship. */
-  --accent:        #1E40AF;   /* blue-800 — sibling of the rail */
-  --accent-2:      #1E3A8A;
-  --accent-tint:   rgba(30,64,175,0.12);
-  --accent-tint-2: rgba(30,64,175,0.22);
+  /* THE hero blue. Accent and the scoped sidebar surface are the same
+   * exact value, so primary buttons + the rail read as one continuous
+   * blue. accent-2 is the only shade variation: one Tailwind step
+   * darker (blue-700) for hover/press states. Tints are alpha-derived
+   * from the accent hex so chip backgrounds carry the same hue. */
+  --accent:        #2563EB;   /* blue-600 — THE hero blue, used everywhere */
+  --accent-2:      #1D4ED8;   /* blue-700 — hover/press only */
+  --accent-tint:   rgba(37,99,235,0.12);
+  --accent-tint-2: rgba(37,99,235,0.22);
 
   --success:      #047857;
   --success-tint: rgba(4,120,87,0.12);
@@ -674,34 +681,40 @@
   --warn-tint:    rgba(180,83,9,0.12);
   --danger:       #B91C1C;
   --danger-tint:  rgba(185,28,28,0.12);
-  --info:         #0369A1;
-  --info-tint:    rgba(3,105,161,0.12);
+  /* --info collapses into the accent — info slot is conceptually a
+   * blue role (Portefeuille tile chip, BrokerStar source pill dot,
+   * Cash-flow callout). Pointing it at the hero blue removes the
+   * second competing blue and lets the palette stay monochrome. */
+  --info:         #2563EB;
+  --info-tint:    rgba(37,99,235,0.12);
   --purple:       #6D28D9;
   --purple-tint:  rgba(109,40,217,0.12);
 
-  /* Nav category icon colors — BRIGHT variants because --nav-* is
-   * consumed only inside the sidebar (Sidebar.tsx), which lives in
-   * the azure-scoped surface below. On blue-600, deep variants would
-   * disappear; bright variants pop cleanly. */
-  --nav-prospection:    #34D399;   /* mint */
-  --nav-portefeuille:   #BAE6FD;   /* sky */
-  --nav-sinistres:      #FB7185;   /* rose */
-  --nav-finance:        #FCD34D;   /* amber */
+  /* Nav category icon colors — unified to the blue family so the rail's
+   * icon row stays in palette. Three close blue-light variants
+   * (blue-100/200/300) give just enough luminance separation to keep
+   * adjacent icons distinguishable without reintroducing mint/rose/
+   * amber. The few that still need a clearly different cue (sinistres
+   * for warnings, alertes for notifications) get the most saturated
+   * blue-300 so they at least pop against quieter neighbours. */
+  --nav-prospection:    #BFDBFE;   /* blue-200 */
+  --nav-portefeuille:   #DBEAFE;   /* blue-100 */
+  --nav-sinistres:      #93C5FD;   /* blue-300 — most saturated, semantic */
+  --nav-finance:        #BFDBFE;
   --nav-vue-ensemble:   var(--rail-accent);
-  --nav-chat:           #C4B5FD;   /* lavender */
-  --nav-alertes:        #FB7185;
+  --nav-chat:           #DBEAFE;
+  --nav-alertes:        #93C5FD;
   --nav-agents:         var(--rail-accent);
   --nav-neutral:        rgba(255,255,255,0.66);
 
   /* Rail token defaults — light values because Sidebar.tsx renders these
-   * on the blue-600 rail surface. Values mirror the scoped sidebar
-   * overrides below so the tokens stay coherent. */
+   * on the blue-600 rail surface. */
   --rail-text:        #FFFFFF;
   --rail-text-muted:  rgba(255,255,255,0.92);
   --rail-text-soft:   rgba(255,255,255,0.70);
   --rail-border:      rgba(255,255,255,0.32);
   --rail-hover:       rgba(255,255,255,0.18);
-  --rail-accent:      #DBEAFE;     /* blue-100 — high contrast on the brighter rail */
+  --rail-accent:      #DBEAFE;     /* blue-100 — Malyz brand + active item glyph */
 
   --rail-badge-bg:     #FFFFFF;
   --rail-badge-border: rgba(15,23,42,0.18);
@@ -727,14 +740,14 @@
 }
 
 /* Sidebar-scope flip for Azure — same architecture as Cobalt: --surface-2
- * becomes the deep rail surface, --surface-3 becomes the on-rail hover
- * overlay, and text/border/semantic tokens are pushed to LIGHT variants
- * for legibility. The rail surface here is blue-600 #2563EB (vs Cobalt's
- * blue-800). */
+ * becomes the rail surface, --surface-3 becomes the on-rail hover
+ * overlay, text/border/semantic tokens push to LIGHT variants. The rail
+ * surface here is THE hero blue #2563EB, identical to --accent at root,
+ * so the rail and accent are visually one continuous blue. */
 :root[data-palette="azure"] .app-sidebar,
 :root[data-palette="azure"] .agent-sidebar,
 :root[data-palette="azure"] .agent-sidebar-content {
-  --surface-2: #2563EB;                  /* bright blue-600 rail */
+  --surface-2: #2563EB;                  /* THE hero blue — same as --accent */
   --surface-3: rgba(255,255,255,0.16);   /* on-rail hover overlay */
   --text:      #FFFFFF;
   --text-2:    rgba(255,255,255,0.92);
