@@ -170,7 +170,15 @@
 /* Sidebar-scope flip for Aurora — Cobalt architecture: --surface-2/-3 +
  * text/border/semantic tokens push to dark-rail-appropriate values. The
  * Aurora rail surface is slate-800 #1E293B — a desaturated cool slate
- * that fits Aurora's Stripe-dashboard cool-fintech identity. */
+ * that fits Aurora's Stripe-dashboard cool-fintech identity.
+ *
+ * Selector includes bare `:root` so the default-Aurora state (no
+ * `data-palette` attribute on <html>, e.g. before the no-flash init
+ * script runs) gets the dark rail too. Other palettes' higher-specificity
+ * selectors override this when their data-palette is active. */
+:root .app-sidebar,
+:root .agent-sidebar,
+:root .agent-sidebar-content,
 :root[data-palette="aurora"] .app-sidebar,
 :root[data-palette="aurora"] .agent-sidebar,
 :root[data-palette="aurora"] .agent-sidebar-content {
@@ -786,6 +794,8 @@
  * so the popup interior reads as a calm light-app surface, matching
  * the popup's own white card. Fixes the bug at the token level rather
  * than overriding each consumer. */
+:root .app-sidebar .rail-on-white,
+:root .agent-sidebar .rail-on-white,
 :root[data-palette="cobalt"] .app-sidebar .rail-on-white,
 :root[data-palette="cobalt"] .agent-sidebar .rail-on-white,
 :root[data-palette="azure"] .app-sidebar .rail-on-white,
@@ -803,7 +813,7 @@
   --surface-2: #DDE5F0;
   --surface-3: #C9D3E3;
   /* Border tokens — sidebar scope sets these to WHITE rgba for hairlines
-   * on the cobalt rail. Inside a white card those would render as
+   * on the dark rail. Inside a white card those would render as
    * invisible white-on-white dividers (the UserMenu/Notifications popup
    * header rule, logout footer rule, list-row separators, "Bientôt" badge
    * border). Reset to the dark light-app variants so dividers actually
@@ -818,7 +828,10 @@
   --rail-text-muted:  #1F2937;
   --rail-text-soft:   #475569;
   --rail-border:      rgba(15,23,42,0.14);
+  --rail-hover:       rgba(15,23,42,0.04);
   --rail-accent:      var(--accent);
+  --rail-badge-bg:     #FFFFFF;
+  --rail-badge-border: rgba(15,23,42,0.18);
   /* Semantic colors flip back to DEEP variants — the sidebar-scope
    * brightened them (e.g. --danger to #FB7185) for legibility on cobalt,
    * but a white card needs deep variants for the same WCAG step. */
