@@ -1,14 +1,12 @@
 "use client";
 
 /**
- * Floating bottom-left palette picker. Consumes the shared palette
- * hook so it stays in sync with any other picker mounted on the page
- * (e.g. the inline picker on /).
+ * Floating palette picker pinned to the top-right corner of the viewport.
  *
- * The switcher is always present on the page. The dismiss button
- * collapses it to a compact swatch+chevron pill (still visible, still
- * one click to reopen). Collapsed state is sessionStorage-scoped so it
- * doesn't leak across tab sessions.
+ * Consumes the shared palette hook so it stays in sync with any other
+ * picker on the page (e.g. the inline picker on /). The dismiss button
+ * collapses the pill to a swatch + chevron; collapsed state lives in
+ * sessionStorage so it doesn't leak across tab sessions.
  */
 
 import { useEffect, useState } from "react";
@@ -53,49 +51,54 @@ export function PaletteSwitcher() {
   const activePalette =
     PALETTES.find((p) => p.id === palette) ?? PALETTES[0];
 
+  /* Pinned to the top-right corner with zero viewport margin. maxWidth
+   * keeps the expanded form on-screen if the viewport is very narrow. */
+  const anchorStyle: React.CSSProperties = {
+    position: "fixed",
+    top: 0,
+    right: 0,
+    zIndex: 9000,
+    background: "var(--surface)",
+    border: "1px solid var(--border)",
+    boxShadow: "var(--tier-1)",
+    fontFamily: "inherit",
+  };
+
   if (collapsed) {
     return (
       <button
         type="button"
         onClick={() => setCollapsedPersisted(false)}
-        aria-label={`Show palette switcher — current: ${activePalette.label}`}
+        aria-label={`Déployer le sélecteur de palette — actif : ${activePalette.label}`}
         title={`Palette : ${activePalette.label}`}
         style={{
-          position: "fixed",
-          left: 16,
-          bottom: 16,
-          zIndex: 9000,
+          ...anchorStyle,
+          appearance: "none",
           display: "inline-flex",
           alignItems: "center",
-          gap: "0.45rem",
-          padding: "0.34rem 0.55rem 0.34rem 0.4rem",
-          background: "var(--surface)",
-          border: "1px solid var(--border)",
+          gap: "0.35rem",
+          padding: "0.22rem 0.4rem 0.22rem 0.32rem",
           borderRadius: 999,
-          boxShadow: "var(--tier-1)",
-          fontFamily: "inherit",
           color: "var(--text-2)",
-          fontSize: "0.7rem",
+          fontSize: "0.68rem",
           fontWeight: 600,
           letterSpacing: "0.01em",
           cursor: "pointer",
-          transition: "transform 0.18s ease, box-shadow 0.18s ease",
+          transition: "box-shadow 0.18s ease",
         }}
         onMouseEnter={(e) => {
-          (e.currentTarget as HTMLElement).style.transform = "translateY(-1px)";
           (e.currentTarget as HTMLElement).style.boxShadow = "var(--tier-2)";
         }}
         onMouseLeave={(e) => {
-          (e.currentTarget as HTMLElement).style.transform = "translateY(0)";
           (e.currentTarget as HTMLElement).style.boxShadow = "var(--tier-1)";
         }}
       >
         <span
           aria-hidden
           style={{
-            width: 16,
-            height: 16,
-            borderRadius: "5px",
+            width: 14,
+            height: 14,
+            borderRadius: "4px",
             background: activePalette.bg,
             position: "relative",
             overflow: "hidden",
@@ -114,7 +117,7 @@ export function PaletteSwitcher() {
           />
         </span>
         <span>Palette</span>
-        <ChevronUp size={13} strokeWidth={2.25} color="var(--text-3)" />
+        <ChevronUp size={12} strokeWidth={2.25} color="var(--text-3)" />
       </button>
     );
   }
@@ -131,16 +134,16 @@ export function PaletteSwitcher() {
         style={{
           appearance: "none",
           border: "none",
-          padding: "0.28rem 0.55rem 0.28rem 0.32rem",
-          borderRadius: "7px",
+          padding: "0.22rem 0.45rem 0.22rem 0.28rem",
+          borderRadius: "6px",
           fontFamily: "inherit",
-          fontSize: "0.7rem",
+          fontSize: "0.68rem",
           fontWeight: 600,
           letterSpacing: "0.01em",
           cursor: "pointer",
           display: "inline-flex",
           alignItems: "center",
-          gap: "0.4rem",
+          gap: "0.35rem",
           background: active ? "var(--surface)" : "transparent",
           color: active ? "var(--text)" : "var(--text-3)",
           boxShadow: active ? "var(--tier-1)" : "none",
@@ -150,9 +153,9 @@ export function PaletteSwitcher() {
         <span
           aria-hidden
           style={{
-            width: 14,
-            height: 14,
-            borderRadius: "4px",
+            width: 12,
+            height: 12,
+            borderRadius: "3px",
             background: meta.bg,
             position: "relative",
             overflow: "hidden",
@@ -180,31 +183,25 @@ export function PaletteSwitcher() {
       role="region"
       aria-label="Palette preview switcher"
       style={{
-        position: "fixed",
-        left: 16,
-        bottom: 16,
-        zIndex: 9000,
-        maxWidth: "calc(100vw - 32px)",
+        ...anchorStyle,
+        maxWidth: "100vw",
         display: "flex",
         alignItems: "center",
-        gap: "0.4rem",
-        padding: "0.3rem 0.34rem 0.3rem 0.6rem",
-        background: "var(--surface)",
-        border: "1px solid var(--border)",
-        borderRadius: "12px",
-        boxShadow: "var(--tier-1)",
-        fontFamily: "inherit",
+        gap: "0.2rem",
+        padding: "0.22rem 0.26rem",
+        borderRadius: "10px",
       }}
     >
       <span
         className="palette-switcher-label"
         style={{
-          fontSize: "0.56rem",
+          fontSize: "0.54rem",
           fontWeight: 700,
           letterSpacing: "0.14em",
           textTransform: "uppercase",
           color: "var(--text-4)",
-          marginRight: "0.15rem",
+          marginLeft: "0.15rem",
+          marginRight: "0.1rem",
           flexShrink: 0,
         }}
       >
@@ -215,10 +212,10 @@ export function PaletteSwitcher() {
           display: "flex",
           flexWrap: "wrap",
           alignItems: "center",
-          gap: "0.1rem",
-          padding: "0.18rem",
+          gap: "0.08rem",
+          padding: "0.14rem",
           background: "var(--surface-2)",
-          borderRadius: "9px",
+          borderRadius: "8px",
           minWidth: 0,
         }}
       >
@@ -227,19 +224,20 @@ export function PaletteSwitcher() {
       <button
         type="button"
         onClick={() => setCollapsedPersisted(true)}
-        aria-label="Collapse palette switcher"
+        aria-label="Replier le sélecteur de palette"
         title="Replier"
         style={{
           appearance: "none",
           border: "none",
           background: "transparent",
           color: "var(--text-4)",
-          padding: "0.22rem",
-          borderRadius: "6px",
+          padding: "0.18rem",
+          borderRadius: "5px",
           cursor: "pointer",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
+          flexShrink: 0,
           transition: "background 0.15s, color 0.15s",
         }}
         onMouseEnter={(e) => {
@@ -251,21 +249,13 @@ export function PaletteSwitcher() {
           (e.currentTarget as HTMLElement).style.color = "var(--text-4)";
         }}
       >
-        <ChevronDown size={13} strokeWidth={2.25} />
+        <ChevronDown size={12} strokeWidth={2.25} />
       </button>
       {/* Hide the "PALETTE" label on narrow viewports so the segmented row
-       * stays readable on 360–480 px phones without horizontal overflow. */}
+       * stays compact. */}
       <style>{`
         @media (max-width: 640px) {
           [aria-label="Palette preview switcher"] .palette-switcher-label { display: none; }
-        }
-        @media (max-width: 420px) {
-          [aria-label="Palette preview switcher"] {
-            left: 8px !important;
-            right: 8px !important;
-            bottom: 8px !important;
-            justify-content: center;
-          }
         }
       `}</style>
     </div>
