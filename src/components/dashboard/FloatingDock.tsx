@@ -426,7 +426,10 @@ const DockBody = forwardRef<HTMLDivElement, BodyProps>(function DockBody(
         display: "flex",
         flexDirection: "column",
         gap: "0.8rem",
-        background: "var(--surface-2)",
+        /* Page-canvas color rather than --surface-2 so the chat preview
+         * stays breathable across palettes — especially Cobalt where
+         * --surface-2 is the heavier slate-blue pill color. */
+        background: "var(--bg)",
       }}
     >
       {messages.length === 0 ? (

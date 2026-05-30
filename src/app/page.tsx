@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { HeroPanel, type HeroEvent } from "@/components/dashboard/HeroPanel";
 import { SatelliteKPI, type Satellite } from "@/components/dashboard/SatelliteKPI";
+import { LandingPalettePicker } from "@/components/landing/LandingPalettePicker";
 
 // ── Preview data (mirrors /dashboard so the landing feels like the product) ──
 const previewData = [62, 64, 70, 68, 72, 78, 80, 82, 86, 88, 92, 92];
@@ -112,6 +113,7 @@ export default function LandingPage() {
           onPreviewKpiOpen={onPreviewKpiOpen}
         />
         <Piliers />
+        <LandingPalettePicker />
       </main>
       <Footer />
     </div>

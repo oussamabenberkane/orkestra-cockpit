@@ -2057,6 +2057,7 @@ function Sidebar({
                 onClick={onToggle}
                 aria-label="Replier le panneau"
                 title="Replier le panneau"
+                className="rail-on-white"
                 style={{
                   width: 40,
                   height: 40,
@@ -2158,7 +2159,7 @@ function Sidebar({
             {/* ─── Search card (tier-1 elevation, accent-tint focus ring) ─── */}
             <div style={{ padding: "0.1rem 0.5rem 0.65rem" }}>
               <div
-                className="agent-conv-search"
+                className="agent-conv-search rail-on-white"
                 style={{
                   position: "relative",
                   display: "flex",
@@ -2535,7 +2536,10 @@ function ConvRow({
     <div
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
-      className={`agent-conv-row${active ? " is-active" : ""}`}
+      /* When active, the row becomes a white card on the (cobalt) rail —
+       * rail-on-white resets text/nav tokens to dark variants so the title
+       * and icon remain legible. No-op in light-sidebar palettes. */
+      className={`agent-conv-row${active ? " is-active rail-on-white" : ""}`}
       style={{
         position: "relative",
         display: "grid",
@@ -2670,16 +2674,20 @@ function UsageFooter({ datasetLabel }: { datasetLabel: string | null }) {
         borderTop: "1px solid var(--border)",
       }}
     >
-      {/* Quota card */}
-      <div style={{
-        display: "flex",
-        flexDirection: "column",
-        gap: "0.4rem",
-        padding: "0.6rem 0.7rem 0.65rem",
-        background: "var(--surface)",
-        borderRadius: 9,
-        boxShadow: "var(--tier-1)",
-      }}>
+      {/* Quota card — white card on the (cobalt) rail, rail-on-white
+       * resets text tokens for legibility. */}
+      <div
+        className="rail-on-white"
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          gap: "0.4rem",
+          padding: "0.6rem 0.7rem 0.65rem",
+          background: "var(--surface)",
+          borderRadius: 9,
+          boxShadow: "var(--tier-1)",
+        }}
+      >
         <div style={{
           display: "flex",
           alignItems: "baseline",
@@ -2723,17 +2731,20 @@ function UsageFooter({ datasetLabel }: { datasetLabel: string | null }) {
         </div>
       </div>
 
-      {/* Sync status card */}
-      <div style={{
-        display: "flex",
-        alignItems: "center",
-        gap: "0.5rem",
-        padding: "0.5rem 0.7rem",
-        background: "var(--surface)",
-        borderRadius: 9,
-        boxShadow: "var(--tier-1)",
-        minWidth: 0,
-      }}>
+      {/* Sync status card — same rail-on-white reset as the quota card. */}
+      <div
+        className="rail-on-white"
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "0.5rem",
+          padding: "0.5rem 0.7rem",
+          background: "var(--surface)",
+          borderRadius: 9,
+          boxShadow: "var(--tier-1)",
+          minWidth: 0,
+        }}
+      >
         <span aria-hidden="true" style={{
           width: 6, height: 6, borderRadius: "50%",
           background: "var(--success)",
