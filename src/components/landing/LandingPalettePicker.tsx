@@ -52,7 +52,14 @@ const SURFACE_SAMPLES: Record<
     sidebarItem: "#BAE6FD",                  /* --rail-accent: sky-200 */
     sidebarLine: "rgba(255,255,255,0.34)",
   },
-  prism:    { bg: "#EEF0F4", surface: "#FFFFFF", surface2: "#D8DBE5", border: "rgba(40,40,60,0.16)" },
+  azure:    {
+    bg: "#F4F7FB",
+    surface: "#FFFFFF",
+    surface2: "#2563EB",                     /* preview shows the SIDEBAR color */
+    border: "rgba(15,23,42,0.14)",
+    sidebarItem: "#DBEAFE",                  /* --rail-accent: blue-100 */
+    sidebarLine: "rgba(255,255,255,0.36)",
+  },
 };
 
 export function LandingPalettePicker() {

@@ -23,7 +23,7 @@ export type Palette =
   | "mineral"
   | "atelier"
   | "cobalt"
-  | "prism";
+  | "azure";
 
 export interface PaletteMeta {
   id: Palette;
@@ -45,7 +45,7 @@ export const PALETTES: readonly PaletteMeta[] = [
   { id: "mineral",  label: "Mineral",  blurb: "Heaviest cool slate, technical cyan",       bg: "#B5C1D2", accent: "#0E7490", text: "#0F172A" },
   { id: "atelier",  label: "Atelier",  blurb: "Industrial slate, engineering blue",        bg: "#B5BDCB", accent: "#1D4ED8", text: "#0F172A" },
   { id: "cobalt",   label: "Cobalt",   blurb: "Deep cobalt sidebar, light app",            bg: "#1E3A8A", accent: "#2563EB", text: "#0F172A" },
-  { id: "prism",    label: "Prism",    blurb: "Paper chrome, violet accent, multi-hue chips", bg: "#D8DBE5", accent: "#6D28D9", text: "#15172B" },
+  { id: "azure",    label: "Azure",    blurb: "Bright blue-600 sidebar, light app",        bg: "#2563EB", accent: "#1E40AF", text: "#0F172A" },
 ] as const;
 
 const STORAGE_KEY = "orkestra.palette.v1";

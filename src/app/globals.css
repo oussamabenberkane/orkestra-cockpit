@@ -567,10 +567,36 @@
 
 /* White-card-on-rail — elements rendered inside the cobalt sidebar but
  * with a white surface bg (active nav pill, search button, bell button,
- * count badges). Reset text + semantic + nav-icon tokens to dark variants
- * so labels, badge counts, and icons render with proper contrast on white. */
+ * count badges, the Profile + Notifications popup panels). Reset text +
+ * semantic + nav-icon tokens to dark variants so labels, badge counts,
+ * and icons render with proper contrast on white.
+ *
+ * IMPORTANT — surface-2/-3 reset:
+ * The sidebar scope above flips --surface-2 to deep cobalt #1E3A8A and
+ * --surface-3 to a translucent white overlay (intended for rail hover
+ * states). White cards rendered inside the rail INHERIT those values,
+ * which means anything painting hover/footer surfaces with
+ * `background: var(--surface-2)` inside the popup (UserMenuContent
+ * item hovers, NotificationsContent list-row hover, the logout footer,
+ * the "Bientôt" badge) gets dark cobalt under dark text — unreadable.
+ * Resetting --surface-2/-3 here restores the LIGHT root-cobalt values
+ * so the popup interior reads as a calm light-app surface, matching
+ * the popup's own white card. Fixes the bug at the token level rather
+ * than overriding each consumer. */
 :root[data-palette="cobalt"] .app-sidebar .rail-on-white,
-:root[data-palette="cobalt"] .agent-sidebar .rail-on-white {
+:root[data-palette="cobalt"] .agent-sidebar .rail-on-white,
+:root[data-palette="azure"] .app-sidebar .rail-on-white,
+:root[data-palette="azure"] .agent-sidebar .rail-on-white {
+  --surface-2: #DDE5F0;
+  --surface-3: #C9D3E3;
+  /* Border tokens — sidebar scope sets these to WHITE rgba for hairlines
+   * on the cobalt rail. Inside a white card those would render as
+   * invisible white-on-white dividers (the UserMenu/Notifications popup
+   * header rule, logout footer rule, list-row separators, "Bientôt" badge
+   * border). Reset to the dark light-app variants so dividers actually
+   * read on a white surface. */
+  --border:        rgba(15,23,42,0.14);
+  --border-strong: rgba(15,23,42,0.24);
   --text:      #0F172A;
   --text-2:    #1F2937;
   --text-3:    #475569;
@@ -601,100 +627,132 @@
 }
 
 /* ════════════════════════════════════════════════════════════
- * 7 · PRISM  — cool paper chrome · violet accent · multi-hue chips
- *     Editorial design-tool register. Chrome stays neutral cool-gray
- *     so color speaks at the COMPONENT layer rather than the layout:
- *     semantic tints sit at ~0.20 alpha so the tile-icon chips, the
- *     TroisChoses callout rows, source-pill dots, and badge surfaces
- *     all read as deliberately colored blocks rather than pale washes
- *     (Aurora's 0.10 alpha produces near-white chips by comparison).
- *     Six distinct hues circulate across the nav rail and dashboard
- *     chips — emerald, sky, rose, orange, violet, fuchsia. Violet-700
- *     accent is deliberately not blue, distinguishing Prism from the
- *     blue/slate spectrum the other six palettes share while staying
- *     restrained enough for a BFSI brokerage register. The Malyz
- *     hexagon and user avatar inherit violet via --rail-accent, so the
- *     rail itself carries identity without a colored sidebar surface.
+ * 7 · AZURE — light app · bright blue-600 sidebar
+ *     A brighter sibling of Cobalt. Same architecture: light main app,
+ *     deeply-saturated colored sidebar, --surface-2/-3 scoped flip,
+ *     .rail-on-white scope for white cards on the rail. The sidebar
+ *     surface lifts from Cobalt's blue-800 (#1E3A8A) up to blue-600
+ *     (#2563EB) — the same blue the dashboard header uses on Cobalt,
+ *     now applied as the rail surface itself. The brighter rail reads
+ *     more forward and energetic; the accent steps DOWN to blue-800
+ *     so action elements on white cards keep weight against the
+ *     lighter rail.
+ *
+ *     Rail-accent and nav hues mirror Cobalt's bright-on-dark palette
+ *     (sky-200, mint, rose, amber, lavender) — all chosen with enough
+ *     luminance to read against blue-600. See the shared .rail-on-white
+ *     selector below: Azure and Cobalt collapse onto the same body so
+ *     popup contrast resets apply to both palettes from one rule.
  * ═══════════════════════════════════════════════════════════ */
-:root[data-palette="prism"] {
+:root[data-palette="azure"] {
   color-scheme: light;
 
-  --bg:           #EEF0F4;   /* canvas — cool paper neutral, no hue dominance */
-  --surface:      #FFFFFF;   /* cards — crisp white pop */
-  --surface-2:    #D8DBE5;   /* sidebar — clearly distinct cool-gray panel */
-  --surface-3:    #BFC3D1;   /* hover */
-  --border:       rgba(40,40,60,0.14);
-  --border-strong:rgba(40,40,60,0.24);
+  --bg:           #F4F7FB;   /* canvas — cool pale */
+  --surface:      #FFFFFF;   /* cards — crisp white */
+  --surface-2:    #DDE5F0;   /* LIGHT — main-app pills/badges/modal headers */
+  --surface-3:    #C9D3E3;   /* LIGHT — main-app hover */
+  --border:       rgba(15,23,42,0.14);
+  --border-strong:rgba(15,23,42,0.24);
 
-  --text:   #15172B;
-  --text-2: #2D2F45;
-  --text-3: #5A5D78;
-  --text-4: #888BA3;
+  --text:   #0F172A;
+  --text-2: #1F2937;
+  --text-3: #475569;
+  --text-4: #64748B;
 
-  /* Violet-700 accent — distinct from every blue/slate palette in the
-   * set, gives Prism its editorial identity. accent-tint pushed to
-   * 0.18 / 0.28 so accent-bearing surfaces (the agents + vue tile
-   * chips, the signing row in TroisChoses, the active dock pill)
-   * register as a clear violet block rather than a near-white wash. */
-  --accent:        #6D28D9;
-  --accent-2:      #5B21B6;
-  --accent-tint:   rgba(109,40,217,0.18);
-  --accent-tint-2: rgba(109,40,217,0.28);
+  /* Accent steps DOWN one tone from the sidebar so action elements on
+   * white cards (primary buttons, focused inputs, KPI sparklines) carry
+   * more weight than the rail surface itself. Same blue family, deeper
+   * variant — Azure's inverse of Cobalt's rail/accent relationship. */
+  --accent:        #1E40AF;   /* blue-800 — sibling of the rail */
+  --accent-2:      #1E3A8A;
+  --accent-tint:   rgba(30,64,175,0.12);
+  --accent-tint-2: rgba(30,64,175,0.22);
 
-  /* Mid-saturation semantic palette — the LEVER for Prism's colorfulness.
-   * Tile-icon chips and TroisChoses callout cards consume these tints
-   * directly (see dashboard-mock.ts); at ~0.20 alpha each chip reads as
-   * a clearly colored cell instead of the pale 0.10-0.12 default. Hues
-   * chosen for visible separation rather than just darker neighbours of
-   * the accent: emerald, orange, true red, sky, fuchsia. The purple slot
-   * is reassigned to fuchsia so the Sparkles agent badge stays a distinct
-   * pink rather than colliding with the violet accent. */
-  --success:      #059669;
-  --success-tint: rgba(5,150,105,0.20);
-  --warn:         #C2410C;
-  --warn-tint:    rgba(194,65,12,0.20);
-  --danger:       #DC2626;
-  --danger-tint:  rgba(220,38,38,0.20);
-  --info:         #0284C7;
-  --info-tint:    rgba(2,132,199,0.20);
-  --purple:       #DB2777;
-  --purple-tint:  rgba(219,39,119,0.20);
+  --success:      #047857;
+  --success-tint: rgba(4,120,87,0.12);
+  --warn:         #B45309;
+  --warn-tint:    rgba(180,83,9,0.12);
+  --danger:       #B91C1C;
+  --danger-tint:  rgba(185,28,28,0.12);
+  --info:         #0369A1;
+  --info-tint:    rgba(3,105,161,0.12);
+  --purple:       #6D28D9;
+  --purple-tint:  rgba(109,40,217,0.12);
 
-  /* Per-section nav hues — mirror the saturated semantic palette so the
-   * rail carries a confident multi-hue row rather than a column of
-   * accent-tinted icons. Five distinct hues plus the violet accent give
-   * the sidebar six visibly different colors. */
-  --nav-prospection:    #059669;   /* emerald */
-  --nav-portefeuille:   #0284C7;   /* sky */
-  --nav-sinistres:      #DC2626;   /* red */
-  --nav-finance:        #C2410C;   /* orange */
-  --nav-vue-ensemble:   var(--accent);
-  --nav-chat:           #DB2777;   /* fuchsia */
-  --nav-alertes:        #DC2626;
-  --nav-agents:         var(--accent);
-  --nav-neutral:        var(--text-3);
+  /* Nav category icon colors — BRIGHT variants because --nav-* is
+   * consumed only inside the sidebar (Sidebar.tsx), which lives in
+   * the azure-scoped surface below. On blue-600, deep variants would
+   * disappear; bright variants pop cleanly. */
+  --nav-prospection:    #34D399;   /* mint */
+  --nav-portefeuille:   #BAE6FD;   /* sky */
+  --nav-sinistres:      #FB7185;   /* rose */
+  --nav-finance:        #FCD34D;   /* amber */
+  --nav-vue-ensemble:   var(--rail-accent);
+  --nav-chat:           #C4B5FD;   /* lavender */
+  --nav-alertes:        #FB7185;
+  --nav-agents:         var(--rail-accent);
+  --nav-neutral:        rgba(255,255,255,0.66);
 
-  /* Elevation — neutral tier-1 keeps resting cards quiet, but tier-active
-   * carries a violet-biased glow so the hovered/active card lift reads as
-   * the palette's identity rather than a generic gray drop. */
+  /* Rail token defaults — light values because Sidebar.tsx renders these
+   * on the blue-600 rail surface. Values mirror the scoped sidebar
+   * overrides below so the tokens stay coherent. */
+  --rail-text:        #FFFFFF;
+  --rail-text-muted:  rgba(255,255,255,0.92);
+  --rail-text-soft:   rgba(255,255,255,0.70);
+  --rail-border:      rgba(255,255,255,0.32);
+  --rail-hover:       rgba(255,255,255,0.18);
+  --rail-accent:      #DBEAFE;     /* blue-100 — high contrast on the brighter rail */
+
+  --rail-badge-bg:     #FFFFFF;
+  --rail-badge-border: rgba(15,23,42,0.18);
+
   --tier-1:
     inset 0 1px 0 rgba(255,255,255,1),
-    0 0 0 1px rgba(40,40,60,0.10),
-    0 1px 2px rgba(40,40,60,0.08),
-    0 12px 26px -14px rgba(40,40,60,0.30);
+    0 0 0 1px rgba(15,23,42,0.10),
+    0 1px 2px rgba(15,23,42,0.08),
+    0 12px 26px -14px rgba(15,23,42,0.30);
   --tier-2:
     inset 0 1px 0 rgba(255,255,255,1),
-    0 0 0 1px rgba(40,40,60,0.14),
-    0 4px 8px rgba(40,40,60,0.10),
-    0 28px 56px -16px rgba(40,40,60,0.34);
+    0 0 0 1px rgba(15,23,42,0.14),
+    0 4px 8px rgba(15,23,42,0.10),
+    0 28px 56px -16px rgba(15,23,42,0.36);
   --tier-active:
     inset 0 1px 0 rgba(255,255,255,1),
-    0 0 0 1px color-mix(in srgb, var(--accent) 24%, transparent),
-    0 1px 2px rgba(40,40,60,0.12),
-    0 12px 26px -14px color-mix(in srgb, var(--accent) 42%, transparent);
+    0 0 0 1px color-mix(in srgb, var(--accent) 26%, transparent),
+    0 1px 2px rgba(15,23,42,0.10),
+    0 12px 26px -14px color-mix(in srgb, var(--accent) 44%, transparent);
   --tier-press:
-    inset 0 1px 2px rgba(40,40,60,0.14),
-    0 0 0 1px rgba(40,40,60,0.10);
+    inset 0 1px 2px rgba(15,23,42,0.12),
+    0 0 0 1px rgba(15,23,42,0.10);
+}
+
+/* Sidebar-scope flip for Azure — same architecture as Cobalt: --surface-2
+ * becomes the deep rail surface, --surface-3 becomes the on-rail hover
+ * overlay, and text/border/semantic tokens are pushed to LIGHT variants
+ * for legibility. The rail surface here is blue-600 #2563EB (vs Cobalt's
+ * blue-800). */
+:root[data-palette="azure"] .app-sidebar,
+:root[data-palette="azure"] .agent-sidebar,
+:root[data-palette="azure"] .agent-sidebar-content {
+  --surface-2: #2563EB;                  /* bright blue-600 rail */
+  --surface-3: rgba(255,255,255,0.16);   /* on-rail hover overlay */
+  --text:      #FFFFFF;
+  --text-2:    rgba(255,255,255,0.92);
+  --text-3:    rgba(255,255,255,0.74);
+  --text-4:    rgba(255,255,255,0.58);
+  --border:    rgba(255,255,255,0.22);
+  --border-strong: rgba(255,255,255,0.32);
+
+  /* Bright semantic variants for badges + status pills on the rail. */
+  --danger:        #FB7185;
+  --danger-tint:   rgba(251,113,133,0.18);
+  --warn:          #FBBF24;
+  --warn-tint:     rgba(251,191,36,0.18);
+  --success:       #34D399;
+  --success-tint:  rgba(52,211,153,0.18);
+
+  --rail-hover:    rgba(255,255,255,0.18);
+  --rail-border:   rgba(255,255,255,0.32);
 }
 
 /* shadcn / Tailwind compatibility — palette-token-driven so the
