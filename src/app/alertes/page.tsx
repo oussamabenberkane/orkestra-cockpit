@@ -262,9 +262,10 @@ export default function AlertesPage() {
           <AnimatePresence>
             {unreadCount > 0 && tab === "nonlu" && (
               <motion.button
-                initial={{ opacity: 0, scale: 0.92 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.92 }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
                 onClick={handleMarkAllAsRead}
                 aria-label="Tout marquer comme lu"
                 title="Tout marquer comme lu"
@@ -306,14 +307,25 @@ export default function AlertesPage() {
         <div className="alerts-layout">
           {/* Left: alert list */}
           <div className="alerts-layout-list">
-            <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-              <AnimatePresence mode="popLayout">
+            {/*
+              The wrapper div is keyed by `tab` so React fully unmounts the
+              outgoing tab's list + AnimatePresence and mounts a fresh one for
+              the incoming tab. This skips exit animations for the rows we're
+              leaving behind (which would otherwise overlap the new rows
+              briefly via popLayout) and starts the new list with no prior
+              layout state for framer-motion's `layout` to animate from —
+              the result is an instant, in-place tab switch. Dismiss /
+              mark-as-read still animate normally because they happen
+              within a single tab without changing the key.
+            */}
+            <div key={tab} style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+              <AnimatePresence mode="popLayout" initial={false}>
                 {list.length === 0 ? (
                   <motion.div
                     key="empty"
-                    initial={{ opacity: 0, scale: 0.96 }}
-                    animate={{ opacity: 1, scale: 1 }}
+                    initial={false}
                     exit={{ opacity: 0 }}
+                    transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
                     style={{
                       display: "flex",
                       flexDirection: "column",
@@ -439,14 +451,18 @@ function AlertRow({
       tabIndex={0}
       aria-label={`${cfg.label} — ${alert.title}`}
       aria-pressed={isSelected}
-      initial={{ opacity: 0, x: -12 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: -16, scale: 0.97 }}
+      // No entrance animation — rows appear in place so tab switches feel
+      // instant rather than cascading down. Exit + layout still animate so
+      // dismiss/mark-as-read reflow stays smooth.
+      initial={false}
+      exit={{ opacity: 0, x: -8 }}
       transition={{
-        layout: { duration: 0.2 },
-        delay: index * 0.04,
-        duration: 0.28,
-        ease: [0.22, 1, 0.36, 1],
+        // Override framer-motion's default layout spring (bouncy) with the
+        // same expo-out easing used everywhere else on the page, so a
+        // mark-as-read / dismiss reflow feels deliberate, not springy.
+        layout:  { duration: 0.24, ease: [0.22, 1, 0.36, 1] },
+        opacity: { duration: 0.18, ease: [0.22, 1, 0.36, 1] },
+        x:       { duration: 0.18, ease: [0.22, 1, 0.36, 1] },
       }}
       onClick={onSelect}
       onKeyDown={(e) => {
@@ -457,14 +473,18 @@ function AlertRow({
       }}
       className="alert-row"
       style={{
-        // Severity-tinted ambient wash from the top-left, fading into the card
-        // surface — replaces the previous flat left stripe. The tint is layered
-        // OVER the opaque base so alpha doesn't leak through to the page bg.
-        background: isRead
-          ? (isSelected ? "var(--surface)" : "var(--surface-2)")
-          : `linear-gradient(135deg, ${cfg.tint}, transparent 42%), ${
-              isSelected ? "var(--surface)" : "var(--surface-2)"
-            }`,
+        // Unread rows get a flat soft tint of the primary brand blue
+        // (var(--accent) #007AFF) mixed into the neutral card surface at ~6%
+        // — uniform across all severities so the row list reads as a single
+        // calm "unread" mood, with the severity pill at top-left carrying the
+        // loud per-row signal. Read rows stay fully neutral so the unread
+        // tint pops in contrast. Selected rows flip to opaque --surface so
+        // selection wins the hierarchy.
+        background: isSelected
+          ? "var(--surface)"
+          : isRead
+            ? "var(--surface-2)"
+            : "color-mix(in srgb, var(--surface-2) 97%, var(--accent))",
         boxShadow: isSelected ? "var(--tier-2)" : "none",
         border: `1.5px solid ${isSelected ? cfg.color + "33" : "transparent"}`,
         opacity: isRead && !isSelected ? 0.72 : 1,
@@ -733,10 +753,10 @@ function EmailPreviewPanel({
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -6 }}
-      transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
       style={{
         borderRadius: "16px",
         background: "var(--surface)",

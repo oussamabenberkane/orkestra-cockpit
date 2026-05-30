@@ -6,6 +6,7 @@ import type { ModalKey } from "@/lib/types";
 import { Sidebar } from "@/components/dashboard/Sidebar";
 import DashboardModal from "@/components/dashboard/DashboardModal";
 import { CommandPalette } from "@/components/shared/CommandPalette";
+import { WorkspaceTabs } from "@/components/dashboard/WorkspaceTabs";
 import { supabase } from "@/lib/supabase";
 
 const SIDEBAR_KEY = "orkestra.sidebar.collapsed";
@@ -67,7 +68,7 @@ export function AppShell({ children, mainStyle }: AppShellProps) {
   const closeModal = () => setModalKey(null);
   /** Smart CTA defaults — modals with a related route navigate; others just close. */
   const handleModalAction = (key: ModalKey) => {
-    if (key === "rapport" || key === "vue360") router.push("/rapports");
+    if (key === "rapport" || key === "vue360" || key === "commodity:vue360") router.push("/rapports");
   };
   const onLogout = async () => {
     await supabase.auth.signOut();
@@ -105,6 +106,7 @@ export function AppShell({ children, mainStyle }: AppShellProps) {
           ...mainStyle,
         }}
       >
+        <WorkspaceTabs />
         {children}
       </main>
 

@@ -13,6 +13,7 @@ import { Sidebar } from "@/components/dashboard/Sidebar";
 import { CommandPalette } from "@/components/shared/CommandPalette";
 import { Sparkline } from "@/components/shared/Sparkline";
 import { FloatingDock } from "@/components/dashboard/FloatingDock";
+import { WorkspaceTabs } from "@/components/dashboard/WorkspaceTabs";
 
 const SIDEBAR_KEY = "orkestra.sidebar.collapsed";
 
@@ -301,9 +302,11 @@ function ReportCard({ report, index }: { report: Report; index: number }) {
       exit={{ opacity: 0, scale: 0.97 }}
       transition={{ duration: 0.38, delay: index * 0.04, ease: [0.22, 1, 0.36, 1] }}
       layout
+      style={{ minWidth: 0 }}
     >
       <Link
         href={`/rapports/${report.id}`}
+        className="rapport-card"
         style={{
           display: "flex",
           flexDirection: "column",
@@ -317,6 +320,7 @@ function ReportCard({ report, index }: { report: Report; index: number }) {
           transition: "transform 0.22s ease, box-shadow 0.22s ease",
           position: "relative",
           overflow: "hidden",
+          minWidth: 0,
         }}
         onMouseEnter={(e) => {
           (e.currentTarget as HTMLElement).style.transform = "translateY(-2px)";
@@ -347,15 +351,20 @@ function ReportCard({ report, index }: { report: Report; index: number }) {
             >
               <Icon size={14} strokeWidth={2} />
             </span>
-            <div style={{ minWidth: 0 }}>
-              <div style={{
-                fontSize: "0.88rem", fontWeight: 600, color: "var(--text)",
-                letterSpacing: "-0.01em", lineHeight: 1.3,
-                whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
-              }}>
+            <div style={{ minWidth: 0, flex: 1 }}>
+              <div
+                className="rapport-card__title"
+                style={{
+                  fontSize: "0.88rem", fontWeight: 600, color: "var(--text)",
+                  letterSpacing: "-0.01em", lineHeight: 1.3,
+                  overflow: "hidden", textOverflow: "ellipsis",
+                  display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical",
+                  wordBreak: "break-word",
+                }}
+              >
                 {report.title}
               </div>
-              <div style={{ fontSize: "0.72rem", color: "var(--text-4)", marginTop: "1px" }}>
+              <div style={{ fontSize: "0.72rem", color: "var(--text-4)", marginTop: "2px" }}>
                 {meta.label} · {PERIODE_LABELS[report.periode]}
               </div>
             </div>
@@ -364,21 +373,30 @@ function ReportCard({ report, index }: { report: Report; index: number }) {
         </div>
 
         {/* KPI */}
-        <div style={{ display: "flex", alignItems: "flex-end", gap: "0.65rem" }}>
-          <div>
-            <div style={{
-              fontFamily: "var(--font-mono)", fontSize: "1.75rem", fontWeight: 600,
-              letterSpacing: "-0.035em", color: "var(--text)", lineHeight: 0.95,
-              fontVariantNumeric: "tabular-nums",
-            }}>
+        <div style={{ display: "flex", alignItems: "flex-end", gap: "0.65rem", minWidth: 0 }}>
+          <div style={{ minWidth: 0 }}>
+            <div
+              className="rapport-card__kpi"
+              style={{
+                fontFamily: "var(--font-mono)", fontWeight: 600,
+                letterSpacing: "-0.035em", color: "var(--text)", lineHeight: 0.95,
+                fontVariantNumeric: "tabular-nums",
+              }}
+            >
               {report.kpi.value}
             </div>
-            <div style={{ fontSize: "0.72rem", color: "var(--text-3)", marginTop: "0.3rem" }}>
+            <div style={{
+              fontSize: "0.72rem", color: "var(--text-3)", marginTop: "0.3rem",
+              whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
+            }}>
               {report.kpi.label}
             </div>
           </div>
           {report.spark && (
-            <div style={{ flex: 1, marginBottom: "0.55rem", color: meta.color, opacity: 0.85 }}>
+            <div style={{
+              flex: 1, minWidth: 0, marginBottom: "0.55rem",
+              color: meta.color, opacity: 0.85, overflow: "hidden",
+            }}>
               <Sparkline data={report.spark} width={120} height={18} stroke="currentColor" strokeWidth={1.4} />
             </div>
           )}
@@ -395,8 +413,9 @@ function ReportCard({ report, index }: { report: Report; index: number }) {
 
         {/* Footer */}
         <div style={{
-          display: "flex", alignItems: "center", gap: "0.5rem",
-          paddingTop: "0.55rem",
+          display: "flex", alignItems: "center", flexWrap: "wrap",
+          gap: "0.35rem 0.5rem",
+          paddingTop: "0.55rem", minWidth: 0,
           background: "linear-gradient(to right, transparent, var(--border) 12%, var(--border) 88%, transparent) top / 100% 1px no-repeat",
         }}>
           <span style={{
@@ -404,6 +423,7 @@ function ReportCard({ report, index }: { report: Report; index: number }) {
             fontSize: "0.66rem", fontWeight: 700,
             color: statut.color, background: statut.bg,
             padding: "0.1rem 0.45rem", borderRadius: "5px",
+            whiteSpace: "nowrap",
           }}>
             <Circle size={4} strokeWidth={0} fill="currentColor" />
             {statut.label}
@@ -413,12 +433,17 @@ function ReportCard({ report, index }: { report: Report; index: number }) {
             fontSize: "0.66rem", fontWeight: 600,
             color: trendColor, background: trendBg,
             padding: "0.1rem 0.4rem", borderRadius: "5px",
+            whiteSpace: "nowrap",
           }}>
             <TrendIcon trend={report.kpi.trend} />
             {report.kpi.trend === "up" ? "Hausse" : report.kpi.trend === "down" ? "Baisse" : "Stable"}
           </span>
-          <span style={{ flex: 1 }} />
-          <span style={{ fontSize: "0.64rem", color: "var(--text-4)", fontWeight: 500 }}>
+          <span style={{ flex: 1, minWidth: 0 }} />
+          <span style={{
+            fontSize: "0.64rem", color: "var(--text-4)", fontWeight: 500,
+            minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+            maxWidth: "100%",
+          }}>
             {report.sources.join(" · ")}
           </span>
         </div>
@@ -428,21 +453,23 @@ function ReportCard({ report, index }: { report: Report; index: number }) {
 }
 
 function DropdownFilter<T extends string>({
-  label, value, options, onChange,
+  label, value, options, onChange, align = "left",
 }: {
   label: string;
   value: T | "all";
   options: { value: T | "all"; label: string }[];
   onChange: (v: T | "all") => void;
+  align?: "left" | "right";
 }) {
   const [open, setOpen] = useState(false);
   const active = value !== "all";
   const selectedLabel = options.find((o) => o.value === value)?.label ?? label;
 
   return (
-    <div style={{ position: "relative" }}>
+    <div style={{ position: "relative" }} className="rapport-dropdown">
       <button
         onClick={() => setOpen((o) => !o)}
+        className="rapport-filter-btn"
         style={{
           display: "inline-flex", alignItems: "center", gap: "0.4rem",
           padding: "0.45rem 0.75rem",
@@ -476,10 +503,15 @@ function DropdownFilter<T extends string>({
             exit={{ opacity: 0, y: 4, scale: 0.97 }}
             transition={{ duration: 0.15 }}
             style={{
-              position: "absolute", top: "calc(100% + 6px)", left: 0, zIndex: 100,
+              position: "absolute", top: "calc(100% + 6px)",
+              ...(align === "right" ? { right: 0 } : { left: 0 }),
+              zIndex: 100,
               background: "var(--surface)", border: "1px solid var(--border)",
               borderRadius: "12px", boxShadow: "var(--tier-2)",
-              minWidth: "180px", overflow: "hidden", padding: "0.3rem",
+              minWidth: "180px",
+              maxWidth: "min(260px, calc(100vw - 32px))",
+              maxHeight: "min(60vh, 320px)",
+              overflowY: "auto", padding: "0.3rem",
             }}
           >
             {options.map((opt) => (
@@ -601,11 +633,12 @@ export default function RapportsPage() {
         onOpenPalette={() => setPaletteOpen(true)}
       />
 
-      <main className="app-main" style={{
+      <main className="app-main rapports-main" style={{
         flex: 1, minWidth: 0,
-        padding: "clamp(2rem, 4vw, 3rem) clamp(1.5rem, 3vw, 2.5rem) 4rem",
+        padding: "clamp(1.5rem, 4vw, 3rem) clamp(1rem, 3vw, 2.5rem) 4rem",
         maxWidth: "1240px", marginInline: "auto", width: "100%",
       }}>
+        <WorkspaceTabs />
         {/* Page header */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
@@ -613,11 +646,11 @@ export default function RapportsPage() {
           transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
           style={{ marginBottom: "2rem" }}
         >
-          <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: "1rem", flexWrap: "wrap" }}>
-            <div>
+          <div className="rapports-header-row">
+            <div style={{ minWidth: 0, flex: 1 }}>
               <div style={{ display: "flex", alignItems: "center", gap: "0.55rem", marginBottom: "0.3rem" }}>
                 <span style={{
-                  width: 32, height: 32,
+                  width: 32, height: 32, flexShrink: 0,
                   background: "var(--accent-tint)", color: "var(--accent)",
                   borderRadius: "9px", display: "flex", alignItems: "center", justifyContent: "center",
                   boxShadow: "inset 0 1px 0 rgba(255,255,255,0.6)",
@@ -625,13 +658,16 @@ export default function RapportsPage() {
                   <BarChart3 size={16} strokeWidth={2} />
                 </span>
                 <h1 style={{
-                  fontSize: "clamp(1.6rem, 2.8vw, 2rem)", fontWeight: 600,
+                  fontSize: "clamp(1.35rem, 4.5vw, 2rem)", fontWeight: 600,
                   letterSpacing: "-0.025em", color: "var(--text)", margin: 0,
+                  minWidth: 0,
                 }}>
                   Tous les rapports
                 </h1>
               </div>
-              <p style={{ fontSize: "0.9rem", color: "var(--text-3)", margin: 0 }}>
+              <p style={{
+                fontSize: "clamp(0.82rem, 2.4vw, 0.9rem)", color: "var(--text-3)", margin: 0,
+              }}>
                 {REPORTS.length}{" "}rapports disponibles · Helvebroker
               </p>
             </div>
@@ -639,19 +675,23 @@ export default function RapportsPage() {
             {activeFilterCount > 0 && (
               <button
                 onClick={clearAll}
+                className="rapport-reset-btn"
+                aria-label={`Réinitialiser ${activeFilterCount} filtre${activeFilterCount > 1 ? "s" : ""}`}
                 style={{
                   display: "inline-flex", alignItems: "center", gap: "0.35rem",
-                  padding: "0.45rem 0.85rem",
+                  padding: "0.5rem 0.85rem",
                   background: "var(--surface)", border: "1px solid var(--border)",
                   borderRadius: "9px", cursor: "pointer", fontFamily: "inherit",
                   fontSize: "0.8rem", fontWeight: 500, color: "var(--text-3)",
                   boxShadow: "var(--tier-1)", transition: "color 0.18s",
+                  whiteSpace: "nowrap", flexShrink: 0,
                 }}
                 onMouseEnter={(e) => (e.currentTarget.style.color = "var(--danger)")}
                 onMouseLeave={(e) => (e.currentTarget.style.color = "var(--text-3)")}
               >
                 <X size={12} strokeWidth={2.5} />
-                Réinitialiser les filtres
+                <span className="rapport-reset-btn__full">Réinitialiser les filtres</span>
+                <span className="rapport-reset-btn__short">Réinitialiser</span>
                 <span style={{
                   minWidth: 18, height: 18, padding: "0 4px",
                   background: "var(--accent)", color: "#fff",
@@ -689,8 +729,10 @@ export default function RapportsPage() {
               placeholder="Rechercher un rapport…"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
+              className="rapport-search-input"
+              aria-label="Rechercher un rapport"
               style={{
-                width: "100%", padding: "0.6rem 2.5rem 0.6rem 2.4rem",
+                width: "100%", padding: "0.65rem 2.5rem 0.65rem 2.4rem",
                 background: "var(--surface)", border: "1px solid var(--border)",
                 borderRadius: "11px", fontFamily: "inherit", fontSize: "0.88rem",
                 color: "var(--text)", outline: "none", boxShadow: "var(--tier-1)",
@@ -708,33 +750,36 @@ export default function RapportsPage() {
             {search && (
               <button
                 onClick={() => setSearch("")}
+                aria-label="Effacer la recherche"
                 style={{
-                  position: "absolute", right: "0.7rem", top: "50%",
+                  position: "absolute", right: "0.4rem", top: "50%",
                   transform: "translateY(-50%)", background: "none", border: "none",
-                  color: "var(--text-4)", cursor: "pointer", display: "flex", padding: "2px",
+                  color: "var(--text-4)", cursor: "pointer",
+                  display: "inline-flex", alignItems: "center", justifyContent: "center",
+                  width: 28, height: 28, borderRadius: 6,
                 }}
               >
-                <X size={13} strokeWidth={2.5} />
+                <X size={14} strokeWidth={2.5} />
               </button>
             )}
           </div>
 
           {/* Filter bar */}
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", alignItems: "center" }}>
-            <span style={{
-              display: "inline-flex", alignItems: "center", gap: "0.3rem",
-              fontSize: "0.76rem", color: "var(--text-4)", fontWeight: 500, paddingRight: "0.25rem",
-            }}>
+          <div className="rapports-filterbar">
+            <div className="rapports-filterbar__label">
               <SlidersHorizontal size={12} strokeWidth={2} />
-              Filtrer
-            </span>
+              <span>Filtrer</span>
+            </div>
 
-            {/* Métier pills */}
-            <div style={{ display: "flex", gap: "0.3rem", flexWrap: "wrap" }}>
+            {/* Métier pills — horizontal scroll on narrow viewports */}
+            <div className="rapports-metiers" role="tablist" aria-label="Métier">
               {METIERS.map((m) => (
                 <button
                   key={m.value}
                   onClick={() => setMetierFilter(m.value as Metier | "all")}
+                  className="rapport-filter-btn rapport-metier-pill"
+                  role="tab"
+                  aria-selected={metierFilter === m.value}
                   style={{
                     padding: "0.38rem 0.7rem",
                     background: metierFilter === m.value ? "var(--accent)" : "var(--surface)",
@@ -744,6 +789,8 @@ export default function RapportsPage() {
                     color: metierFilter === m.value ? "#fff" : "var(--text-2)",
                     boxShadow: metierFilter === m.value ? "none" : "var(--tier-1)",
                     transition: "all 0.18s",
+                    whiteSpace: "nowrap",
+                    flexShrink: 0,
                   }}
                 >
                   {m.value === "all" ? "Tous" : m.label}
@@ -751,11 +798,13 @@ export default function RapportsPage() {
               ))}
             </div>
 
-            <div style={{ width: "1px", height: "24px", background: "var(--border)" }} />
+            <div className="rapports-filterbar__divider" aria-hidden />
 
-            <DropdownFilter label="Branche" value={brancheFilter} options={BRANCHES} onChange={setBrancheFilter} />
-            <DropdownFilter label="Période" value={periodeFilter} options={PERIODES} onChange={setPeriodeFilter} />
-            <DropdownFilter label="Statut" value={statutFilter} options={STATUTS} onChange={setstatutFilter} />
+            <div className="rapports-dropdowns">
+              <DropdownFilter label="Branche" value={brancheFilter} options={BRANCHES} onChange={setBrancheFilter} />
+              <DropdownFilter label="Période" value={periodeFilter} options={PERIODES} onChange={setPeriodeFilter} />
+              <DropdownFilter label="Statut" value={statutFilter} options={STATUTS} onChange={setstatutFilter} align="right" />
+            </div>
           </div>
         </motion.div>
 
@@ -776,7 +825,7 @@ export default function RapportsPage() {
               key="grid"
               style={{
                 display: "grid",
-                gridTemplateColumns: "repeat(3, 1fr)",
+                gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
                 gap: "0.85rem",
               }}
               className="rapports-grid"
@@ -827,8 +876,121 @@ export default function RapportsPage() {
         </AnimatePresence>
 
         <style>{`
-          @media (max-width: 1100px) { .rapports-grid { grid-template-columns: repeat(2, 1fr) !important; } }
-          @media (max-width: 600px)  { .rapports-grid { grid-template-columns: 1fr !important; } }
+          /* ── Rapports — page header row ────────────────────────────────────── */
+          .rapports-header-row {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 0.75rem 1rem;
+            flex-wrap: wrap;
+          }
+          .rapport-reset-btn__short { display: none; }
+          @media (max-width: 480px) {
+            .rapports-header-row { align-items: flex-start; }
+            .rapport-reset-btn__full { display: none; }
+            .rapport-reset-btn__short { display: inline; }
+          }
+
+          /* ── Rapports — KPI value (responsive font-size) ───────────────────── */
+          .rapport-card__kpi {
+            font-size: clamp(1.4rem, 4.5vw, 1.75rem);
+          }
+          /* The title block — clamp to two lines, allow long words to break */
+          .rapport-card__title {
+            word-break: break-word;
+            overflow-wrap: anywhere;
+          }
+
+          /* ── Rapports — card grid breakpoints ──────────────────────────────── */
+          @media (max-width: 1100px) {
+            .rapports-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+          }
+          @media (max-width: 600px) {
+            .rapports-grid { grid-template-columns: minmax(0, 1fr) !important; gap: 0.7rem !important; }
+          }
+
+          /* ── Rapports — filter bar layout ─────────────────────────────────── */
+          .rapports-filterbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            align-items: center;
+            min-width: 0;
+          }
+          .rapports-filterbar__label {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            font-size: 0.76rem;
+            color: var(--text-4);
+            font-weight: 500;
+            padding-right: 0.25rem;
+            flex-shrink: 0;
+          }
+          .rapports-filterbar__divider {
+            width: 1px;
+            height: 24px;
+            background: var(--border);
+            flex-shrink: 0;
+          }
+          .rapports-metiers {
+            display: flex;
+            gap: 0.3rem;
+            flex-wrap: wrap;
+            min-width: 0;
+          }
+          .rapports-dropdowns {
+            display: flex;
+            gap: 0.4rem;
+            flex-wrap: wrap;
+            min-width: 0;
+          }
+
+          /* Tablet (≤900px) — Métier pills become a horizontal scroll strip so
+             they always stay on one row and can't squeeze the dropdowns. */
+          @media (max-width: 900px) {
+            .rapports-filterbar { gap: 0.55rem; }
+            .rapports-metiers {
+              flex-wrap: nowrap;
+              overflow-x: auto;
+              overflow-y: hidden;
+              scrollbar-width: none;
+              -ms-overflow-style: none;
+              padding-bottom: 2px;
+              width: 100%;
+              order: 2;
+              mask-image: linear-gradient(90deg, #000 calc(100% - 14px), transparent);
+              -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 14px), transparent);
+            }
+            .rapports-metiers::-webkit-scrollbar { display: none; }
+            .rapports-filterbar__label { order: 1; }
+            .rapports-filterbar__divider { display: none; }
+            .rapports-dropdowns { order: 3; width: 100%; }
+          }
+
+          /* Mobile (≤600px) — drop the "Filtrer" eyebrow, stretch dropdowns so
+             three side-by-side don't overflow at 320px (≈98px each + gap). */
+          @media (max-width: 600px) {
+            .rapports-filterbar__label { display: none; }
+            .rapports-dropdowns { gap: 0.35rem; }
+            .rapport-dropdown { flex: 1 1 30%; min-width: 0; }
+            .rapport-filter-btn { width: 100%; justify-content: space-between; }
+            .rapport-metier-pill { width: auto; justify-content: center; }
+          }
+
+          /* Touch target floor (≥44px) on mobile per Apple HIG / WCAG. */
+          @media (max-width: 720px) {
+            .rapport-filter-btn,
+            .rapport-search-input {
+              min-height: 44px;
+            }
+            .rapport-search-input {
+              font-size: 16px;
+            }
+          }
+          @media (hover: none) {
+            .rapport-filter-btn { min-height: 44px; }
+          }
         `}</style>
       </main>
 

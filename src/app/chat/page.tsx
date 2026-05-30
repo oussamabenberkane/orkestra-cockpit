@@ -200,11 +200,16 @@ const SIDEBAR_COLLAPSED_KEY = "orkestra.agent-test.sidebar-collapsed.v1";
 // carries across routes.
 const APP_SIDEBAR_KEY = "orkestra.sidebar.collapsed";
 
-// Below this width both sidebars become overlay drawers and the chat history
-// rail defaults to closed on first visit. Matches /dashboard's mobile
-// breakpoint so the two rails feel consistent across routes. Keep this in
-// sync with the @media (max-width: 720px) blocks at the bottom of the file.
-const SIDEBAR_BREAKPOINT = 720;
+// Below this width the right history rail becomes an overlay drawer (slides
+// over the main column instead of taking layout width). Set wider than the
+// /dashboard breakpoint because the chat column needs more horizontal room
+// for messages — squeezing a docked 256–288px rail in alongside it on
+// 1024–1224px viewports leaves the conversation too narrow. The shared left
+// app sidebar keeps its own 720 breakpoint (hardcoded in
+// components/dashboard/Sidebar.tsx), so on 720–1223px viewports the left
+// stays docked while the right behaves as a drawer. Keep this value in sync
+// with the .agent-sidebar @media block at the bottom of the file.
+const SIDEBAR_BREAKPOINT = 1224;
 
 // French label shown in the live activity indicator while a tool is
 // running. Falls back to the raw tool name if a label isn't mapped.
@@ -298,11 +303,21 @@ export default function AgentTestPage() {
   // so it can't clobber saved data with the default state before rehydration.
   const [hydrated, setHydrated] = useState(false);
   // Tracks whether the layout breakpoint considers us "mobile" (drawer mode).
-  // Updated on resize so the sidebar render mode reacts live.
+  // Updated on resize so the sidebar render mode reacts live. Threshold
+  // matches SIDEBAR_BREAKPOINT (1224), so tablets share the drawer UX.
   const [isMobileLayout, setIsMobileLayout] = useState(false);
+  // Phone-form-factor flag (≤720) — only flips MemoryDrawer's slide direction
+  // to bottom-sheet. The right history rail uses the wider isMobileLayout
+  // above; the memory drawer keeps the narrower threshold because a bottom
+  // sheet on a 1024-wide tablet would be awkward.
+  const [isPhoneLayout, setIsPhoneLayout] = useState(false);
   // True only while the user is scrolled away from the bottom of the message
   // list. Drives the "scroll to bottom" pill and pauses autoscroll on stream.
   const [showScrollBottom, setShowScrollBottom] = useState(false);
+  // Live composer height — used to position the scroll-to-bottom pill exactly
+  // above the composer regardless of breakpoint or autogrow state. Static CSS
+  // offsets were fragile when the textarea grew. Default ≈ resting composer.
+  const [composerHeight, setComposerHeight] = useState(160);
   // Memory has graduated out of the sidebar into its own on-demand drawer
   // (right side on desktop, bottom sheet on mobile). The TopBar pill toggles
   // it; the dialog handlers below still drive create/edit independently.
@@ -432,6 +447,18 @@ export default function AgentTestPage() {
     return () => mql.removeEventListener("change", sync);
   }, []);
 
+  // Phone-only matchMedia for the MemoryDrawer's bottom-sheet behavior.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const mql = window.matchMedia("(max-width: 719px)");
+    const sync = (e: MediaQueryListEvent | MediaQueryList) => {
+      setIsPhoneLayout(e.matches);
+    };
+    sync(mql);
+    mql.addEventListener("change", sync);
+    return () => mql.removeEventListener("change", sync);
+  }, []);
+
   // Resolve the correct store (Supabase when authenticated, localStorage
   // otherwise) then load the initial memory list.
   useEffect(() => {
@@ -488,13 +515,124 @@ export default function AgentTestPage() {
     return () => el.removeEventListener("scroll", onScroll);
   }, [activeId]);
 
-  // autogrow textarea
+  // Autogrow textarea.
+  //   Empty:  leave `height` unset so CSS `min-height` (88px ≤1024, 90px
+  //           desktop) is the single source of truth — kills the "tall on
+  //           load" first-paint flash.
+  //   Typed:  clamp the inline height to [min, cap], where `min` mirrors
+  //           the CSS baseline. Without this floor, some browsers report
+  //           `scrollHeight` as the bare content height (~30px for one
+  //           character), the inline `height` wins the layout pass before
+  //           the CSS `min-height` kicks back in, and the field visibly
+  //           shrinks on the first keystroke. Mirrors fix on every
+  //           breakpoint so desktop, tablet, and phone all stay stable.
   useEffect(() => {
     const ta = textareaRef.current;
     if (!ta) return;
+    if (!input) {
+      ta.style.height = "";
+      return;
+    }
+    const compact =
+      typeof window !== "undefined" &&
+      window.matchMedia("(max-width: 1024px)").matches;
+    const min = compact ? 88 : 90;
+    const cap = compact ? 200 : 340;
     ta.style.height = "auto";
-    ta.style.height = Math.min(ta.scrollHeight, 340) + "px";
+    ta.style.height = `${Math.max(min, Math.min(ta.scrollHeight, cap))}px`;
   }, [input]);
+
+  // iOS Safari: when the on-screen keyboard opens, the layout viewport stays
+  // at 100dvh but the *visible* viewport shrinks. Without this, the composer
+  // gets pushed under the keyboard and dismissing it leaves a grey gap at the
+  // bottom while the page settles. Pinning .agent-root to visualViewport
+  // keeps the shell glued to whatever the user can actually see.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const root = document.querySelector(".agent-root") as HTMLElement | null;
+    if (!root) return;
+    const sync = () => {
+      root.style.height = `${vv.height}px`;
+    };
+    sync();
+    vv.addEventListener("resize", sync);
+    vv.addEventListener("scroll", sync);
+    return () => {
+      vv.removeEventListener("resize", sync);
+      vv.removeEventListener("scroll", sync);
+      root.style.height = "";
+    };
+  }, []);
+
+  // Lock the document while /chat is mounted. iOS Safari's default focus-
+  // into-view scrolls the WHOLE document up when the keyboard opens — even
+  // though .agent-root is overflow:hidden, html/body still are not, so the
+  // user can swipe up and watch the composer slide above the visible area.
+  // Pinning html/body to viewport height with overflow:hidden eliminates
+  // that escape hatch: only .agent-scroll (the message list) can scroll,
+  // and the composer stays anchored above the keyboard.
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    const html = document.documentElement;
+    const body = document.body;
+    const prev = {
+      htmlOverflow: html.style.overflow,
+      htmlHeight: html.style.height,
+      bodyOverflow: body.style.overflow,
+      bodyHeight: body.style.height,
+      bodyOverscroll: body.style.overscrollBehavior,
+    };
+    html.style.overflow = "hidden";
+    html.style.height = "100%";
+    body.style.overflow = "hidden";
+    body.style.height = "100%";
+    body.style.overscrollBehavior = "none";
+    return () => {
+      html.style.overflow = prev.htmlOverflow;
+      html.style.height = prev.htmlHeight;
+      body.style.overflow = prev.bodyOverflow;
+      body.style.height = prev.bodyHeight;
+      body.style.overscrollBehavior = prev.bodyOverscroll;
+    };
+  }, []);
+
+  // Track the composer wrap's live height so the scroll-to-bottom pill can
+  // sit exactly above it regardless of breakpoint, autogrow state, or
+  // safe-area insets. ResizeObserver fires on every height change — textarea
+  // typing, viewport rotation, address-bar collapse all flow through.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const el = document.querySelector(
+      ".agent-composer-wrap",
+    ) as HTMLElement | null;
+    if (!el) return;
+    const update = () => setComposerHeight(el.offsetHeight);
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  // When the textarea is focused (keyboard opens on mobile), nudge the
+  // message list to its latest turn. Otherwise the visualViewport contraction
+  // would leave the user looking at the middle of the conversation instead of
+  // the answer they just sent. Runs once per focus, after a tick so the
+  // viewport has had time to settle.
+  useEffect(() => {
+    const ta = textareaRef.current;
+    if (!ta) return;
+    const onFocus = () => {
+      window.setTimeout(() => {
+        const el = scrollRef.current;
+        if (!el) return;
+        el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
+      }, 220);
+    };
+    ta.addEventListener("focus", onFocus);
+    return () => ta.removeEventListener("focus", onFocus);
+  }, []);
 
   // /chat-local memory observers: after a stream resolves, the
   // AgentConversationProvider may have drained save_memory proposals into the
@@ -754,6 +892,7 @@ export default function AgentTestPage() {
             {showScrollBottom && (
               <motion.button
                 key="scroll-to-bottom"
+                className="agent-scroll-to-bottom"
                 initial={{ opacity: 0, y: 8, scale: 0.92 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: 8, scale: 0.92 }}
@@ -767,7 +906,11 @@ export default function AgentTestPage() {
                 title="Revenir au dernier message"
                 style={{
                   position: "absolute",
-                  bottom: "calc(env(safe-area-inset-bottom, 0px) + 92px)",
+                  /* Anchored 12px above the composer's measured top edge.
+                   * `composerHeight` already includes its safe-area padding,
+                   * so this offset works for every breakpoint and tracks the
+                   * autogrow textarea live via ResizeObserver. */
+                  bottom: `${composerHeight + 12}px`,
                   right: "clamp(1rem, 3vw, 2rem)",
                   width: 36,
                   height: 36,
@@ -835,7 +978,7 @@ export default function AgentTestPage() {
           <MemoryDrawer
             key="memory-drawer"
             memories={memories}
-            isMobile={isMobileLayout}
+            isMobile={isPhoneLayout}
             onClose={() => setMemoryDrawerOpen(false)}
             onReplaySavedView={(m) => {
               setMemoryDrawerOpen(false);
@@ -889,22 +1032,25 @@ export default function AgentTestPage() {
       </AnimatePresence>
 
       <style>{`
-        /* History rail width responds to viewport — narrower on tablet, full
-           drawer width on mobile so the touch targets stay comfortable. */
+        /* History rail width — docked at >1223 uses 288px; drawer at ≤1223
+           uses a touch-friendly width capped so it doesn't dominate the
+           viewport. The wider drawer breakpoint matches SIDEBAR_BREAKPOINT
+           above (chat column would be too narrow with a docked rail on
+           1024–1224 tablets). */
         :root, .agent-root { --agent-sidebar-w: 288px; }
-        @media (max-width: 1100px) {
-          .agent-root { --agent-sidebar-w: 256px; }
+        @media (max-width: 1223px) {
+          .agent-root { --agent-sidebar-w: min(86vw, 360px); }
         }
         @media (max-width: 720px) {
           .agent-root { --agent-sidebar-w: min(86vw, 320px); }
         }
 
-        /* Mobile drawer — pins to the right edge so it slides in opposite the
-           shared app sidebar on the left. Scrim catches taps outside the
-           drawer; one-at-a-time coordination with the app sidebar happens via
-           the orkestra:close-sidebars custom event. */
+        /* Overlay drawer (≤1223) — pins to the right edge so it slides in
+           opposite the shared app sidebar on the left. Scrim catches taps
+           outside the drawer; one-at-a-time coordination with the app
+           sidebar happens via the orkestra:close-sidebars custom event. */
         .agent-sidebar-scrim { display: none; }
-        @media (max-width: 720px) {
+        @media (max-width: 1223px) {
           .agent-sidebar {
             position: fixed !important;
             top: 0;
@@ -912,8 +1058,8 @@ export default function AgentTestPage() {
             right: 0;
             z-index: 50;
             box-shadow: -8px 0 32px rgba(0,0,0,0.16);
-            /* Mobile drawer always uses the full var width regardless of the
-             * desktop "collapsed" preference. The slim rail is hidden below. */
+            /* Drawer always uses the full var width regardless of the desktop
+             * "collapsed" preference. The slim rail is hidden below. */
             width: var(--agent-sidebar-w, 320px) !important;
             /* Slide-in/out animation tied to data-open. Without this rule the
              * drawer is fixed:right:0 with no visibility binding, so clicking
@@ -940,26 +1086,26 @@ export default function AgentTestPage() {
             -webkit-backdrop-filter: blur(2px);
             z-index: 49;
           }
-          /* Slim rail is desktop-only. On mobile the drawer renders the full
-           * content directly. */
+          /* Slim rail is docked-mode-only. In drawer mode the panel renders
+           * its full content directly. */
           .agent-sidebar-rail { display: none !important; }
           .agent-sidebar-content { display: flex !important; }
         }
 
-        /* Desktop collapse mode — slim icon rail only, full content hidden.
-         * !important is required because the rail and content elements set
-         * display:flex inline; that wins over a regular CSS rule even
-         * inside a media query. */
-        @media (min-width: 721px) {
+        /* Docked collapse mode (>1223) — slim icon rail only, full content
+         * hidden. !important is required because the rail and content
+         * elements set display:flex inline; that wins over a regular CSS
+         * rule even inside a media query. */
+        @media (min-width: 1224px) {
           .agent-sidebar[data-collapsed="true"] .agent-sidebar-content {
             display: none !important;
           }
           .agent-sidebar[data-collapsed="false"] .agent-sidebar-rail {
             display: none !important;
           }
-          /* Topbar's history toggle is desktop-redundant once the sidebar
-           * carries its own collapse/expand chevron. Keep it for the mobile
-           * drawer where the panel itself is hidden when closed. */
+          /* Topbar's history toggle is docked-mode-redundant once the
+           * sidebar carries its own collapse/expand chevron. Keep it for
+           * the drawer mode where the panel itself is hidden when closed. */
           .agent-topbar-history-toggle { display: none !important; }
         }
 
@@ -1017,9 +1163,59 @@ export default function AgentTestPage() {
         textarea.agent-input { min-height: 90px; }
         textarea.agent-input::placeholder { color: ${T.text4}; }
         textarea.agent-input:disabled { cursor: not-allowed; opacity: 0.6; }
-        /* Hide the textarea scrollbar — pairs with scrollbarWidth: "none" in
-         * the inline style. Scrolling still works; the bar just doesn't render. */
-        textarea.agent-input::-webkit-scrollbar { display: none; }
+        /* Thin primary-accent scrollbar — only visible once content exceeds
+         * the textarea's max-height. Firefox uses scrollbar-width/-color;
+         * WebKit/Chromium gets the explicit ::-webkit-scrollbar rules.
+         *
+         * Clipping note: .agent-composer carries the visible rounded border
+         * (radius 16px) but no overflow clip, so the textarea's scrollbar
+         * was rendering into the curved corner. The 'overflow: hidden' below
+         * makes the rounded shape an actual mask — anything that lands in
+         * the corner now gets clipped cleanly instead of looking sliced.
+         *
+         * The thumb's transparent border (with background-clip: content-box)
+         * insets the visible bar ~3px from the right edge so it sits inside
+         * the curve. The 16px top/bottom track margin keeps the thumb out of
+         * the curved corner area entirely, so even with the up/down buttons
+         * fully removed there's no visual collision. */
+        .agent-composer { overflow: hidden; }
+        textarea.agent-input {
+          scrollbar-width: thin;
+          scrollbar-color: var(--accent) transparent;
+        }
+        textarea.agent-input::-webkit-scrollbar { width: 10px; }
+        textarea.agent-input::-webkit-scrollbar-track {
+          background: transparent;
+          margin: 12px 0;
+        }
+        textarea.agent-input::-webkit-scrollbar-thumb {
+          background: var(--accent);
+          border-radius: 999px;
+          border: 3px solid transparent;
+          background-clip: content-box;
+        }
+        textarea.agent-input::-webkit-scrollbar-thumb:hover {
+          background: var(--accent-2);
+          background-clip: content-box;
+        }
+        /* Kill the up/down arrow buttons in every shape Chromium hands them
+         * out (single-button, double-button, start/end, increment/decrement).
+         * One bare ::-webkit-scrollbar-button rule isn't always enough on
+         * Windows builds — the slot is still reserved unless every variant
+         * is zeroed out. */
+        textarea.agent-input::-webkit-scrollbar-button,
+        textarea.agent-input::-webkit-scrollbar-button:single-button,
+        textarea.agent-input::-webkit-scrollbar-button:vertical:start:decrement,
+        textarea.agent-input::-webkit-scrollbar-button:vertical:start:increment,
+        textarea.agent-input::-webkit-scrollbar-button:vertical:end:decrement,
+        textarea.agent-input::-webkit-scrollbar-button:vertical:end:increment {
+          display: none !important;
+          width: 0 !important;
+          height: 0 !important;
+          -webkit-appearance: none !important;
+          appearance: none !important;
+          background: transparent !important;
+        }
 
         /* Hide the keyboard hint on narrow screens — the kbd glyphs aren't
            useful on touch devices that don't have a real Enter key. */
@@ -1042,18 +1238,44 @@ export default function AgentTestPage() {
         @media (max-width: 720px) {
           /* Remove min-height:100vh which on iOS Safari (address bar visible)
            * is larger than the dynamic viewport, pushing the composer off-screen.
-           * height:100dvh (inline) correctly tracks the visible area. */
-          .agent-root { min-height: 0 !important; }
+           * height:100dvh (inline) correctly tracks the visible area.
+           *
+           * Also lock the column + main so only .agent-scroll can scroll. Without
+           * this, iOS Safari's focus-into-view scrolls the whole agent-column
+           * past the viewport when the keyboard opens, pushing the composer
+           * out of view and leaving a grey strip behind when it closes. The
+           * visualViewport effect (in the page component) keeps .agent-root
+           * pinned to the visible viewport; these rules make sure nothing
+           * between it and .agent-scroll can scroll the layout up. */
+          .agent-root {
+            min-height: 0 !important;
+            overflow: hidden !important;
+          }
+          .agent-column {
+            overflow: hidden !important;
+            min-height: 0 !important;
+          }
+          .agent-column > main {
+            overflow: hidden !important;
+            min-height: 0 !important;
+          }
+          .agent-scroll {
+            overscroll-behavior: contain !important;
+            -webkit-overflow-scrolling: touch;
+          }
           .agent-topbar {
             min-height: 0 !important;
             padding-top: 0 !important;
             padding-bottom: 0 !important;
             border-bottom-color: transparent !important;
           }
-          /* Scroll container — minimal breathing space, no bottom gap. */
+          /* Scroll container — minimal top space, plus a subtle ~10px gap
+           * at the bottom so long conversations don't have their last bubble
+           * touching the composer. Small enough that it doesn't reflow short
+           * threads. */
           .agent-scroll {
             padding-top: 0.65rem !important;
-            padding-bottom: 0.1rem !important;
+            padding-bottom: 0.65rem !important;
           }
           /* Welcome itself — no extra top space. */
           .agent-welcome { padding-top: 0 !important; }
@@ -1073,9 +1295,13 @@ export default function AgentTestPage() {
             gap: 0.45rem !important;
           }
           .agent-welcome-grid > button {
-            aspect-ratio: 1 / 1;
-            min-height: 0 !important;
-            padding: 0.5rem 0.4rem !important;
+            /* Size cards to their content (icon + 2-line title slot) instead
+             * of forcing a square. At 400–720px the column width balloons
+             * past 130px, which made aspect-ratio:1/1 produce 130–220px-tall
+             * squares with mostly empty space. A fixed min-height keeps the
+             * row uniform without stretching with the viewport. */
+            min-height: 96px !important;
+            padding: 0.6rem 0.4rem !important;
             border-radius: 12px !important;
             display: flex !important;
             flex-direction: column !important;
@@ -1138,6 +1364,29 @@ export default function AgentTestPage() {
           .agent-welcome-helper { display: none !important; }
         }
 
+        /* ─── Composer: tablet + mobile single-row pill (≤1024px) ───
+         * iPad portrait sits between 768 and 1024px; the old layout left it
+         * on the desktop two-row composer which felt oversized. This block
+         * brings the 44px pill all the way up to the iPad-Pro-portrait edge,
+         * matching the .dashboard-hero / .kpi-strip-compact breakpoint
+         * convention used elsewhere in the app. The narrower 720px block
+         * below overrides this with phone-specific button geometry. */
+        @media (max-width: 1024px) {
+          textarea.agent-input {
+            font-size: 16px !important;     /* prevent iOS auto-zoom on focus */
+            /* Two-row baseline (~88px). With the buttons now in their own
+             * row beneath the textarea (.agent-composer-actions), the
+             * textarea is back to symmetric horizontal padding — text uses
+             * the full width without wrapping around button hit-boxes. */
+            min-height: 88px !important;
+            line-height: 1.4 !important;
+            padding: 0.7rem 1rem 0.55rem 1rem !important;
+            max-height: 200px !important;
+          }
+          .agent-composer { border-radius: 12px !important; }
+          .agent-composer-meta { display: none !important; }
+        }
+
         /* ─── Composer: standard mobile single-row pill ───
          * Target: ~44px card height (= Apple HIG / Material touch target
          * floor and the dominant mobile-chat-input pattern in ChatGPT,
@@ -1155,40 +1404,38 @@ export default function AgentTestPage() {
            * comfortably inside. */
           textarea.agent-input {
             font-size: 16px !important;
-            min-height: 42px !important;
+            /* Phone matches the tablet baseline — both rely on the new
+             * actions row below the textarea for the buttons, so the
+             * textarea is plain symmetric padding now. */
+            min-height: 88px !important;
             line-height: 1.4 !important;
-            padding: 0.42rem 2.85rem 0.42rem 0.95rem !important;
-            max-height: 140px !important;
+            padding: 0.65rem 1rem 0.5rem 1rem !important;
+            max-height: 180px !important;
+            /* Hide the scrollbar entirely on phone — touch scroll handles
+             * the overflow naturally, and the rendered scrollbar (plus its
+             * end-cap buttons) was too visually noisy at this width.
+             * Content still scrolls; only the chrome is gone. */
+            scrollbar-width: none !important;
           }
-          .agent-composer { border-radius: 22px !important; }
+          textarea.agent-input::-webkit-scrollbar {
+            display: none !important;
+            width: 0 !important;
+            height: 0 !important;
+          }
+          .agent-composer { border-radius: 12px !important; }
           /* No top gap between grid and composer; safe-area handles bottom. */
           .agent-composer-wrap {
             padding: 0.08rem 0.7rem calc(0.45rem + env(safe-area-inset-bottom, 0px)) !important;
           }
           .agent-composer-meta { display: none !important; }
-          /* Action buttons — 32×32, anchored to bottom:4px so they sit
-           * inside the ~35px card with 3px clearance on each side. */
+          /* Action buttons — 32×32 in the dedicated actions row below the
+           * textarea. No right/bottom needed since they're flex children. */
           .agent-composer-send,
-          .agent-composer-stop {
-            width: 32px !important;
-            height: 32px !important;
-            right: 6px !important;
-            bottom: 4px !important;
-            border-radius: 9px !important;
-          }
+          .agent-composer-stop,
           .agent-composer-mic {
             width: 32px !important;
             height: 32px !important;
-            right: 44px !important;
-            bottom: 4px !important;
             border-radius: 9px !important;
-          }
-        }
-        /* Slightly narrower tap region on the smallest devices — mic shifts
-         * left to give the send button breathing room from the screen edge. */
-        @media (max-width: 380px) {
-          textarea.agent-input {
-            padding-right: 2.55rem !important;
           }
         }
 
@@ -1810,6 +2057,7 @@ function Sidebar({
                 onClick={onToggle}
                 aria-label="Replier le panneau"
                 title="Replier le panneau"
+                className="rail-on-white"
                 style={{
                   width: 40,
                   height: 40,
@@ -1911,7 +2159,7 @@ function Sidebar({
             {/* ─── Search card (tier-1 elevation, accent-tint focus ring) ─── */}
             <div style={{ padding: "0.1rem 0.5rem 0.65rem" }}>
               <div
-                className="agent-conv-search"
+                className="agent-conv-search rail-on-white"
                 style={{
                   position: "relative",
                   display: "flex",
@@ -2288,7 +2536,10 @@ function ConvRow({
     <div
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
-      className={`agent-conv-row${active ? " is-active" : ""}`}
+      /* When active, the row becomes a white card on the (cobalt) rail —
+       * rail-on-white resets text/nav tokens to dark variants so the title
+       * and icon remain legible. No-op in light-sidebar palettes. */
+      className={`agent-conv-row${active ? " is-active rail-on-white" : ""}`}
       style={{
         position: "relative",
         display: "grid",
@@ -2423,16 +2674,20 @@ function UsageFooter({ datasetLabel }: { datasetLabel: string | null }) {
         borderTop: "1px solid var(--border)",
       }}
     >
-      {/* Quota card */}
-      <div style={{
-        display: "flex",
-        flexDirection: "column",
-        gap: "0.4rem",
-        padding: "0.6rem 0.7rem 0.65rem",
-        background: "var(--surface)",
-        borderRadius: 9,
-        boxShadow: "var(--tier-1)",
-      }}>
+      {/* Quota card — white card on the (cobalt) rail, rail-on-white
+       * resets text tokens for legibility. */}
+      <div
+        className="rail-on-white"
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          gap: "0.4rem",
+          padding: "0.6rem 0.7rem 0.65rem",
+          background: "var(--surface)",
+          borderRadius: 9,
+          boxShadow: "var(--tier-1)",
+        }}
+      >
         <div style={{
           display: "flex",
           alignItems: "baseline",
@@ -2476,17 +2731,20 @@ function UsageFooter({ datasetLabel }: { datasetLabel: string | null }) {
         </div>
       </div>
 
-      {/* Sync status card */}
-      <div style={{
-        display: "flex",
-        alignItems: "center",
-        gap: "0.5rem",
-        padding: "0.5rem 0.7rem",
-        background: "var(--surface)",
-        borderRadius: 9,
-        boxShadow: "var(--tier-1)",
-        minWidth: 0,
-      }}>
+      {/* Sync status card — same rail-on-white reset as the quota card. */}
+      <div
+        className="rail-on-white"
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "0.5rem",
+          padding: "0.5rem 0.7rem",
+          background: "var(--surface)",
+          borderRadius: 9,
+          boxShadow: "var(--tier-1)",
+          minWidth: 0,
+        }}
+      >
         <span aria-hidden="true" style={{
           width: 6, height: 6, borderRadius: "50%",
           background: "var(--success)",
@@ -3866,6 +4124,21 @@ function UserMessage({
   const [draft, setDraft] = useState(message.content);
   const editorRef = useRef<HTMLTextAreaElement | null>(null);
 
+  /* Mobile + tablet + any touch-only device: keep the "Modifier" chip
+   * permanently visible/interactive. The desktop hover-reveal is fragile on
+   * iPad and hybrid laptops where `(hover: none)` doesn't match but `hover`
+   * mouse events still never fire — the !important CSS fallback below was
+   * not enough on its own. */
+  const [alwaysShowEdit, setAlwaysShowEdit] = useState(false);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const mq = window.matchMedia("(max-width: 1024px), (hover: none)");
+    const sync = () => setAlwaysShowEdit(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
+
   /* Focus + autosize on entering edit mode. */
   useEffect(() => {
     if (!editing) return;
@@ -3981,8 +4254,8 @@ function UserMessage({
                  * mobile where the chip is always visible via the
                  * @media (hover:none) override. */
                 minHeight: 32,
-                opacity: hover ? 1 : 0,
-                pointerEvents: hover ? "auto" : "none",
+                opacity: hover || alwaysShowEdit ? 1 : 0,
+                pointerEvents: hover || alwaysShowEdit ? "auto" : "none",
                 transition: "opacity 0.18s ease, background 0.12s, color 0.12s, border-color 0.12s",
               }}
               onMouseEnter={(e) => {
@@ -4877,12 +5150,18 @@ function Composer({
           <div
             className="agent-composer"
             style={{
-              position: "relative",
+              /* Two-row layout: textarea on top, action buttons in their own
+               * row below. Replaces the previous absolute-positioned buttons
+               * that visually overlapped the textarea's bottom-right corner —
+               * text can now use the full width without wrapping around the
+               * buttons, and the buttons sit in a clear dedicated strip. */
+              display: "flex",
+              flexDirection: "column",
               background: "var(--surface)",
               /* Hair-thin neutral border. The visual presence comes from the
                * soft, wide drop-shadow (frosted halo) below — not the border. */
               border: "1px solid var(--border-strong)",
-              borderRadius: 16,
+              borderRadius: 12,
               transition: "box-shadow 0.2s ease, border-color 0.2s ease",
               /* Soft "frosted" shadow — wide blur radius, low opacity gives
                * the card a faint glow on the sides without darkening below
@@ -4912,140 +5191,148 @@ function Composer({
                 fontWeight: 500,
                 lineHeight: 1.55,
                 color: T.text,
-                /* Roomier top padding so the placeholder sits high in the
-                 * field, plus a deeper bottom inset for the action buttons.
-                 * Mirrors Claude's tall, generous composer footprint. */
-                padding: voiceSupported
-                  ? "0.85rem 5.85rem 1.1rem 1.2rem"
-                  : "0.85rem 3.65rem 1.1rem 1.2rem",
+                /* Symmetric horizontal padding — no need to reserve the
+                 * right side for buttons anymore (they live in their own
+                 * row below). Text wraps at the natural right edge. */
+                padding: "0.85rem 1.2rem 0.55rem 1.2rem",
                 maxHeight: 340,
-                scrollbarWidth: "none",
               }}
             />
-            {voiceSupported && !loading && (
-              <button
-                type="button"
-                className="agent-composer-mic"
-                onClick={recording ? stopDictation : startDictation}
-                aria-label={recording ? "Arrêter la dictée" : "Dicter une question"}
-                title={recording ? "Arrêter la dictée" : "Dicter une question"}
-                style={{
-                  position: "absolute",
-                  right: 52,
-                  bottom: 10,
-                  width: 36,
-                  height: 36,
-                  borderRadius: 10,
-                  border: "none",
-                  background: recording ? T.danger : T.surface,
-                  color: recording ? "#FFFFFF" : T.text3,
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  boxShadow: recording
-                    ? "0 0 0 1px rgba(255,59,48,0.45), 0 4px 14px -4px rgba(255,59,48,0.40)"
-                    : T.tier1,
-                  transition: "background 0.15s, color 0.15s, box-shadow 0.18s",
-                }}
-                onMouseEnter={(e) => {
-                  if (recording) return;
-                  e.currentTarget.style.color = T.accent;
-                }}
-                onMouseLeave={(e) => {
-                  if (recording) return;
-                  e.currentTarget.style.color = T.text3;
-                }}
-              >
-                {recording ? (
-                  <motion.span
-                    animate={{ scale: [1, 1.18, 1] }}
-                    transition={{ repeat: Infinity, duration: 1.1 }}
-                    style={{ display: "inline-flex" }}
-                  >
-                    <MicOff size={15} strokeWidth={2.25} />
-                  </motion.span>
-                ) : (
-                  <Mic size={15} strokeWidth={2.25} />
-                )}
-              </button>
-            )}
-            {loading ? (
-              <button
-                type="button"
-                className="agent-composer-stop"
-                onClick={onStop}
-                aria-label="Arrêter la génération"
-                style={{
-                  position: "absolute",
-                  right: 10,
-                  bottom: 10,
-                  width: 36,
-                  height: 36,
-                  borderRadius: 10,
-                  border: "none",
-                  background: T.danger,
-                  color: "#FFFFFF",
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  transition: "background 0.15s, transform 0.1s",
-                  boxShadow:
-                    "inset 0 1px 0 rgba(255,255,255,0.25), 0 0 0 1px rgba(255,59,48,0.30), 0 4px 14px -4px rgba(255,59,48,0.40)",
-                }}
-                onMouseDown={(e) => {
-                  e.currentTarget.style.transform = "scale(0.94)";
-                }}
-                onMouseUp={(e) => (e.currentTarget.style.transform = "scale(1)")}
-                onMouseLeave={(e) =>
-                  (e.currentTarget.style.transform = "scale(1)")
-                }
-              >
-                <span
+            <div
+              className="agent-composer-actions"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "flex-end",
+                gap: "0.4rem",
+                padding: "0 0.6rem 0.55rem 0.6rem",
+              }}
+            >
+              {voiceSupported && !loading && (
+                <button
+                  type="button"
+                  className="agent-composer-mic"
+                  onClick={recording ? stopDictation : startDictation}
+                  aria-label={recording ? "Arrêter la dictée" : "Dicter une question"}
+                  title={recording ? "Arrêter la dictée" : "Dicter une question"}
                   style={{
-                    width: 10,
-                    height: 10,
-                    borderRadius: 2,
-                    background: "#FFFFFF",
+                    width: 36,
+                    height: 36,
+                    borderRadius: 10,
+                    border: "none",
+                    background: recording ? T.danger : T.surface,
+                    color: recording ? "#FFFFFF" : T.text3,
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    flexShrink: 0,
+                    boxShadow: recording
+                      ? "0 0 0 1px rgba(255,59,48,0.45), 0 4px 14px -4px rgba(255,59,48,0.40)"
+                      : T.tier1,
+                    transition: "background 0.15s, color 0.15s, box-shadow 0.18s",
                   }}
-                />
-              </button>
-            ) : (
-              <button
-                type="submit"
-                className="agent-composer-send"
-                disabled={!value.trim()}
-                aria-label="Envoyer"
-                style={{
-                  position: "absolute",
-                  right: 10,
-                  bottom: 10,
-                  width: 36,
-                  height: 36,
-                  borderRadius: 10,
-                  border: "none",
-                  background: !value.trim() ? T.surface3 : T.gradient,
-                  color: !value.trim() ? T.text4 : "#FFFFFF",
-                  cursor: !value.trim() ? "not-allowed" : "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  transition: "background 0.15s, transform 0.1s, box-shadow 0.18s",
-                  boxShadow: !value.trim() ? "none" : T.gradientShadow,
-                }}
-                onMouseDown={(e) => {
-                  if (value.trim())
+                  onMouseEnter={(e) => {
+                    if (recording) return;
+                    e.currentTarget.style.color = T.accent;
+                  }}
+                  onMouseLeave={(e) => {
+                    if (recording) return;
+                    e.currentTarget.style.color = T.text3;
+                  }}
+                >
+                  {recording ? (
+                    <motion.span
+                      animate={{ scale: [1, 1.18, 1] }}
+                      transition={{ repeat: Infinity, duration: 1.1 }}
+                      style={{ display: "inline-flex" }}
+                    >
+                      <MicOff size={15} strokeWidth={2.25} />
+                    </motion.span>
+                  ) : (
+                    <Mic size={15} strokeWidth={2.25} />
+                  )}
+                </button>
+              )}
+              {loading ? (
+                <button
+                  type="button"
+                  className="agent-composer-stop"
+                  onClick={onStop}
+                  aria-label="Arrêter la génération"
+                  style={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: 10,
+                    border: "none",
+                    background: T.danger,
+                    color: "#FFFFFF",
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    flexShrink: 0,
+                    transition: "background 0.15s, transform 0.1s",
+                    boxShadow:
+                      "inset 0 1px 0 rgba(255,255,255,0.25), 0 0 0 1px rgba(255,59,48,0.30), 0 4px 14px -4px rgba(255,59,48,0.40)",
+                  }}
+                  onMouseDown={(e) => {
                     e.currentTarget.style.transform = "scale(0.94)";
-                }}
-                onMouseUp={(e) => (e.currentTarget.style.transform = "scale(1)")}
-                onMouseLeave={(e) =>
-                  (e.currentTarget.style.transform = "scale(1)")
-                }
-              >
-                <ArrowUp size={15} strokeWidth={2.5} />
-              </button>
-            )}
+                  }}
+                  onMouseUp={(e) => (e.currentTarget.style.transform = "scale(1)")}
+                  onMouseLeave={(e) =>
+                    (e.currentTarget.style.transform = "scale(1)")
+                  }
+                >
+                  <span
+                    style={{
+                      width: 10,
+                      height: 10,
+                      borderRadius: 2,
+                      background: "#FFFFFF",
+                    }}
+                  />
+                </button>
+              ) : (
+                <button
+                  type="submit"
+                  className="agent-composer-send"
+                  disabled={!value.trim()}
+                  aria-label="Envoyer"
+                  style={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: 10,
+                    border: "none",
+                    /* Solid primary accent — the brand blue (--accent /
+                     * #007AFF). Replaces the previous to-bottom gradient
+                     * so the button reads as a single confident colour
+                     * rather than a soft pill. */
+                    background: !value.trim() ? T.surface3 : "var(--accent)",
+                    color: !value.trim() ? T.text4 : "#FFFFFF",
+                    cursor: !value.trim() ? "not-allowed" : "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    flexShrink: 0,
+                    transition: "background 0.15s, transform 0.1s, box-shadow 0.18s",
+                    boxShadow: !value.trim()
+                      ? "none"
+                      : "0 1px 2px rgba(0,98,204,0.20), 0 4px 14px -4px rgba(0,122,255,0.45)",
+                  }}
+                  onMouseDown={(e) => {
+                    if (value.trim())
+                      e.currentTarget.style.transform = "scale(0.94)";
+                  }}
+                  onMouseUp={(e) => (e.currentTarget.style.transform = "scale(1)")}
+                  onMouseLeave={(e) =>
+                    (e.currentTarget.style.transform = "scale(1)")
+                  }
+                >
+                  <ArrowUp size={15} strokeWidth={2.5} />
+                </button>
+              )}
+            </div>
           </div>
         </form>
         <div

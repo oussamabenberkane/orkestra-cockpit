@@ -28,7 +28,14 @@ export async function middleware(request: NextRequest) {
     }
   );
 
-  const { data: { user } } = await supabase.auth.getUser();
+  let user = null;
+  try {
+    const { data } = await supabase.auth.getUser();
+    user = data.user;
+  } catch {
+    // Stale or invalid refresh token — fall through to the redirect below.
+    // The cookies set by createServerClient above already clear the bad token.
+  }
 
   if (!user) {
     const loginUrl = request.nextUrl.clone();

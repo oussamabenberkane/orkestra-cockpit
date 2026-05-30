@@ -1,9 +1,9 @@
 "use client";
 
-import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { LifeBuoy, Plus, Filter, X } from "lucide-react";
+import { LifeBuoy, MessageSquarePlus, Search, X, Check, ChevronDown } from "lucide-react";
 import { AppShell } from "@/components/dashboard/AppShell";
 import { TicketList } from "@/components/support/TicketList";
 import { TicketThread } from "@/components/support/TicketThread";
@@ -66,6 +66,7 @@ function SupportContent() {
 
   const [statusFilter, setStatusFilter] = useState<TicketStatus[]>([]);
   const [typeFilter, setTypeFilter] = useState<TicketType | null>(null);
+  const [search, setSearch] = useState("");
 
   // Auto-open modal from `?new=1[&type=…&category=…]`. Clears the param so a
   // refresh doesn't reopen the modal.
@@ -120,33 +121,44 @@ function SupportContent() {
 
   const filtered = useMemo(() => {
     if (!tickets) return [];
+    const q = search.trim().toLowerCase();
     return tickets.filter((t) => {
-      const statusOk = statusFilter.length === 0 || statusFilter.includes(t.status);
-      const typeOk = typeFilter === null || t.type === typeFilter;
-      return statusOk && typeOk;
+      if (statusFilter.length > 0 && !statusFilter.includes(t.status)) return false;
+      if (typeFilter !== null && t.type !== typeFilter) return false;
+      if (q) {
+        const lastBody = t.messages?.[t.messages.length - 1]?.body ?? "";
+        const haystack = `${t.subject} ${t.id} ${lastBody}`.toLowerCase();
+        if (!haystack.includes(q)) return false;
+      }
+      return true;
     });
-  }, [tickets, statusFilter, typeFilter]);
+  }, [tickets, search, statusFilter, typeFilter]);
 
-  const stats = useMemo(() => {
-    const list = tickets ?? [];
-    return {
-      open: list.filter((t) => t.status !== "closed" && t.status !== "resolved").length,
-      inProgress: list.filter((t) => t.status === "in_progress").length,
-      resolved: list.filter((t) => t.status === "resolved").length,
+  /** Counts per status / per type — shown next to each dropdown option. */
+  const statusCounts = useMemo(() => {
+    const counts: Record<TicketStatus, number> = {
+      new: 0, open: 0, in_progress: 0, resolved: 0, closed: 0,
     };
+    for (const t of tickets ?? []) counts[t.status] = (counts[t.status] ?? 0) + 1;
+    return counts;
+  }, [tickets]);
+  const typeCounts = useMemo(() => {
+    const counts: Record<TicketType, number> = { incident: 0, request: 0 };
+    for (const t of tickets ?? []) counts[t.type] = (counts[t.type] ?? 0) + 1;
+    return counts;
   }, [tickets]);
 
-  const hasFilters = statusFilter.length > 0 || typeFilter !== null;
+  const hasFilters = statusFilter.length > 0 || typeFilter !== null || search.trim() !== "";
 
   const toggleStatus = (s: TicketStatus) =>
     setStatusFilter((prev) =>
       prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s],
     );
-  const toggleType = (t: TicketType) =>
-    setTypeFilter((prev) => (prev === t ? null : t));
+  const setType = (t: TicketType | null) => setTypeFilter(t);
   const clearFilters = () => {
     setStatusFilter([]);
     setTypeFilter(null);
+    setSearch("");
   };
 
   // ── Server-action handlers ──────────────────────────────────────────────
@@ -222,6 +234,7 @@ function SupportContent() {
         initial={{ opacity: 0, y: -8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
+        className="support-header-row"
         style={{
           display: "flex",
           alignItems: "center",
@@ -230,7 +243,7 @@ function SupportContent() {
           gap: "0.75rem",
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: "0.875rem" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.875rem", minWidth: 0, flex: 1 }}>
           <span
             style={{
               display: "inline-flex",
@@ -246,10 +259,10 @@ function SupportContent() {
           >
             <LifeBuoy size={20} strokeWidth={2.5} />
           </span>
-          <div>
+          <div style={{ minWidth: 0 }}>
             <h1
               style={{
-                fontSize: "1.3rem",
+                fontSize: "clamp(1.1rem, 4.5vw, 1.3rem)",
                 fontWeight: 700,
                 letterSpacing: "-0.022em",
                 color: "var(--text)",
@@ -259,7 +272,11 @@ function SupportContent() {
             >
               Centre de support
             </h1>
-            <p style={{ fontSize: "0.78rem", color: "var(--text-3)", margin: 0 }}>
+            <p style={{
+              fontSize: "clamp(0.72rem, 2.4vw, 0.78rem)",
+              color: "var(--text-3)",
+              margin: 0,
+            }}>
               Contactez l&apos;équipe Malyz ou suivez vos tickets en cours.
             </p>
           </div>
@@ -269,28 +286,31 @@ function SupportContent() {
           <button
             type="button"
             onClick={() => setCreateOpen(true)}
+            className="support-new-ticket-btn cta-primary"
             style={{
               display: "inline-flex",
               alignItems: "center",
-              gap: "0.45rem",
-              fontSize: "0.82rem",
+              gap: "0.5rem",
+              fontSize: "0.85rem",
               fontWeight: 600,
               color: "#fff",
               background:
                 "linear-gradient(180deg, var(--accent) 0%, var(--accent-2) 100%)",
               border: "1px solid var(--accent-2)",
               borderRadius: "10px",
-              padding: "0.55rem 1.05rem",
+              padding: "0.65rem 1.1rem",
+              minHeight: 44,
               cursor: "pointer",
               boxShadow:
-                "inset 0 1px 0 rgba(255,255,255,0.2), 0 1px 2px rgba(88,86,214,0.22), 0 6px 16px -8px rgba(88,86,214,0.5)",
-              transition: "transform 0.15s",
+                "inset 0 1px 0 rgba(255,255,255,0.22), 0 1px 2px rgba(0,98,204,0.25), 0 8px 18px -8px rgba(0,122,255,0.55)",
+              transition: "transform 0.15s, box-shadow 0.18s",
+              whiteSpace: "nowrap",
             }}
             onMouseDown={(e) => (e.currentTarget.style.transform = "scale(0.985)")}
             onMouseUp={(e) => (e.currentTarget.style.transform = "scale(1)")}
             onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
           >
-            <Plus size={14} />
+            <MessageSquarePlus size={15} strokeWidth={2.25} />
             Nouveau ticket
           </button>
         )}
@@ -326,92 +346,64 @@ function SupportContent() {
             transition={{ duration: 0.18 }}
             style={{ display: "flex", flexDirection: "column", gap: "1.1rem" }}
           >
-            {/* KPI strip */}
-            <div className="support-stats">
-              <StatCard label="Tickets ouverts" value={stats.open} tone="accent" />
-              <StatCard label="En cours" value={stats.inProgress} tone="warn" />
-              <StatCard label="Résolus" value={stats.resolved} tone="success" />
-            </div>
-
-            {/* Filters */}
-            <div
-              style={{
-                background: "var(--surface)",
-                border: "1px solid var(--border)",
-                borderRadius: "16px",
-                boxShadow: "var(--tier-1)",
-                padding: "1rem 1.1rem",
-              }}
-            >
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  marginBottom: "0.85rem",
-                }}
-              >
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "0.4rem",
-                    color: "var(--text-2)",
-                  }}
-                >
-                  <Filter size={14} color="var(--text-3)" />
-                  <span
-                    style={{
-                      fontSize: "0.82rem",
-                      fontWeight: 700,
-                      color: "var(--text)",
-                    }}
-                  >
-                    Filtres
-                  </span>
-                </div>
-                {hasFilters && (
+            {/* Toolbar — search + status dropdown + type dropdown, all one row */}
+            <div className="support-toolbar" role="search">
+              <div className="support-search">
+                <Search size={15} strokeWidth={2.25} className="support-search__icon" aria-hidden />
+                <input
+                  type="text"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Rechercher par sujet, ID ou contenu…"
+                  className="support-search__input"
+                  aria-label="Rechercher dans les tickets"
+                />
+                {search && (
                   <button
                     type="button"
-                    onClick={clearFilters}
-                    style={{
-                      display: "inline-flex",
-                      alignItems: "center",
-                      gap: "0.3rem",
-                      fontSize: "0.74rem",
-                      fontWeight: 600,
-                      color: "var(--accent)",
-                      background: "transparent",
-                      border: "none",
-                      cursor: "pointer",
-                    }}
+                    onClick={() => setSearch("")}
+                    aria-label="Effacer la recherche"
+                    className="support-search__clear"
                   >
-                    <X size={12} />
-                    Tout effacer
+                    <X size={13} strokeWidth={2.5} />
                   </button>
                 )}
               </div>
 
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "0.75rem",
-                }}
-              >
-                <FilterRow
-                  label="Statut"
-                  options={STATUSES.map((s) => ({ value: s, label: STATUS_LABEL[s] }))}
-                  isActive={(v) => statusFilter.includes(v as TicketStatus)}
-                  onToggle={(v) => toggleStatus(v as TicketStatus)}
-                />
-                <FilterRow
-                  label="Type"
-                  options={TYPES.map((t) => ({ value: t, label: TYPE_LABEL[t] }))}
-                  isActive={(v) => typeFilter === v}
-                  onToggle={(v) => toggleType(v as TicketType)}
-                />
-              </div>
+              <Dropdown
+                label="Statut"
+                multi
+                values={statusFilter}
+                options={STATUSES.map((s) => ({
+                  value: s, label: STATUS_LABEL[s], count: statusCounts[s] ?? 0,
+                }))}
+                onToggle={(v) => toggleStatus(v as TicketStatus)}
+                onClear={() => setStatusFilter([])}
+              />
+
+              <Dropdown
+                label="Type"
+                multi={false}
+                values={typeFilter ? [typeFilter] : []}
+                options={TYPES.map((t) => ({
+                  value: t, label: TYPE_LABEL[t], count: typeCounts[t] ?? 0,
+                }))}
+                onToggle={(v) => setType(typeFilter === v ? null : (v as TicketType))}
+                onClear={() => setType(null)}
+                alignRight
+              />
+
+              {hasFilters && (
+                <button
+                  type="button"
+                  onClick={clearFilters}
+                  className="support-clear-btn"
+                  aria-label="Effacer tous les filtres"
+                >
+                  <X size={13} strokeWidth={2.5} />
+                  <span className="support-clear-btn__label">Tout effacer</span>
+                </button>
+              )}
             </div>
 
             {/* List */}
@@ -481,17 +473,311 @@ function SupportContent() {
         busy={creating}
       />
 
-      {/* Responsive helpers */}
+      {/* Design tokens + responsive helpers */}
       <style jsx global>{`
-        .support-stats {
-          display: grid;
-          grid-template-columns: repeat(3, minmax(0, 1fr));
-          gap: 0.75rem;
+        /* ── Toolbar: search bar + 2 dropdowns + clear ────────────────────── */
+        .support-toolbar {
+          display: flex;
+          align-items: stretch;
+          gap: 0.55rem;
+          min-width: 0;
         }
+
+        /* Search */
+        .support-search {
+          position: relative;
+          flex: 1 1 240px;
+          min-width: 0;
+          display: flex;
+          align-items: center;
+        }
+        .support-search__icon {
+          position: absolute;
+          left: 0.85rem;
+          top: 50%;
+          transform: translateY(-50%);
+          color: var(--text-4);
+          pointer-events: none;
+        }
+        .support-search__input {
+          width: 100%;
+          height: 40px;
+          padding: 0 2.4rem 0 2.45rem;
+          background: var(--surface);
+          border: 1px solid var(--border);
+          border-radius: 10px;
+          font-family: inherit;
+          font-size: 0.86rem;
+          color: var(--text);
+          outline: none;
+          box-shadow: var(--tier-1);
+          transition: border-color 0.15s, box-shadow 0.18s;
+        }
+        .support-search__input::placeholder { color: var(--text-4); }
+        .support-search__input:focus {
+          border-color: var(--accent);
+          box-shadow: 0 0 0 3px var(--accent-tint), var(--tier-1);
+        }
+        .support-search__clear {
+          position: absolute;
+          right: 0.4rem;
+          top: 50%;
+          transform: translateY(-50%);
+          width: 26px;
+          height: 26px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          background: transparent;
+          border: none;
+          color: var(--text-4);
+          border-radius: 6px;
+          cursor: pointer;
+          transition: background 0.15s, color 0.15s;
+        }
+        .support-search__clear:hover {
+          background: var(--surface-3);
+          color: var(--text-2);
+        }
+
+        /* Dropdown root */
+        .s-dd { position: relative; flex: 0 0 auto; min-width: 0; }
+
+        /* Trigger button */
+        .s-dd__trigger {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.45rem;
+          height: 40px;
+          padding: 0 0.85rem;
+          background: var(--surface);
+          border: 1px solid var(--border);
+          border-radius: 10px;
+          font-family: inherit;
+          font-size: 0.84rem;
+          font-weight: 500;
+          color: var(--text-2);
+          box-shadow: var(--tier-1);
+          cursor: pointer;
+          transition: background 0.15s, border-color 0.15s, box-shadow 0.18s;
+          white-space: nowrap;
+        }
+        .s-dd__trigger:hover {
+          background: var(--surface-2);
+          border-color: var(--border-strong);
+        }
+        .s-dd__trigger.is-active {
+          background: var(--accent-tint);
+          border-color: var(--accent-tint-2);
+          color: var(--accent);
+          font-weight: 600;
+        }
+        .s-dd__trigger.is-open {
+          box-shadow: 0 0 0 3px var(--accent-tint), var(--tier-1);
+          border-color: var(--accent);
+        }
+        .s-dd__caret {
+          display: inline-flex;
+          opacity: 0.55;
+          transition: transform 0.18s ease;
+        }
+        .s-dd__trigger.is-open .s-dd__caret { transform: rotate(180deg); }
+        .s-dd__trigger-count {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          min-width: 18px;
+          height: 18px;
+          padding: 0 5px;
+          background: var(--accent-tint-2);
+          color: var(--accent);
+          border-radius: 100px;
+          font-family: var(--font-mono);
+          font-size: 0.62rem;
+          font-weight: 700;
+          line-height: 1;
+        }
+
+        /* Menu — sizes to its content with the trigger's width as a floor,
+           so a wide trigger never sits above a narrower menu and a short
+           trigger doesn't get a pointlessly wide popover. */
+        .s-dd__menu {
+          position: absolute;
+          top: calc(100% + 6px);
+          left: 0;
+          z-index: 60;
+          width: max-content;
+          min-width: 100%;
+          max-width: min(260px, calc(100vw - 24px));
+          background: var(--surface);
+          border: 1px solid var(--border);
+          border-radius: 12px;
+          box-shadow: var(--tier-2);
+          padding: 0.3rem;
+          overflow: hidden;
+        }
+        .s-dd--right .s-dd__menu { left: auto; right: 0; }
+        .s-dd__menu-scroll {
+          max-height: min(60vh, 320px);
+          overflow-y: auto;
+          padding: 0.05rem;
+        }
+        .s-dd__option {
+          display: grid;
+          align-items: center;
+          gap: 0.55rem;
+          width: 100%;
+          padding: 0.5rem 0.6rem;
+          background: transparent;
+          border: none;
+          border-radius: 8px;
+          font-family: inherit;
+          font-size: 0.84rem;
+          font-weight: 500;
+          color: var(--text-2);
+          text-align: left;
+          cursor: pointer;
+          transition: background 0.12s;
+        }
+        /* Multi-select: leading checkbox column. */
+        .s-dd__option--multi {
+          grid-template-columns: 18px minmax(0, 1fr) auto;
+        }
+        /* Single-select: no checkbox — label sits flush-left. */
+        .s-dd__option--single {
+          grid-template-columns: minmax(0, 1fr) auto;
+        }
+        .s-dd__option:hover { background: var(--surface-2); }
+        .s-dd__option.is-active {
+          color: var(--accent);
+          font-weight: 600;
+          background: var(--accent-tint);
+        }
+        .s-dd__check {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          color: var(--accent);
+        }
+        .s-dd__check--empty {
+          width: 14px;
+          height: 14px;
+          border: 1.5px solid var(--border-strong);
+          border-radius: 4px;
+          background: var(--surface);
+        }
+        .s-dd__option.is-active .s-dd__check--empty {
+          border-color: var(--accent);
+          background: var(--accent);
+        }
+        .s-dd__count {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          min-width: 22px;
+          height: 20px;
+          padding: 0 6px;
+          background: var(--accent-tint);
+          color: var(--accent);
+          border-radius: 100px;
+          font-family: var(--font-mono);
+          font-size: 0.66rem;
+          font-weight: 700;
+          line-height: 1;
+          font-variant-numeric: tabular-nums;
+        }
+        /* On the active row, bump the badge tint so it still reads against
+           the row's blue background. Same hue, just one step deeper. */
+        .s-dd__option.is-active .s-dd__count {
+          background: var(--accent-tint-2);
+        }
+        .s-dd__option-label {
+          min-width: 0;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+        .s-dd__divider {
+          height: 1px;
+          background: var(--border);
+          margin: 0.25rem 0.15rem;
+        }
+        .s-dd__reset {
+          display: flex;
+          align-items: center;
+          justify-content: flex-start;
+          width: 100%;
+          padding: 0.5rem 0.6rem;
+          background: transparent;
+          border: none;
+          border-radius: 8px;
+          font-family: inherit;
+          font-size: 0.78rem;
+          font-weight: 500;
+          color: var(--text-3);
+          cursor: pointer;
+          gap: 0.45rem;
+          transition: background 0.12s, color 0.12s;
+        }
+        .s-dd__reset:hover {
+          background: var(--danger-tint);
+          color: var(--danger);
+        }
+        .s-dd__overlay {
+          position: fixed;
+          inset: 0;
+          z-index: 59;
+          background: transparent;
+        }
+
+        /* Clear button (toolbar-level) */
+        .support-clear-btn {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0.35rem;
+          height: 40px;
+          padding: 0 0.75rem;
+          background: transparent;
+          border: 1px dashed var(--border-strong);
+          border-radius: 10px;
+          font-family: inherit;
+          font-size: 0.78rem;
+          font-weight: 600;
+          color: var(--text-3);
+          cursor: pointer;
+          white-space: nowrap;
+          transition: background 0.15s, color 0.15s, border-color 0.15s;
+        }
+        .support-clear-btn:hover {
+          background: var(--danger-tint);
+          color: var(--danger);
+          border-color: var(--danger);
+        }
+
+        /* Mobile — search takes the full first row; dropdowns + clear wrap below. */
         @media (max-width: 640px) {
-          .support-stats {
-            grid-template-columns: 1fr;
-          }
+          .support-toolbar { flex-wrap: wrap; }
+          .support-search { flex: 1 1 100%; }
+          .s-dd { flex: 1 1 auto; }
+          .s-dd__trigger { width: 100%; justify-content: space-between; }
+        }
+        @media (max-width: 420px) {
+          .support-clear-btn__label { display: none; }
+        }
+
+        /* Touch target floor on mobile / touch devices. */
+        @media (max-width: 720px), (hover: none) {
+          .support-search__input { height: 44px; font-size: 16px; }
+          .s-dd__trigger { height: 44px; }
+          .support-clear-btn { height: 44px; }
+          .s-dd__option { padding: 0.65rem 0.6rem; }
+        }
+
+        /* ── Header row ──────────────────────────────────────────────────── */
+        @media (max-width: 480px) {
+          .support-new-ticket-btn { width: 100%; justify-content: center; }
+          .support-header-row { row-gap: 0.5rem !important; }
         }
       `}</style>
     </div>
@@ -500,122 +786,152 @@ function SupportContent() {
 
 // ── Pieces ────────────────────────────────────────────────────────────────
 
-function StatCard({
-  label,
-  value,
-  tone,
-}: {
+interface DropdownOption {
+  value: string;
   label: string;
-  value: number;
-  tone: "accent" | "warn" | "success";
-}) {
-  const palette =
-    tone === "accent"
-      ? { fg: "var(--accent)", bg: "var(--accent-tint)" }
-      : tone === "warn"
-        ? { fg: "var(--warn)", bg: "var(--warn-tint)" }
-        : { fg: "var(--success)", bg: "var(--success-tint)" };
-
-  return (
-    <div
-      style={{
-        background: "var(--surface)",
-        border: "1px solid var(--border)",
-        borderRadius: "16px",
-        boxShadow: "var(--tier-1)",
-        padding: "0.95rem 1.1rem",
-        display: "flex",
-        flexDirection: "column",
-        gap: "0.4rem",
-      }}
-    >
-      <span
-        style={{
-          fontSize: "0.62rem",
-          fontWeight: 700,
-          letterSpacing: "0.1em",
-          textTransform: "uppercase",
-          color: palette.fg,
-          background: palette.bg,
-          padding: "0.16rem 0.5rem",
-          borderRadius: "100px",
-          alignSelf: "flex-start",
-        }}
-      >
-        {label}
-      </span>
-      <span
-        style={{
-          fontFamily: "var(--font-mono)",
-          fontSize: "1.55rem",
-          fontWeight: 700,
-          color: "var(--text)",
-          fontVariantNumeric: "tabular-nums",
-        }}
-      >
-        {value}
-      </span>
-    </div>
-  );
+  count: number;
 }
 
-function FilterRow({
-  label,
-  options,
-  isActive,
-  onToggle,
-}: {
+interface DropdownProps {
   label: string;
-  options: { value: string; label: string }[];
-  isActive: (v: string) => boolean;
-  onToggle: (v: string) => void;
-}) {
+  /** Currently selected values (always an array — single-select wraps in [v]). */
+  values: string[];
+  options: DropdownOption[];
+  /** True = checkboxes (multi-select); false = single-select. */
+  multi: boolean;
+  onToggle: (value: string) => void;
+  onClear: () => void;
+  /** Anchor the menu to the right edge (avoid right-side viewport spill). */
+  alignRight?: boolean;
+}
+
+/**
+ * Custom-styled dropdown filter with per-option count badges.
+ *
+ * - Multi-select mode renders a checkbox in front of each option; clicking
+ *   toggles the value.
+ * - Single-select mode renders a check icon only for the active value.
+ * - Click-outside / Escape close the menu.
+ */
+function Dropdown({
+  label,
+  values,
+  options,
+  multi,
+  onToggle,
+  onClear,
+  alignRight,
+}: DropdownProps) {
+  const [open, setOpen] = useState(false);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const isActive = values.length > 0;
+
+  // Close on Escape, restore focus.
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setOpen(false);
+        triggerRef.current?.focus();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open]);
+
+  // Trigger label: shows the selection summary when active, the field name otherwise.
+  const triggerText =
+    !isActive
+      ? label
+      : multi
+        ? values.length === 1
+          ? options.find((o) => o.value === values[0])?.label ?? label
+          : `${label} · ${values.length}`
+        : options.find((o) => o.value === values[0])?.label ?? label;
+
   return (
-    <div>
-      <span
-        style={{
-          display: "block",
-          fontSize: "0.7rem",
-          fontWeight: 700,
-          color: "var(--text-3)",
-          letterSpacing: "0.06em",
-          textTransform: "uppercase",
-          marginBottom: "0.45rem",
-        }}
+    <div className={`s-dd ${alignRight ? "s-dd--right" : ""}`}>
+      <button
+        ref={triggerRef}
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        className={`s-dd__trigger ${isActive ? "is-active" : ""} ${open ? "is-open" : ""}`}
       >
-        {label}
-      </span>
-      <div style={{ display: "flex", flexWrap: "wrap", gap: "0.4rem" }}>
-        {options.map((opt) => {
-          const active = isActive(opt.value);
-          return (
-            <button
-              key={opt.value}
-              type="button"
-              onClick={() => onToggle(opt.value)}
-              style={{
-                fontSize: "0.78rem",
-                fontWeight: 600,
-                padding: "0.4rem 0.85rem",
-                borderRadius: "11px",
-                cursor: "pointer",
-                border: active
-                  ? "1px solid var(--accent-2)"
-                  : "1px solid var(--border)",
-                background: active
-                  ? "linear-gradient(180deg, var(--accent) 0%, var(--accent-2) 100%)"
-                  : "var(--surface)",
-                color: active ? "#fff" : "var(--text-2)",
-                boxShadow: active ? "var(--tier-press)" : "var(--tier-1)",
-                transition: "background 0.15s, color 0.15s, border-color 0.15s",
-                fontFamily: "inherit",
-              }}
+        <span>{triggerText}</span>
+        {multi && values.length > 1 && (
+          <span className="s-dd__trigger-count">{values.length}</span>
+        )}
+        <ChevronDown size={13} strokeWidth={2.5} className="s-dd__caret" aria-hidden />
+      </button>
+
+      <AnimatePresence>
+        {open && (
+          <>
+            <div className="s-dd__overlay" onClick={() => setOpen(false)} aria-hidden />
+            <motion.div
+              role="listbox"
+              aria-multiselectable={multi}
+              initial={{ opacity: 0, y: 4, scale: 0.97 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 4, scale: 0.97 }}
+              transition={{ duration: 0.14, ease: [0.22, 1, 0.36, 1] }}
+              className="s-dd__menu"
             >
-              {opt.label}
-            </button>
-          );
-        })}
-      </div>
+              <div className="s-dd__menu-scroll">
+                {options.map((opt) => {
+                  const active = values.includes(opt.value);
+                  return (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      role="option"
+                      aria-selected={active}
+                      onClick={() => {
+                        onToggle(opt.value);
+                        if (!multi) setOpen(false);
+                      }}
+                      className={`s-dd__option ${multi ? "s-dd__option--multi" : "s-dd__option--single"} ${active ? "is-active" : ""}`}
+                    >
+                      {multi && (
+                        <span className="s-dd__check" aria-hidden>
+                          <span className="s-dd__check--empty">
+                            {active && <Check size={10} strokeWidth={3.5} color="#fff" />}
+                          </span>
+                        </span>
+                      )}
+                      <span className="s-dd__option-label">{opt.label}</span>
+                      {opt.count >= 1 ? (
+                        <span className="s-dd__count">{opt.count}</span>
+                      ) : (
+                        <span aria-hidden />
+                      )}
+                    </button>
+                  );
+                })}
+
+                {isActive && (
+                  <>
+                    <div className="s-dd__divider" aria-hidden />
+                    <button
+                      type="button"
+                      className="s-dd__reset"
+                      onClick={() => {
+                        onClear();
+                        setOpen(false);
+                      }}
+                    >
+                      <X size={12} strokeWidth={2.5} />
+                      Réinitialiser
+                    </button>
+                  </>
+                )}
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

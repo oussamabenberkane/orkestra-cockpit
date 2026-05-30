@@ -148,7 +148,7 @@ function renderInline(nodes: Inline[], keyPrefix = ""): React.ReactNode[] {
         return <CodeChip key={k}>{n.value}</CodeChip>;
       case "bold":
         return (
-          <strong key={k} style={{ fontWeight: 700, color: "#0F172A" }}>
+          <strong key={k} style={{ fontWeight: 700, color: "var(--text)" }}>
             {renderInline(n.children, `${k}b`)}
           </strong>
         );
@@ -174,11 +174,11 @@ function CodeChip({ children }: { children: React.ReactNode }) {
       style={{
         fontFamily: "var(--font-mono), ui-monospace, monospace",
         fontSize: "0.86em",
-        background: "#F1F5F9",
-        color: "#1E293B",
+        background: "var(--surface-2)",
+        color: "var(--text)",
         padding: "0.08em 0.36em",
         borderRadius: 4,
-        border: "1px solid #E2E8F0",
+        border: "1px solid var(--border)",
       }}
     >
       {children}
@@ -195,11 +195,11 @@ function IdChip({ children }: { children: React.ReactNode }) {
         fontFamily: "var(--font-mono), ui-monospace, monospace",
         fontSize: "0.84em",
         fontWeight: 600,
-        color: "#1E40AF",
-        background: "#EFF6FF",
+        color: "var(--accent)",
+        background: "var(--accent-tint)",
         padding: "0.08em 0.42em",
         borderRadius: 4,
-        border: "1px solid #DBEAFE",
+        border: "1px solid var(--accent-tint-2)",
         letterSpacing: "0.01em",
         verticalAlign: "baseline",
       }}
@@ -224,7 +224,7 @@ function AmountChip({ children }: { children: React.ReactNode }) {
         fontFamily: "var(--font-mono), ui-monospace, monospace",
         fontVariantNumeric: "tabular-nums",
         fontWeight: 600,
-        color: "#0F172A",
+        color: "var(--text)",
         letterSpacing: "-0.01em",
       }}
     >
@@ -234,7 +234,7 @@ function AmountChip({ children }: { children: React.ReactNode }) {
           style={{
             fontSize: "0.72em",
             fontWeight: 600,
-            color: "#64748B",
+            color: "var(--text-3)",
             letterSpacing: "0.04em",
           }}
         >
@@ -252,7 +252,7 @@ function PercentChip({ children }: { children: React.ReactNode }) {
         fontFamily: "var(--font-mono), ui-monospace, monospace",
         fontVariantNumeric: "tabular-nums",
         fontWeight: 600,
-        color: "#0F172A",
+        color: "var(--text)",
       }}
     >
       {children}
@@ -406,7 +406,7 @@ function renderBlock(b: Block, key: number): React.ReactNode {
           style={{
             fontSize: "1.25rem",
             fontWeight: 700,
-            color: "#0F172A",
+            color: "var(--text)",
             letterSpacing: "-0.02em",
             margin: "1.1rem 0 0.55rem",
             lineHeight: 1.25,
@@ -422,7 +422,7 @@ function renderBlock(b: Block, key: number): React.ReactNode {
           style={{
             fontSize: "1.05rem",
             fontWeight: 700,
-            color: "#0F172A",
+            color: "var(--text)",
             letterSpacing: "-0.015em",
             margin: "1rem 0 0.45rem",
             lineHeight: 1.3,
@@ -438,7 +438,7 @@ function renderBlock(b: Block, key: number): React.ReactNode {
           style={{
             fontSize: "0.92rem",
             fontWeight: 700,
-            color: "#1E40AF",
+            color: "var(--accent)",
             textTransform: "uppercase",
             letterSpacing: "0.06em",
             margin: "0.85rem 0 0.35rem",
@@ -454,7 +454,7 @@ function renderBlock(b: Block, key: number): React.ReactNode {
           style={{
             margin: "0.4rem 0",
             lineHeight: 1.6,
-            color: "#1E293B",
+            color: "var(--text)",
           }}
         >
           {renderInline(parseInline(b.text), `p-${key}-`)}
@@ -477,7 +477,7 @@ function renderBlock(b: Block, key: number): React.ReactNode {
               key={i}
               style={{
                 lineHeight: 1.55,
-                color: "#1E293B",
+                color: "var(--text)",
                 paddingLeft: "0.15rem",
                 position: "relative",
                 listStyle: "none",
@@ -492,7 +492,7 @@ function renderBlock(b: Block, key: number): React.ReactNode {
                   width: 4,
                   height: 4,
                   borderRadius: "50%",
-                  background: "#1E40AF",
+                  background: "var(--accent)",
                   opacity: 0.7,
                 }}
               />
@@ -511,7 +511,7 @@ function renderBlock(b: Block, key: number): React.ReactNode {
             display: "flex",
             flexDirection: "column",
             gap: "0.18rem",
-            color: "#1E293B",
+            color: "var(--text)",
           }}
         >
           {b.items.map((it, i) => (
@@ -528,9 +528,9 @@ function renderBlock(b: Block, key: number): React.ReactNode {
           style={{
             margin: "0.6rem 0",
             padding: "0.55rem 0.9rem",
-            borderLeft: "3px solid #DBEAFE",
-            background: "#F8FAFC",
-            color: "#475569",
+            borderLeft: "3px solid var(--accent-tint-2)",
+            background: "var(--surface-2)",
+            color: "var(--text-2)",
             borderRadius: "0 6px 6px 0",
             fontStyle: "italic",
             lineHeight: 1.55,
@@ -580,9 +580,9 @@ function renderBlock(b: Block, key: number): React.ReactNode {
           className="md-table-wrap"
           style={{
             margin: "0.7rem 0",
-            border: "1px solid #E2E8F0",
+            border: "1px solid var(--border)",
             borderRadius: 8,
-            background: "#FFFFFF",
+            background: "var(--surface)",
           }}
         >
           <table
@@ -594,7 +594,7 @@ function renderBlock(b: Block, key: number): React.ReactNode {
             }}
           >
             <thead>
-              <tr style={{ background: "#F8FAFC" }}>
+              <tr style={{ background: "var(--surface-2)" }}>
                 {b.header.map((h, i) => (
                   <th
                     key={i}
@@ -605,8 +605,8 @@ function renderBlock(b: Block, key: number): React.ReactNode {
                       fontWeight: 700,
                       letterSpacing: "0.06em",
                       textTransform: "uppercase",
-                      color: "#64748B",
-                      borderBottom: "1px solid #E2E8F0",
+                      color: "var(--text-3)",
+                      borderBottom: "1px solid var(--border)",
                     }}
                   >
                     {renderInline(parseInline(h), `th-${key}-${i}-`)}
@@ -619,8 +619,8 @@ function renderBlock(b: Block, key: number): React.ReactNode {
                 <tr
                   key={ri}
                   style={{
-                    background: ri % 2 === 0 ? "#FFFFFF" : "#FBFCFD",
-                    borderTop: ri === 0 ? "none" : "1px solid #F1F5F9",
+                    background: ri % 2 === 0 ? "var(--surface)" : "var(--surface-2)",
+                    borderTop: ri === 0 ? "none" : "1px solid var(--border)",
                   }}
                 >
                   {row.map((cell, ci) => (
@@ -629,7 +629,7 @@ function renderBlock(b: Block, key: number): React.ReactNode {
                       style={{
                         textAlign: b.align[ci] ?? "left",
                         padding: "0.5rem 0.75rem",
-                        color: "#1E293B",
+                        color: "var(--text)",
                         verticalAlign: "top",
                       }}
                     >
@@ -650,7 +650,7 @@ function renderBlock(b: Block, key: number): React.ReactNode {
             margin: "0.85rem 0",
             border: "none",
             height: 1,
-            background: "#E2E8F0",
+            background: "var(--border-strong)",
           }}
         />
       );
@@ -666,7 +666,7 @@ export function Markdown({ source }: { source: string }) {
       className="md-root"
       style={{
         fontSize: "0.92rem",
-        color: "#1E293B",
+        color: "var(--text)",
         maxWidth: "100%",
         minWidth: 0,
       }}

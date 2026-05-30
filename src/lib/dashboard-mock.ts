@@ -87,7 +87,13 @@ export const heroByPeriod: Record<Period, HeroDataset> = {
   },
 };
 
-/** Three satellite KPIs (Marge / Cash-flow / Rétention). Stable across periods for now. */
+/** Three satellite KPIs (Marge / Cash-flow / Rétention). Stable across periods for now.
+ *
+ * Each KPI carries a `tone` so its sparkline + chrome render in a distinct hue rather
+ * than collapsing to a single accent column. Hues map to the KPI's metric meaning:
+ *   - Marge nette  → success (profitability)
+ *   - Cash-flow    → accent  (primary identity / treasury)
+ *   - Rétention    → info    (relationship / portfolio health) */
 export const satellites: Satellite[] = [
   {
     label: "Marge nette", value: "68", unit: "%", trend: "+4 pt",
@@ -99,6 +105,7 @@ export const satellites: Satellite[] = [
       { src: "⊕ Marge",      val: "68 %" },
     ],
     Icon: Percent, target: "Obj. 70 %", sparkTarget: 70, modalKey: "finance",
+    tone: "success",
   },
   {
     label: "Cash-flow", value: "+18", unit: "K", trend: "stable",
@@ -110,6 +117,7 @@ export const satellites: Satellite[] = [
       { src: "⊕ Net",    val: "+18.4 K" },
     ],
     Icon: Wallet, target: "Obj. +20 K", sparkTarget: 20, modalKey: "finance",
+    tone: "accent",
   },
   {
     label: "Rétention", value: "87", unit: "%", trend: "+3 pt",
@@ -121,6 +129,7 @@ export const satellites: Satellite[] = [
       { src: "Solde",      val: "+8" },
     ],
     Icon: Users, target: "Obj. 90 %", sparkTarget: 90, modalKey: "portefeuille",
+    tone: "info",
   },
 ];
 

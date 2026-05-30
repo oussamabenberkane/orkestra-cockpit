@@ -47,97 +47,990 @@
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
 
-  /* Brand colors (legacy navy still used by login BrandPanel) */
+  /* Brand colors. Navy stays static for the login BrandPanel
+     hex-grid; the rest are wired to palette tokens so utility
+     classes that reference --color-* also follow the swap. */
   --color-navy: #1E2761;
   --color-malyz: #2B3AE8;
-  --color-accent-indigo: #007AFF;
-  --color-accent-indigo-2: #0062CC;
-  --color-success: #34A853;
-  --color-warn:    #FF9F0A;
-  --color-danger:  #FF3B30;
-  --color-info:    #007AFF;
-  --color-purple:  #5856D6;
+  --color-accent-indigo:    var(--accent);
+  --color-accent-indigo-2:  var(--accent-2);
+  --color-success: var(--success);
+  --color-warn:    var(--warn);
+  --color-danger:  var(--danger);
+  --color-info:    var(--info);
+  --color-purple:  var(--purple);
 }
 
-:root {
-  /* ── Surfaces ─────────────────────────────────────────── */
-  --bg:           #FFFFFF;
-  --surface:      #FFFFFF;
-  --surface-2:    #F5F5F7;  /* sidebar background */
-  --surface-3:    #ECECEF;
-  --border:       rgba(0,0,0,0.06);
-  --border-strong:rgba(0,0,0,0.10);
+/* ──────────────────────────────────────────────────────────
+ * Four cool, professional palettes share one token contract.
+ * Switch by setting `data-palette` on <html> via PaletteSwitcher:
+ *
+ *   default / [data-palette="aurora"]    → Aurora    · LIGHT · indigo
+ *   [data-palette="stratus"]             → Stratus   · LIGHT · navy
+ *   [data-palette="slate"]               → Slate     · DARK  · Linear violet
+ *   [data-palette="graphite"]            → Graphite  · DARK  · Vercel mono+blue
+ *
+ * Every palette guarantees the same layered surface stack so
+ * components can rely on visual hierarchy regardless of mode:
+ *   --bg        page canvas (where work happens)
+ *   --surface   cards / interactive (1 step above canvas)
+ *   --surface-2 sidebar / muted    (1 step below canvas)
+ *   --surface-3 hover / pressed    (a step above surface)
+ * In dark themes surfaces step UP toward light; in light themes
+ * they step subtly UP toward white. Same logical contract either
+ * way — components don't branch on theme.
+ * ────────────────────────────────────────────────────────── */
 
-  /* ── Text ─────────────────────────────────────────────── */
-  --text:   #1D1D1F;
-  --text-2: #424245;
-  --text-3: #6E6E73;
-  --text-4: #86868B;
+/* ════════════════════════════════════════════════════════════
+ * 1 · AURORA  — light · indigo · pushed-contrast cool slate
+ *     Modern fintech / Stripe Dashboard energy. Canvas is a
+ *     visibly cool slate (deeper than near-white), the sidebar
+ *     drops a clear ~18 L* below it, and cards POP white. Three
+ *     unmistakable tiers, distinct per-section nav hues.
+ * ═══════════════════════════════════════════════════════════ */
+:root,
+:root[data-palette="aurora"] {
+  color-scheme: light;
 
-  /* ── Brand accent (iOS system blue) ──────────────────── */
-  --accent:        #007AFF;
-  --accent-2:      #0062CC;
-  --accent-tint:   rgba(0,122,255,0.10);
-  --accent-tint-2: rgba(0,122,255,0.16);
+  --bg:           #F2F4F9;   /* canvas — visibly tinted (was near-white) */
+  --surface:      #FFFFFF;   /* cards — POP, ~9 L* above canvas */
+  --surface-2:    #D6DEEC;   /* LIGHT — main-app pills/badges/modal headers */
+  --surface-3:    #BEC9DD;   /* LIGHT — main-app hover */
+  --border:       rgba(15,23,42,0.12);
+  --border-strong:rgba(15,23,42,0.20);
 
-  /* ── Semantic ─────────────────────────────────────────── */
-  --success:      #34A853;
-  --success-tint: rgba(52,168,83,0.10);
-  --warn:         #FF9F0A;
-  --warn-tint:    rgba(255,159,10,0.10);
-  --danger:       #FF3B30;
-  --danger-tint:  rgba(255,59,48,0.10);
-  --info:         #007AFF;
-  --info-tint:    rgba(0,122,255,0.10);
-  --purple:       #5856D6;
-  --purple-tint:  rgba(88,86,214,0.10);
+  --text:   #0F172A;
+  --text-2: #334155;
+  --text-3: #64748B;
+  --text-4: #94A3B8;
 
-  /* ── Per-category navigation tints ─────────────────────
-     Used by the sidebar to colorize each nav item even
-     when inactive. Mirrors the dashboard tile palette. */
-  --nav-prospection:    var(--accent);
-  --nav-portefeuille:   var(--info);
-  --nav-sinistres:      var(--danger);
-  --nav-finance:        var(--warn);
-  --nav-vue-ensemble:   var(--accent);
-  --nav-chat:           var(--accent);
-  --nav-alertes:        var(--danger);
-  --nav-agents:         var(--accent);
-  --nav-neutral:        var(--text-3);
+  --accent:        #4F46E5;
+  --accent-2:      #4338CA;
+  --accent-tint:   rgba(79,70,229,0.10);
+  --accent-tint-2: rgba(79,70,229,0.18);
 
-  /* ── Elevation tokens (tier shadows) ───────────────────
-     Multi-layer shadows produce a soft, "plinth" surface. */
+  --success:      #10B981;
+  --success-tint: rgba(16,185,129,0.12);
+  --warn:         #D97706;
+  --warn-tint:    rgba(217,119,6,0.12);
+  --danger:       #DC2626;
+  --danger-tint:  rgba(220,38,38,0.12);
+  --info:         #0EA5E9;
+  --info-tint:    rgba(14,165,233,0.12);
+  --purple:       #7C3AED;
+  --purple-tint:  rgba(124,58,237,0.12);
+
+  /* Nav category icon colors — BRIGHT variants because the Aurora rail is
+   * now a deep slate-800 surface (see the scoped rule below). Deep
+   * semantic variants would disappear; bright variants pop. */
+  --nav-prospection:    #34D399;   /* mint */
+  --nav-portefeuille:   #7DD3FC;   /* sky */
+  --nav-sinistres:      #FB7185;   /* rose */
+  --nav-finance:        #FCD34D;   /* amber */
+  --nav-vue-ensemble:   var(--rail-accent);
+  --nav-chat:           #C4B5FD;   /* lavender */
+  --nav-alertes:        #FB7185;
+  --nav-agents:         var(--rail-accent);
+  --nav-neutral:        rgba(255,255,255,0.62);
+
+  /* Rail tokens — light values for white text/glyphs on the slate-800
+   * rail. rail-accent uses indigo-200, a light sibling of the accent. */
+  --rail-text:        #FFFFFF;
+  --rail-text-muted:  rgba(255,255,255,0.92);
+  --rail-text-soft:   rgba(255,255,255,0.70);
+  --rail-border:      rgba(255,255,255,0.30);
+  --rail-hover:       rgba(255,255,255,0.18);
+  --rail-accent:      #C7D2FE;     /* indigo-200 — Malyz brand + active glyph */
+
+  --rail-badge-bg:     #FFFFFF;
+  --rail-badge-border: rgba(15,23,42,0.18);
+
+  /* Elevation tokens — stronger drops because the deeper canvas
+   * would otherwise swallow a faint shadow. */
   --tier-1:
     inset 0 1px 0 rgba(255,255,255,1),
-    0 0 0 1px rgba(0,0,0,0.04),
-    0 1px 2px rgba(0,0,0,0.05),
-    0 6px 16px -10px rgba(0,0,0,0.12);
+    0 0 0 1px rgba(15,23,42,0.08),
+    0 1px 2px rgba(15,23,42,0.08),
+    0 10px 22px -12px rgba(15,23,42,0.26);
   --tier-2:
     inset 0 1px 0 rgba(255,255,255,1),
-    0 0 0 1px rgba(0,0,0,0.06),
-    0 2px 4px rgba(0,0,0,0.06),
-    0 16px 32px -12px rgba(0,0,0,0.18);
+    0 0 0 1px rgba(15,23,42,0.12),
+    0 3px 6px rgba(15,23,42,0.10),
+    0 24px 48px -14px rgba(15,23,42,0.30);
+  --tier-active:
+    inset 0 1px 0 rgba(255,255,255,1),
+    0 0 0 1px color-mix(in srgb, var(--accent) 20%, transparent),
+    0 1px 2px rgba(15,23,42,0.10),
+    0 10px 22px -12px color-mix(in srgb, var(--accent) 36%, transparent);
   --tier-press:
-    inset 0 1px 2px rgba(0,0,0,0.06),
-    0 0 0 1px rgba(0,0,0,0.05);
+    inset 0 1px 2px rgba(15,23,42,0.10),
+    0 0 0 1px rgba(15,23,42,0.08);
+}
 
-  /* ── shadcn / Tailwind compatibility ──────────────────── */
-  --background: #FFFFFF;
-  --foreground: #1D1D1F;
-  --card: #FFFFFF;
-  --card-foreground: #1D1D1F;
-  --popover: #FFFFFF;
-  --popover-foreground: #1D1D1F;
-  --primary: #007AFF;
+/* Sidebar-scope flip for Aurora — Cobalt architecture: --surface-2/-3 +
+ * text/border/semantic tokens push to dark-rail-appropriate values. The
+ * Aurora rail surface is slate-800 #1E293B — a desaturated cool slate
+ * that fits Aurora's Stripe-dashboard cool-fintech identity.
+ *
+ * Selector includes bare `:root` so the default-Aurora state (no
+ * `data-palette` attribute on <html>, e.g. before the no-flash init
+ * script runs) gets the dark rail too. Other palettes' higher-specificity
+ * selectors override this when their data-palette is active. */
+:root .app-sidebar,
+:root .agent-sidebar,
+:root .agent-sidebar-content,
+:root[data-palette="aurora"] .app-sidebar,
+:root[data-palette="aurora"] .agent-sidebar,
+:root[data-palette="aurora"] .agent-sidebar-content {
+  --surface-2: #1E293B;                  /* slate-800 rail */
+  --surface-3: rgba(255,255,255,0.16);   /* on-rail hover overlay */
+  --text:      #FFFFFF;
+  --text-2:    rgba(255,255,255,0.92);
+  --text-3:    rgba(255,255,255,0.74);
+  --text-4:    rgba(255,255,255,0.58);
+  --border:    rgba(255,255,255,0.22);
+  --border-strong: rgba(255,255,255,0.32);
+
+  /* Bright semantic variants for badges + status pills on the rail. */
+  --danger:        #FB7185;
+  --danger-tint:   rgba(251,113,133,0.18);
+  --warn:          #FBBF24;
+  --warn-tint:     rgba(251,191,36,0.18);
+  --success:       #34D399;
+  --success-tint:  rgba(52,211,153,0.18);
+
+  --rail-hover:    rgba(255,255,255,0.18);
+  --rail-border:   rgba(255,255,255,0.30);
+}
+
+/* ════════════════════════════════════════════════════════════
+ * 2 · MARBLE  — light · saturated dove-blue chrome + sapphire
+ *     Sidebar is a notably saturated dove-blue panel that reads
+ *     as a deliberate colored surface rather than a tint. Cards
+ *     crisp white pop dramatically. All-blue: deep sapphire
+ *     accent harmonizes with the chrome rather than competing.
+ *     (Previously amethyst — purple tones dropped entirely.)
+ * ═══════════════════════════════════════════════════════════ */
+:root[data-palette="marble"] {
+  color-scheme: light;
+
+  --bg:           #EEF1F8;   /* canvas — cool blue-tinted */
+  --surface:      #FFFFFF;   /* cards — crisp white, strong lift */
+  --surface-2:    #C8D2E6;   /* sidebar — heavier dove-blue panel */
+  --surface-3:    #B0BDD7;   /* hover */
+  --border:       rgba(70,90,150,0.16);
+  --border-strong:rgba(70,90,150,0.26);
+
+  --text:   #1A1E2E;
+  --text-2: #353B52;
+  --text-3: #5C6580;
+  --text-4: #8B93AE;
+
+  --accent:        #1E40AF;   /* blue-800, deep sapphire */
+  --accent-2:      #1E3A8A;
+  --accent-tint:   rgba(30,64,175,0.12);
+  --accent-tint-2: rgba(30,64,175,0.20);
+
+  --success:      #047857;
+  --success-tint: rgba(4,120,87,0.12);
+  --warn:         #B45309;
+  --warn-tint:    rgba(180,83,9,0.12);
+  --danger:       #B91C1C;
+  --danger-tint:  rgba(185,28,28,0.12);
+  --info:         #1E40AF;
+  --info-tint:    rgba(30,64,175,0.12);
+  /* "Purple" slot reassigned to sky-blue so components consuming
+   * --purple (e.g. Sparkles agent badge) stay on-brand for Marble. */
+  --purple:       #0EA5E9;
+  --purple-tint:  rgba(14,165,233,0.12);
+
+  /* Nav category icon colors — BRIGHT variants because the Marble rail is
+   * now indigo-800 (see scoped rule below). Deep semantic variants would
+   * disappear on the dark rail. */
+  --nav-prospection:    #34D399;   /* mint */
+  --nav-portefeuille:   #BFDBFE;   /* blue-200 — sibling of accent */
+  --nav-sinistres:      #FB7185;   /* rose */
+  --nav-finance:        #FCD34D;   /* amber */
+  --nav-vue-ensemble:   var(--rail-accent);
+  --nav-chat:           #C4B5FD;   /* lavender */
+  --nav-alertes:        #FB7185;
+  --nav-agents:         var(--rail-accent);
+  --nav-neutral:        rgba(255,255,255,0.62);
+
+  /* Rail tokens — light values for white text/glyphs on the indigo-800
+   * rail. rail-accent uses violet-300 (a bridge between the indigo
+   * rail and the sapphire accent — pops against deep indigo). */
+  --rail-text:        #FFFFFF;
+  --rail-text-muted:  rgba(255,255,255,0.92);
+  --rail-text-soft:   rgba(255,255,255,0.70);
+  --rail-border:      rgba(255,255,255,0.30);
+  --rail-hover:       rgba(255,255,255,0.18);
+  --rail-accent:      #C4B5FD;     /* violet-300 — Malyz brand + active glyph */
+
+  --rail-badge-bg:     #FFFFFF;
+  --rail-badge-border: rgba(15,23,42,0.18);
+
+  --tier-1:
+    inset 0 1px 0 rgba(255,255,255,1),
+    0 0 0 1px rgba(30,40,80,0.12),
+    0 1px 2px rgba(30,40,80,0.10),
+    0 12px 26px -14px rgba(30,40,80,0.32);
+  --tier-2:
+    inset 0 1px 0 rgba(255,255,255,1),
+    0 0 0 1px rgba(30,40,80,0.16),
+    0 3px 6px rgba(30,40,80,0.10),
+    0 28px 56px -16px rgba(30,40,80,0.36);
+  --tier-active:
+    inset 0 1px 0 rgba(255,255,255,1),
+    0 0 0 1px color-mix(in srgb, var(--accent) 22%, transparent),
+    0 1px 2px rgba(30,40,80,0.12),
+    0 12px 26px -14px color-mix(in srgb, var(--accent) 40%, transparent);
+  --tier-press:
+    inset 0 1px 2px rgba(30,40,80,0.14),
+    0 0 0 1px rgba(30,40,80,0.10);
+}
+
+/* Sidebar-scope flip for Marble — indigo-800 rail with violet leaning,
+ * deliberately a different blue family from Cobalt's pure navy. */
+:root[data-palette="marble"] .app-sidebar,
+:root[data-palette="marble"] .agent-sidebar,
+:root[data-palette="marble"] .agent-sidebar-content {
+  --surface-2: #3730A3;                  /* indigo-800 rail */
+  --surface-3: rgba(255,255,255,0.16);
+  --text:      #FFFFFF;
+  --text-2:    rgba(255,255,255,0.92);
+  --text-3:    rgba(255,255,255,0.74);
+  --text-4:    rgba(255,255,255,0.58);
+  --border:    rgba(255,255,255,0.22);
+  --border-strong: rgba(255,255,255,0.32);
+
+  --danger:        #FB7185;
+  --danger-tint:   rgba(251,113,133,0.18);
+  --warn:          #FBBF24;
+  --warn-tint:     rgba(251,191,36,0.18);
+  --success:       #34D399;
+  --success-tint:  rgba(52,211,153,0.18);
+
+  --rail-hover:    rgba(255,255,255,0.18);
+  --rail-border:   rgba(255,255,255,0.30);
+}
+
+/* ════════════════════════════════════════════════════════════
+ * 3 · PEARL  — light · zinc-neutral chrome + ink accent
+ *     Editorial / Vercel-light energy. Zero blue tint in chrome.
+ *     Pushed-contrast: canvas heavier, sidebar one zinc step
+ *     deeper still, cards POP crisp white with aggressive drops.
+ *     Ink accent stays sharp and confident.
+ * ═══════════════════════════════════════════════════════════ */
+:root[data-palette="pearl"] {
+  color-scheme: light;
+
+  --bg:           #EBEBEE;   /* canvas — heavier zinc, was #F4F4F5 */
+  --surface:      #FFFFFF;   /* cards — POP, max lift */
+  --surface-2:    #D4D4D8;   /* sidebar — zinc-300, was #E4E4E7 */
+  --surface-3:    #BCBCC1;   /* hover */
+  --border:       rgba(24,24,27,0.14);
+  --border-strong:rgba(24,24,27,0.22);
+
+  --text:   #09090B;
+  --text-2: #27272A;
+  --text-3: #52525B;
+  --text-4: #71717A;
+
+  --accent:        #18181B;   /* near-black ink */
+  --accent-2:      #09090B;
+  --accent-tint:   rgba(24,24,27,0.08);
+  --accent-tint-2: rgba(24,24,27,0.16);
+
+  --success:      #16A34A;
+  --success-tint: rgba(22,163,74,0.12);
+  --warn:         #D97706;
+  --warn-tint:    rgba(217,119,6,0.12);
+  --danger:       #DC2626;
+  --danger-tint:  rgba(220,38,38,0.12);
+  --info:         #0EA5E9;
+  --info-tint:    rgba(14,165,233,0.12);
+  --purple:       #7C3AED;
+  --purple-tint:  rgba(124,58,237,0.12);
+
+  /* Nav category icon colors — BRIGHT variants because the Pearl rail is
+   * now zinc-900 (see scoped rule below). */
+  --nav-prospection:    #34D399;   /* mint */
+  --nav-portefeuille:   #7DD3FC;   /* sky */
+  --nav-sinistres:      #FB7185;   /* rose */
+  --nav-finance:        #FCD34D;   /* amber */
+  --nav-vue-ensemble:   var(--rail-accent);
+  --nav-chat:           #C4B5FD;   /* lavender */
+  --nav-alertes:        #FB7185;
+  --nav-agents:         var(--rail-accent);
+  --nav-neutral:        rgba(255,255,255,0.62);
+
+  /* Rail tokens — light values for white text/glyphs on the zinc-900
+   * rail. rail-accent uses zinc-50 (pure near-white) — editorial
+   * white-on-ink Vercel-dark register, no accent hue on the rail glyph. */
+  --rail-text:        #FFFFFF;
+  --rail-text-muted:  rgba(255,255,255,0.92);
+  --rail-text-soft:   rgba(255,255,255,0.70);
+  --rail-border:      rgba(255,255,255,0.30);
+  --rail-hover:       rgba(255,255,255,0.18);
+  --rail-accent:      #FAFAFA;     /* zinc-50 — Malyz brand + active glyph */
+
+  --rail-badge-bg:     #FFFFFF;
+  --rail-badge-border: rgba(24,24,27,0.20);
+
+  --tier-1:
+    inset 0 1px 0 rgba(255,255,255,1),
+    0 0 0 1px rgba(24,24,27,0.12),
+    0 1px 2px rgba(24,24,27,0.10),
+    0 14px 28px -14px rgba(24,24,27,0.34);
+  --tier-2:
+    inset 0 1px 0 rgba(255,255,255,1),
+    0 0 0 1px rgba(24,24,27,0.14),
+    0 4px 8px rgba(24,24,27,0.12),
+    0 32px 60px -18px rgba(24,24,27,0.42);
+  --tier-active:
+    inset 0 1px 0 rgba(255,255,255,1),
+    0 0 0 1px rgba(24,24,27,0.20),
+    0 1px 2px rgba(24,24,27,0.12),
+    0 14px 28px -14px rgba(24,24,27,0.40);
+  --tier-press:
+    inset 0 1px 2px rgba(24,24,27,0.16),
+    0 0 0 1px rgba(24,24,27,0.10);
+}
+
+/* Sidebar-scope flip for Pearl — zinc-900 rail, near-black editorial
+ * Vercel-dark sidebar against the zinc-neutral light app. */
+:root[data-palette="pearl"] .app-sidebar,
+:root[data-palette="pearl"] .agent-sidebar,
+:root[data-palette="pearl"] .agent-sidebar-content {
+  --surface-2: #18181B;                  /* zinc-900 rail */
+  --surface-3: rgba(255,255,255,0.14);
+  --text:      #FFFFFF;
+  --text-2:    rgba(255,255,255,0.92);
+  --text-3:    rgba(255,255,255,0.72);
+  --text-4:    rgba(255,255,255,0.56);
+  --border:    rgba(255,255,255,0.20);
+  --border-strong: rgba(255,255,255,0.30);
+
+  --danger:        #FB7185;
+  --danger-tint:   rgba(251,113,133,0.18);
+  --warn:          #FBBF24;
+  --warn-tint:     rgba(251,191,36,0.18);
+  --success:       #34D399;
+  --success-tint:  rgba(52,211,153,0.18);
+
+  --rail-hover:    rgba(255,255,255,0.18);
+  --rail-border:   rgba(255,255,255,0.30);
+}
+
+/* ════════════════════════════════════════════════════════════
+ * 4 · MINERAL  — light · deeply saturated cool slate chrome + cyan
+ *     Deepest cool-slate saturation in the set. Pushed-contrast:
+ *     sidebar at #B5C1D2 (was #C5D0DE) — even more obviously a
+ *     colored panel. Cards crisp white pop dramatically. Cyan-700
+ *     accent gives a sharp, technical, data-tool register.
+ * ═══════════════════════════════════════════════════════════ */
+:root[data-palette="mineral"] {
+  color-scheme: light;
+
+  --bg:           #E6ECF3;   /* canvas — cool pale slate */
+  --surface:      #FFFFFF;   /* cards — crisp white pop */
+  --surface-2:    #B5C1D2;   /* sidebar — heaviest cool-slate panel */
+  --surface-3:    #9CABBE;   /* hover */
+  --border:       rgba(30,41,59,0.16);
+  --border-strong:rgba(30,41,59,0.28);
+
+  --text:   #0F172A;
+  --text-2: #1E293B;
+  --text-3: #475569;
+  --text-4: #64748B;
+
+  --accent:        #0E7490;   /* cyan-700, technical sharp */
+  --accent-2:      #155E75;
+  --accent-tint:   rgba(14,116,144,0.12);
+  --accent-tint-2: rgba(14,116,144,0.22);
+
+  --success:      #047857;
+  --success-tint: rgba(4,120,87,0.12);
+  --warn:         #B45309;
+  --warn-tint:    rgba(180,83,9,0.12);
+  --danger:       #B91C1C;
+  --danger-tint:  rgba(185,28,28,0.12);
+  --info:         #0369A1;
+  --info-tint:    rgba(3,105,161,0.12);
+  --purple:       #6D28D9;
+  --purple-tint:  rgba(109,40,217,0.12);
+
+  /* Nav category icon colors — BRIGHT variants because the Mineral rail is
+   * now cyan-800 (see scoped rule below). */
+  --nav-prospection:    #34D399;   /* mint */
+  --nav-portefeuille:   #A5F3FC;   /* cyan-200 — sibling of accent */
+  --nav-sinistres:      #FB7185;   /* rose */
+  --nav-finance:        #FCD34D;   /* amber */
+  --nav-vue-ensemble:   var(--rail-accent);
+  --nav-chat:           #C4B5FD;   /* lavender */
+  --nav-alertes:        #FB7185;
+  --nav-agents:         var(--rail-accent);
+  --nav-neutral:        rgba(255,255,255,0.62);
+
+  /* Rail tokens — light values for white text/glyphs on the cyan-800
+   * rail. rail-accent uses cyan-200, sibling of the cyan-700 accent. */
+  --rail-text:        #FFFFFF;
+  --rail-text-muted:  rgba(255,255,255,0.92);
+  --rail-text-soft:   rgba(255,255,255,0.70);
+  --rail-border:      rgba(255,255,255,0.30);
+  --rail-hover:       rgba(255,255,255,0.18);
+  --rail-accent:      #A5F3FC;     /* cyan-200 — Malyz brand + active glyph */
+
+  --rail-badge-bg:     #FFFFFF;
+  --rail-badge-border: rgba(15,23,42,0.18);
+
+  --tier-1:
+    inset 0 1px 0 rgba(255,255,255,1),
+    0 0 0 1px rgba(30,41,59,0.14),
+    0 1px 2px rgba(30,41,59,0.12),
+    0 12px 26px -14px rgba(30,41,59,0.34);
+  --tier-2:
+    inset 0 1px 0 rgba(255,255,255,1),
+    0 0 0 1px rgba(30,41,59,0.18),
+    0 4px 8px rgba(30,41,59,0.12),
+    0 28px 56px -16px rgba(30,41,59,0.38);
+  --tier-active:
+    inset 0 1px 0 rgba(255,255,255,1),
+    0 0 0 1px color-mix(in srgb, var(--accent) 24%, transparent),
+    0 1px 2px rgba(30,41,59,0.14),
+    0 12px 26px -14px color-mix(in srgb, var(--accent) 42%, transparent);
+  --tier-press:
+    inset 0 1px 2px rgba(30,41,59,0.14),
+    0 0 0 1px rgba(30,41,59,0.10);
+}
+
+/* Sidebar-scope flip for Mineral — cyan-800 rail, sibling of the cyan-700
+ * accent. Reinforces the data-tool / observability identity. */
+:root[data-palette="mineral"] .app-sidebar,
+:root[data-palette="mineral"] .agent-sidebar,
+:root[data-palette="mineral"] .agent-sidebar-content {
+  --surface-2: #155E75;                  /* cyan-800 rail */
+  --surface-3: rgba(255,255,255,0.16);
+  --text:      #FFFFFF;
+  --text-2:    rgba(255,255,255,0.92);
+  --text-3:    rgba(255,255,255,0.74);
+  --text-4:    rgba(255,255,255,0.58);
+  --border:    rgba(255,255,255,0.22);
+  --border-strong: rgba(255,255,255,0.32);
+
+  --danger:        #FB7185;
+  --danger-tint:   rgba(251,113,133,0.18);
+  --warn:          #FBBF24;
+  --warn-tint:     rgba(251,191,36,0.18);
+  --success:       #34D399;
+  --success-tint:  rgba(52,211,153,0.18);
+
+  --rail-hover:    rgba(255,255,255,0.18);
+  --rail-border:   rgba(255,255,255,0.30);
+}
+
+/* ════════════════════════════════════════════════════════════
+ * 5 · ATELIER  — industrial cool-slate · sharp sapphire-navy
+ *     Engineering / blueprint register. Pushed-contrast: canvas
+ *     deeper (#DDE2EB), sidebar much heavier (#B5BDCB) — a real
+ *     dark-leaning slate panel below the canvas. Cards POP white,
+ *     borders are strong and visible. CAD-tool feel.
+ * ═══════════════════════════════════════════════════════════ */
+:root[data-palette="atelier"] {
+  color-scheme: light;
+
+  --bg:           #DDE2EB;   /* canvas — dark-leaning cool slate */
+  --surface:      #FFFFFF;   /* cards — POP, ~26 L* above canvas */
+  --surface-2:    #B5BDCB;   /* sidebar — much heavier, ~16 L* below canvas */
+  --surface-3:    #98A2B2;   /* hover */
+  --border:       rgba(30,41,59,0.22);   /* strong visible hairlines */
+  --border-strong:rgba(30,41,59,0.34);
+
+  --text:   #0F172A;
+  --text-2: #1E293B;
+  --text-3: #475569;
+  --text-4: #6B7689;
+
+  --accent:        #1D4ED8;   /* blue-700, sharp engineering */
+  --accent-2:      #1E40AF;
+  --accent-tint:   rgba(29,78,216,0.12);
+  --accent-tint-2: rgba(29,78,216,0.20);
+
+  --success:      #047857;
+  --success-tint: rgba(4,120,87,0.12);
+  --warn:         #B45309;
+  --warn-tint:    rgba(180,83,9,0.12);
+  --danger:       #B91C1C;
+  --danger-tint:  rgba(185,28,28,0.12);
+  --info:         #0369A1;
+  --info-tint:    rgba(3,105,161,0.12);
+  --purple:       #6D28D9;
+  --purple-tint:  rgba(109,40,217,0.12);
+
+  /* Nav category icon colors — BRIGHT variants because the Atelier rail
+   * is now slate-900 (see scoped rule below). */
+  --nav-prospection:    #34D399;   /* mint */
+  --nav-portefeuille:   #BFDBFE;   /* blue-200 — sibling of accent */
+  --nav-sinistres:      #FB7185;   /* rose */
+  --nav-finance:        #FCD34D;   /* amber */
+  --nav-vue-ensemble:   var(--rail-accent);
+  --nav-chat:           #C4B5FD;   /* lavender */
+  --nav-alertes:        #FB7185;
+  --nav-agents:         var(--rail-accent);
+  --nav-neutral:        rgba(255,255,255,0.62);
+
+  /* Rail tokens — light values for white text/glyphs on the slate-900
+   * rail. rail-accent uses blue-200 (sibling of the blue-700 accent),
+   * reinforcing the CAD-tool blueprint identity. */
+  --rail-text:        #FFFFFF;
+  --rail-text-muted:  rgba(255,255,255,0.92);
+  --rail-text-soft:   rgba(255,255,255,0.70);
+  --rail-border:      rgba(255,255,255,0.30);
+  --rail-hover:       rgba(255,255,255,0.18);
+  --rail-accent:      #BFDBFE;     /* blue-200 — Malyz brand + active glyph */
+
+  --rail-badge-bg:     #FFFFFF;
+  --rail-badge-border: rgba(15,23,42,0.18);
+
+  --tier-1:
+    inset 0 1px 0 rgba(255,255,255,1),
+    0 0 0 1px rgba(30,41,59,0.16),
+    0 1px 2px rgba(30,41,59,0.14),
+    0 14px 30px -14px rgba(30,41,59,0.40);
+  --tier-2:
+    inset 0 1px 0 rgba(255,255,255,1),
+    0 0 0 1px rgba(30,41,59,0.22),
+    0 4px 8px rgba(30,41,59,0.14),
+    0 32px 60px -18px rgba(30,41,59,0.46);
+  --tier-active:
+    inset 0 1px 0 rgba(255,255,255,1),
+    0 0 0 1px color-mix(in srgb, var(--accent) 30%, transparent),
+    0 1px 2px rgba(30,41,59,0.16),
+    0 14px 30px -14px color-mix(in srgb, var(--accent) 46%, transparent);
+  --tier-press:
+    inset 0 1px 2px rgba(30,41,59,0.18),
+    0 0 0 1px rgba(30,41,59,0.14);
+}
+
+/* Sidebar-scope flip for Atelier — slate-900 rail. Deepest of the
+ * dark-sidebar palettes, reinforcing the CAD-blueprint identity. */
+:root[data-palette="atelier"] .app-sidebar,
+:root[data-palette="atelier"] .agent-sidebar,
+:root[data-palette="atelier"] .agent-sidebar-content {
+  --surface-2: #0F172A;                  /* slate-900 rail */
+  --surface-3: rgba(255,255,255,0.16);
+  --text:      #FFFFFF;
+  --text-2:    rgba(255,255,255,0.92);
+  --text-3:    rgba(255,255,255,0.74);
+  --text-4:    rgba(255,255,255,0.58);
+  --border:    rgba(255,255,255,0.22);
+  --border-strong: rgba(255,255,255,0.32);
+
+  --danger:        #FB7185;
+  --danger-tint:   rgba(251,113,133,0.18);
+  --warn:          #FBBF24;
+  --warn-tint:     rgba(251,191,36,0.18);
+  --success:       #34D399;
+  --success-tint:  rgba(52,211,153,0.18);
+
+  --rail-hover:    rgba(255,255,255,0.18);
+  --rail-border:   rgba(255,255,255,0.30);
+}
+
+/* ════════════════════════════════════════════════════════════
+ * 6 · COBALT  — light app · saturated deep-blue sidebar
+ *     The sidebar is a saturated cobalt panel (Tailwind blue-800
+ *     #1E3A8A) that stands out boldly against the light main app.
+ *     Maximum sidebar/canvas contrast without going full dark.
+ *
+ *     Surface architecture: --surface-2 and --surface-3 are LIGHT
+ *     values at the root level — they're consumed app-wide for
+ *     pill backgrounds, badge chips, modal headers, hover effects.
+ *     The deep cobalt surface is applied via a SCOPED rule only
+ *     inside .app-sidebar / .agent-sidebar / .agent-sidebar-content,
+ *     so the main app doesn't accidentally inherit a dark-blue pill
+ *     anywhere. Within those scopes, text + border tokens flip to
+ *     light variants for legibility on the deep blue.
+ *
+ *     White-on-rail elements (active nav pill, search button, bell
+ *     button) are tagged with .rail-on-white so their text tokens
+ *     re-scope back to dark — preserving label legibility when a
+ *     white card floats on the cobalt rail.
+ * ═══════════════════════════════════════════════════════════ */
+:root[data-palette="cobalt"] {
+  color-scheme: light;
+
+  --bg:           #F4F7FB;   /* canvas — cool pale */
+  --surface:      #FFFFFF;   /* cards — crisp white */
+  --surface-2:    #DDE5F0;   /* LIGHT — main-app pills/badges/modal headers */
+  --surface-3:    #C9D3E3;   /* LIGHT — main-app hover */
+  --border:       rgba(15,23,42,0.14);
+  --border-strong:rgba(15,23,42,0.24);
+
+  /* Text tokens darkened a step for crisper main-app readability.
+   * (Was #334155 / #64748B / #94A3B8 — pushed darker so labels,
+   * source pills, and KPI captions read with proper authority.) */
+  --text:   #0F172A;
+  --text-2: #1F2937;
+  --text-3: #475569;
+  --text-4: #64748B;
+
+  --accent:        #2563EB;   /* blue-600 — sibling of sidebar */
+  --accent-2:      #1D4ED8;
+  --accent-tint:   rgba(37,99,235,0.12);
+  --accent-tint-2: rgba(37,99,235,0.22);
+
+  --success:      #047857;
+  --success-tint: rgba(4,120,87,0.12);
+  --warn:         #B45309;
+  --warn-tint:    rgba(180,83,9,0.12);
+  --danger:       #B91C1C;
+  --danger-tint:  rgba(185,28,28,0.12);
+  --info:         #0369A1;
+  --info-tint:    rgba(3,105,161,0.12);
+  --purple:       #6D28D9;
+  --purple-tint:  rgba(109,40,217,0.12);
+
+  /* Nav category icon colors — BRIGHT variants because --nav-* is
+   * consumed only inside the sidebar (Sidebar.tsx), which lives in
+   * the cobalt-scoped surface below. On the deep-blue sidebar, deep
+   * variants would disappear; bright variants pop cleanly. */
+  --nav-prospection:    #34D399;   /* mint */
+  --nav-portefeuille:   #7DD3FC;   /* sky */
+  --nav-sinistres:      #FB7185;   /* rose */
+  --nav-finance:        #FCD34D;   /* amber */
+  --nav-vue-ensemble:   var(--rail-accent);
+  --nav-chat:           #C4B5FD;   /* lavender */
+  --nav-alertes:        #FB7185;
+  --nav-agents:         var(--rail-accent);
+  --nav-neutral:        rgba(255,255,255,0.62);
+
+  /* Rail token defaults — light values because Sidebar.tsx renders
+   * these on the cobalt sidebar surface. Values mirror the scoped
+   * sidebar overrides below so the tokens stay coherent. */
+  --rail-text:        #FFFFFF;
+  --rail-text-muted:  rgba(255,255,255,0.92);
+  --rail-text-soft:   rgba(255,255,255,0.66);
+  --rail-border:      rgba(255,255,255,0.30);
+  --rail-hover:       rgba(255,255,255,0.18);
+  --rail-accent:      #BAE6FD;     /* sky-200 — high contrast on deep cobalt */
+
+  /* Badge override — solid white pill with a dark hairline so the
+   * count chip pops crisply on the cobalt rail. Text color is set
+   * by the .rail-on-white scope below to deep semantic variants. */
+  --rail-badge-bg:     #FFFFFF;
+  --rail-badge-border: rgba(15,23,42,0.18);
+
+  --tier-1:
+    inset 0 1px 0 rgba(255,255,255,1),
+    0 0 0 1px rgba(15,23,42,0.10),
+    0 1px 2px rgba(15,23,42,0.08),
+    0 12px 26px -14px rgba(15,23,42,0.30);
+  --tier-2:
+    inset 0 1px 0 rgba(255,255,255,1),
+    0 0 0 1px rgba(15,23,42,0.14),
+    0 4px 8px rgba(15,23,42,0.10),
+    0 28px 56px -16px rgba(15,23,42,0.36);
+  --tier-active:
+    inset 0 1px 0 rgba(255,255,255,1),
+    0 0 0 1px color-mix(in srgb, var(--accent) 26%, transparent),
+    0 1px 2px rgba(15,23,42,0.10),
+    0 12px 26px -14px color-mix(in srgb, var(--accent) 44%, transparent);
+  --tier-press:
+    inset 0 1px 2px rgba(15,23,42,0.12),
+    0 0 0 1px rgba(15,23,42,0.10);
+}
+
+/* In Cobalt, sidebar containers flip --surface-2/-3 to the deep cobalt
+ * and override text/border tokens for legibility. Everything inside the
+ * sidebar (popups, badges, hover states) inherits these automatically.
+ *
+ * Semantic colors are also overridden to BRIGHT variants because dark
+ * defaults (--danger #B91C1C, --warn #B45309) disappear on the cobalt
+ * surface. The bright variants only apply inside the sidebar scope, so
+ * the main app keeps its deep semantic palette for badges on light cards. */
+:root[data-palette="cobalt"] .app-sidebar,
+:root[data-palette="cobalt"] .agent-sidebar,
+:root[data-palette="cobalt"] .agent-sidebar-content {
+  --surface-2: #1E3A8A;                  /* deep cobalt — sidebar bg */
+  --surface-3: rgba(255,255,255,0.16);   /* on-rail hover overlay (more visible) */
+  --text:      #FFFFFF;
+  --text-2:    rgba(255,255,255,0.92);   /* nudged up from 0.88 */
+  --text-3:    rgba(255,255,255,0.74);   /* nudged up from 0.66 — metadata */
+  --text-4:    rgba(255,255,255,0.58);   /* nudged up from 0.48 — timestamps */
+  --border:    rgba(255,255,255,0.20);
+  --border-strong: rgba(255,255,255,0.30);
+
+  /* Bright semantic variants for badges + status pills on cobalt. */
+  --danger:        #FB7185;
+  --danger-tint:   rgba(251,113,133,0.18);
+  --warn:          #FBBF24;
+  --warn-tint:     rgba(251,191,36,0.18);
+  --success:       #34D399;
+  --success-tint:  rgba(52,211,153,0.18);
+
+  /* Rail-hover/border bumped so badge pills carry weight on the cobalt
+   * background — these are the count chips on nav items. */
+  --rail-hover:    rgba(255,255,255,0.18);
+  --rail-border:   rgba(255,255,255,0.30);
+}
+
+/* White-card-on-rail — elements rendered inside the cobalt sidebar but
+ * with a white surface bg (active nav pill, search button, bell button,
+ * count badges, the Profile + Notifications popup panels). Reset text +
+ * semantic + nav-icon tokens to dark variants so labels, badge counts,
+ * and icons render with proper contrast on white.
+ *
+ * IMPORTANT — surface-2/-3 reset:
+ * The sidebar scope above flips --surface-2 to deep cobalt #1E3A8A and
+ * --surface-3 to a translucent white overlay (intended for rail hover
+ * states). White cards rendered inside the rail INHERIT those values,
+ * which means anything painting hover/footer surfaces with
+ * `background: var(--surface-2)` inside the popup (UserMenuContent
+ * item hovers, NotificationsContent list-row hover, the logout footer,
+ * the "Bientôt" badge) gets dark cobalt under dark text — unreadable.
+ * Resetting --surface-2/-3 here restores the LIGHT root-cobalt values
+ * so the popup interior reads as a calm light-app surface, matching
+ * the popup's own white card. Fixes the bug at the token level rather
+ * than overriding each consumer. */
+:root .app-sidebar .rail-on-white,
+:root .agent-sidebar .rail-on-white,
+:root[data-palette="cobalt"] .app-sidebar .rail-on-white,
+:root[data-palette="cobalt"] .agent-sidebar .rail-on-white,
+:root[data-palette="azure"] .app-sidebar .rail-on-white,
+:root[data-palette="azure"] .agent-sidebar .rail-on-white,
+:root[data-palette="aurora"] .app-sidebar .rail-on-white,
+:root[data-palette="aurora"] .agent-sidebar .rail-on-white,
+:root[data-palette="marble"] .app-sidebar .rail-on-white,
+:root[data-palette="marble"] .agent-sidebar .rail-on-white,
+:root[data-palette="pearl"] .app-sidebar .rail-on-white,
+:root[data-palette="pearl"] .agent-sidebar .rail-on-white,
+:root[data-palette="mineral"] .app-sidebar .rail-on-white,
+:root[data-palette="mineral"] .agent-sidebar .rail-on-white,
+:root[data-palette="atelier"] .app-sidebar .rail-on-white,
+:root[data-palette="atelier"] .agent-sidebar .rail-on-white {
+  --surface-2: #DDE5F0;
+  --surface-3: #C9D3E3;
+  /* Border tokens — sidebar scope sets these to WHITE rgba for hairlines
+   * on the dark rail. Inside a white card those would render as
+   * invisible white-on-white dividers (the UserMenu/Notifications popup
+   * header rule, logout footer rule, list-row separators, "Bientôt" badge
+   * border). Reset to the dark light-app variants so dividers actually
+   * read on a white surface. */
+  --border:        rgba(15,23,42,0.14);
+  --border-strong: rgba(15,23,42,0.24);
+  --text:      #0F172A;
+  --text-2:    #1F2937;
+  --text-3:    #475569;
+  --text-4:    #64748B;
+  --rail-text:        #0F172A;
+  --rail-text-muted:  #1F2937;
+  --rail-text-soft:   #475569;
+  --rail-border:      rgba(15,23,42,0.14);
+  --rail-hover:       rgba(15,23,42,0.04);
+  --rail-accent:      var(--accent);
+  --rail-badge-bg:     #FFFFFF;
+  --rail-badge-border: rgba(15,23,42,0.18);
+  /* Semantic colors flip back to DEEP variants — the sidebar-scope
+   * brightened them (e.g. --danger to #FB7185) for legibility on cobalt,
+   * but a white card needs deep variants for the same WCAG step. */
+  --danger:        #B91C1C;
+  --warn:          #B45309;
+  --success:       #047857;
+  --info:          #0369A1;
+  /* Nav category icons swap from BRIGHT (designed for dark rail) to
+   * DEEP variants since they're now on a white card. */
+  --nav-prospection:    #047857;
+  --nav-portefeuille:   #0369A1;
+  --nav-sinistres:      #B91C1C;
+  --nav-finance:        #B45309;
+  --nav-vue-ensemble:   var(--accent);
+  --nav-chat:           #6D28D9;
+  --nav-alertes:        #B91C1C;
+  --nav-agents:         var(--accent);
+  --nav-neutral:        var(--text-3);
+}
+
+/* ════════════════════════════════════════════════════════════
+ * 7 · AZURE — all-blue · #2563EB everywhere (rail, accent, buttons)
+ *     Monochromatic blue palette. The hero blue (#2563EB) is the SAME
+ *     value used for:
+ *       - the sidebar rail surface (scoped --surface-2 below)
+ *       - the --accent token (primary buttons, source pills, sparkline
+ *         accents, focus rings, the active dock pill, the Aujourd'hui
+ *         chip on the hero chart, the modal "OUVRIR" CTA, …)
+ *       - the --info slot (collapsed into accent so two competing blues
+ *         don't fight; the Portefeuille tile and BrokerStar source pill
+ *         now read as the same hero blue)
+ *     Hover and press states use blue-700 (#1D4ED8) — one Tailwind
+ *     shade darker — as the only shade variation, plus the standard
+ *     alpha-tinted variants for chip backgrounds. The whole chrome
+ *     reads as one unified blue surface rather than the rail / accent
+ *     sibling-hue split that Cobalt uses.
+ *
+ *     Semantic slots that need to actually MEAN something keep their
+ *     own hues — success (emerald), warn (orange), danger (red),
+ *     purple (violet) — otherwise the "+12% YoY", "2 impayés", and
+ *     bell-badge count would lose their semantic colour cue. The nav
+ *     icons in the rail unify around light-blue variants so the
+ *     sidebar's icon row stops carrying the multi-hue rainbow.
+ * ═══════════════════════════════════════════════════════════ */
+:root[data-palette="azure"] {
+  color-scheme: light;
+
+  --bg:           #F4F7FB;   /* canvas — cool pale */
+  --surface:      #FFFFFF;   /* cards — crisp white */
+  --surface-2:    #DDE5F0;   /* LIGHT — main-app pills/badges/modal headers */
+  --surface-3:    #C9D3E3;   /* LIGHT — main-app hover */
+  --border:       rgba(15,23,42,0.14);
+  --border-strong:rgba(15,23,42,0.24);
+
+  --text:   #0F172A;
+  --text-2: #1F2937;
+  --text-3: #475569;
+  --text-4: #64748B;
+
+  /* THE hero blue. Accent and the scoped sidebar surface are the same
+   * exact value, so primary buttons + the rail read as one continuous
+   * blue. accent-2 is the only shade variation: one Tailwind step
+   * darker (blue-700) for hover/press states. Tints are alpha-derived
+   * from the accent hex so chip backgrounds carry the same hue. */
+  --accent:        #2563EB;   /* blue-600 — THE hero blue, used everywhere */
+  --accent-2:      #1D4ED8;   /* blue-700 — hover/press only */
+  --accent-tint:   rgba(37,99,235,0.12);
+  --accent-tint-2: rgba(37,99,235,0.22);
+
+  --success:      #047857;
+  --success-tint: rgba(4,120,87,0.12);
+  --warn:         #B45309;
+  --warn-tint:    rgba(180,83,9,0.12);
+  --danger:       #B91C1C;
+  --danger-tint:  rgba(185,28,28,0.12);
+  /* --info collapses into the accent — info slot is conceptually a
+   * blue role (Portefeuille tile chip, BrokerStar source pill dot,
+   * Cash-flow callout). Pointing it at the hero blue removes the
+   * second competing blue and lets the palette stay monochrome. */
+  --info:         #2563EB;
+  --info-tint:    rgba(37,99,235,0.12);
+  --purple:       #6D28D9;
+  --purple-tint:  rgba(109,40,217,0.12);
+
+  /* Nav category icon colors — unified to the blue family so the rail's
+   * icon row stays in palette. Three close blue-light variants
+   * (blue-100/200/300) give just enough luminance separation to keep
+   * adjacent icons distinguishable without reintroducing mint/rose/
+   * amber. The few that still need a clearly different cue (sinistres
+   * for warnings, alertes for notifications) get the most saturated
+   * blue-300 so they at least pop against quieter neighbours. */
+  --nav-prospection:    #BFDBFE;   /* blue-200 */
+  --nav-portefeuille:   #DBEAFE;   /* blue-100 */
+  --nav-sinistres:      #93C5FD;   /* blue-300 — most saturated, semantic */
+  --nav-finance:        #BFDBFE;
+  --nav-vue-ensemble:   var(--rail-accent);
+  --nav-chat:           #DBEAFE;
+  --nav-alertes:        #93C5FD;
+  --nav-agents:         var(--rail-accent);
+  --nav-neutral:        rgba(255,255,255,0.66);
+
+  /* Rail token defaults — light values because Sidebar.tsx renders these
+   * on the blue-600 rail surface. */
+  --rail-text:        #FFFFFF;
+  --rail-text-muted:  rgba(255,255,255,0.92);
+  --rail-text-soft:   rgba(255,255,255,0.70);
+  --rail-border:      rgba(255,255,255,0.32);
+  --rail-hover:       rgba(255,255,255,0.18);
+  --rail-accent:      #DBEAFE;     /* blue-100 — Malyz brand + active item glyph */
+
+  --rail-badge-bg:     #FFFFFF;
+  --rail-badge-border: rgba(15,23,42,0.18);
+
+  --tier-1:
+    inset 0 1px 0 rgba(255,255,255,1),
+    0 0 0 1px rgba(15,23,42,0.10),
+    0 1px 2px rgba(15,23,42,0.08),
+    0 12px 26px -14px rgba(15,23,42,0.30);
+  --tier-2:
+    inset 0 1px 0 rgba(255,255,255,1),
+    0 0 0 1px rgba(15,23,42,0.14),
+    0 4px 8px rgba(15,23,42,0.10),
+    0 28px 56px -16px rgba(15,23,42,0.36);
+  --tier-active:
+    inset 0 1px 0 rgba(255,255,255,1),
+    0 0 0 1px color-mix(in srgb, var(--accent) 26%, transparent),
+    0 1px 2px rgba(15,23,42,0.10),
+    0 12px 26px -14px color-mix(in srgb, var(--accent) 44%, transparent);
+  --tier-press:
+    inset 0 1px 2px rgba(15,23,42,0.12),
+    0 0 0 1px rgba(15,23,42,0.10);
+}
+
+/* Sidebar-scope flip for Azure — same architecture as Cobalt: --surface-2
+ * becomes the rail surface, --surface-3 becomes the on-rail hover
+ * overlay, text/border/semantic tokens push to LIGHT variants. The rail
+ * surface here is THE hero blue #2563EB, identical to --accent at root,
+ * so the rail and accent are visually one continuous blue. */
+:root[data-palette="azure"] .app-sidebar,
+:root[data-palette="azure"] .agent-sidebar,
+:root[data-palette="azure"] .agent-sidebar-content {
+  --surface-2: #2563EB;                  /* THE hero blue — same as --accent */
+  --surface-3: rgba(255,255,255,0.16);   /* on-rail hover overlay */
+  --text:      #FFFFFF;
+  --text-2:    rgba(255,255,255,0.92);
+  --text-3:    rgba(255,255,255,0.74);
+  --text-4:    rgba(255,255,255,0.58);
+  --border:    rgba(255,255,255,0.22);
+  --border-strong: rgba(255,255,255,0.32);
+
+  /* Bright semantic variants for badges + status pills on the rail. */
+  --danger:        #FB7185;
+  --danger-tint:   rgba(251,113,133,0.18);
+  --warn:          #FBBF24;
+  --warn-tint:     rgba(251,191,36,0.18);
+  --success:       #34D399;
+  --success-tint:  rgba(52,211,153,0.18);
+
+  --rail-hover:    rgba(255,255,255,0.18);
+  --rail-border:   rgba(255,255,255,0.32);
+}
+
+/* shadcn / Tailwind compatibility — palette-token-driven so the
+ * shadcn primitive layer follows every data-palette swap. */
+:root {
+  /* Rail token defaults — these are consumed by Sidebar.tsx and other
+   * "rail-style" surfaces (chat history sidebar etc.). Defaults assume
+   * a light sidebar (the case in 6 of 7 palettes), so they resolve to
+   * the same dark text values as the rest of the app. Palettes with a
+   * colored sidebar (e.g. Cobalt) override these to light values. */
+  --rail-text:        var(--text);
+  --rail-text-muted:  var(--text-2);
+  --rail-text-soft:   var(--text-4);
+  --rail-border:      var(--border);
+  --rail-hover:       rgba(0,0,0,0.04);
+  --rail-accent:      var(--accent);
+
+  /* Badge chip on the sidebar — separate tokens so colored-sidebar
+   * palettes can flip the badge to a high-contrast solid pill without
+   * touching the rail-hover token (which is used by other UI states). */
+  --rail-badge-bg:     var(--rail-hover);
+  --rail-badge-border: var(--rail-border);
+
+  --background: var(--bg);
+  --foreground: var(--text);
+  --card: var(--surface);
+  --card-foreground: var(--text);
+  --popover: var(--surface);
+  --popover-foreground: var(--text);
+  --primary: var(--accent);
   --primary-foreground: #FFFFFF;
-  --secondary: #F5F5F7;
-  --secondary-foreground: #1D1D1F;
-  --muted: #F5F5F7;
-  --muted-foreground: #6E6E73;
-  --accent-foreground: #1D1D1F;
-  --destructive: #FF3B30;
-  --input: rgba(0,0,0,0.06);
-  --ring: #007AFF;
+  --secondary: var(--surface-2);
+  --secondary-foreground: var(--text);
+  --muted: var(--surface-2);
+  --muted-foreground: var(--text-3);
+  --accent-foreground: var(--text);
+  --destructive: var(--danger);
+  --input: var(--border);
+  --ring: var(--accent);
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
@@ -670,32 +1563,24 @@ html.scroll-locked body {
 
 /* Email meta value rows: scroll horizontally when De/À/Objet content overflows
    (mainly the long sender/recipient + monospace email pair on narrow viewports).
-   The right-edge mask fades the last few px so the cut-off feels intentional,
-   and a slim 4px scrollbar makes the affordance discoverable. */
+   The right-edge mask fades the last few px so the cut-off feels intentional.
+   No visible scrollbar — matches the native input scroll behaviour used by
+   the À / Objet fields, so the three rows feel identical. */
 .alert-email-meta-value {
   flex: 1;
   min-width: 0;
   overflow-x: auto;
   overflow-y: hidden;
   white-space: nowrap;
-  scrollbar-width: thin;
-  scrollbar-color: var(--border-strong) transparent;
-  padding-bottom: 2px;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
   mask-image: linear-gradient(90deg, #000 calc(100% - 18px), transparent);
   -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 18px), transparent);
 }
 .alert-email-meta-value::-webkit-scrollbar {
-  height: 4px;
-}
-.alert-email-meta-value::-webkit-scrollbar-track {
-  background: transparent;
-}
-.alert-email-meta-value::-webkit-scrollbar-thumb {
-  background: var(--border-strong);
-  border-radius: 100px;
-}
-.alert-email-meta-value::-webkit-scrollbar-thumb:hover {
-  background: var(--text-4);
+  display: none;
+  height: 0;
+  width: 0;
 }
 
 /* Header CTA label: full text on wide screens, abbreviated on narrow. */
@@ -757,6 +1642,118 @@ html.scroll-locked body {
   /* Breadcrumb's trailing "Composition d'e-mail" tag duplicates the page
      intent and crowds the narrow breadcrumb — hide it. */
   .alert-detail-breadcrumb-tag { display: none; }
+}
+
+/* ── Alert detail — email composer card chrome ──────────────────
+   Class hooks so the card's internal paddings can shrink at narrow
+   widths without rewriting the inline-styled rows. Default values
+   match the desktop comfort spacing; @media overrides tighten them
+   on mobile so the card stays usable from 320 px upwards. */
+
+.alert-email-card-head    { padding: 0.75rem 1.25rem; }
+.alert-email-meta-row     { padding: 0.5rem  1.25rem; }
+.alert-email-meta-row-de  { padding: 0.6rem  1.25rem; }
+.alert-email-toolbar      { padding: 0.5rem  0.875rem; }
+.alert-email-editor       { padding: 1.5rem  1.75rem; }
+.alert-email-preview      { padding: 1.5rem  1.75rem; }
+.alert-email-actions      { padding: 0.875rem 1.25rem; }
+
+/* Editor needs to wrap long words/URLs instead of pushing a horizontal
+   scroll. overflow-wrap covers modern browsers, word-wrap is the legacy
+   alias still required by some Webkit builds. */
+.alert-email-editor,
+.alert-email-preview {
+  overflow-wrap: anywhere;
+  word-wrap: break-word;
+}
+
+/* Field labels (De, À, Objet) — minWidth ladder so the label column
+   shrinks gracefully on narrow phones, leaving more room for the value. */
+.alert-email-meta-label   { min-width: 44px; flex-shrink: 0; }
+
+@media (max-width: 640px) {
+  .alert-email-card-head    { padding: 0.6rem  0.95rem; }
+  .alert-email-meta-row,
+  .alert-email-meta-row-de  { padding: 0.5rem  0.95rem; gap: 0.6rem !important; }
+  .alert-email-toolbar      { padding: 0.5rem  0.65rem; }
+  .alert-email-editor,
+  .alert-email-preview      { padding: 1.15rem 1rem; }
+  .alert-email-actions      { padding: 0.75rem 0.95rem; gap: 0.45rem !important; }
+  .alert-email-meta-label   { min-width: 36px; }
+}
+
+@media (max-width: 380px) {
+  .alert-email-card-head    { padding: 0.55rem 0.75rem; }
+  .alert-email-meta-row,
+  .alert-email-meta-row-de  { padding: 0.45rem 0.75rem; gap: 0.5rem !important; }
+  .alert-email-toolbar      { padding: 0.45rem 0.5rem; }
+  .alert-email-editor,
+  .alert-email-preview      { padding: 1rem 0.85rem; }
+  .alert-email-actions      { padding: 0.65rem 0.75rem; }
+  .alert-email-meta-label   { min-width: 32px; }
+}
+
+/* Variables dropdown — right-edge aligned to the Variables button so the
+   menu never spills past the card's right edge (which is clipped by the
+   card's overflow:hidden). Width is clamped so the menu fits even at
+   320 px viewports while staying readable on desktop. */
+.alert-variables-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  left: auto;
+  background: var(--surface);
+  border-radius: 11px;
+  box-shadow: var(--tier-2);
+  border: 1px solid var(--border);
+  padding: 0.3rem;
+  z-index: 50;
+  min-width: 230px;
+  max-width: min(280px, calc(100vw - 32px));
+}
+@media (max-width: 380px) {
+  .alert-variables-menu { min-width: 0; width: calc(100vw - 48px); }
+}
+
+/* Action bar — stack buttons vertically below 480 px so each gets full
+   width instead of producing a jagged 2-or-3-line wrap. The flex spacer
+   collapses and Brouillon / Ignorer / Send each fill the row. Send stays
+   visually primary, so order is preserved. */
+@media (max-width: 480px) {
+  .alert-email-actions {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem !important;
+  }
+  .alert-email-actions-spacer { display: none; }
+  .alert-email-actions > button {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* Send button label — full text on wide screens, "Envoyer" only on
+   the narrowest phones so the button doesn't grow past the row. */
+.alert-send-label-long  { display: inline; }
+.alert-send-label-short { display: none; }
+@media (max-width: 380px) {
+  .alert-send-label-long  { display: none; }
+  .alert-send-label-short { display: inline; }
+}
+
+/* Touch targets — Apple HIG / WCAG ≥44 px on touch devices. The toolbar
+   icon buttons are intentionally smaller on hover-capable screens (denser
+   editing UI); on touch we bump them up so each glyph is independently
+   tappable without trip-hits on neighbours. */
+@media (hover: none) {
+  .alert-email-toolbar button {
+    min-height: 36px;
+    min-width: 36px;
+  }
+  .alert-email-actions button,
+  .alert-email-actions > a {
+    min-height: 44px;
+  }
 }
 
 /* ── Paramètres (settings) responsive helpers ────────────────────

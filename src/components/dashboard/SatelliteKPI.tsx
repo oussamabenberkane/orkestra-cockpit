@@ -3,6 +3,17 @@
 import { ArrowUpRight, TrendingUp, TrendingDown, Minus, type LucideIcon } from "lucide-react";
 import type { ModalKey } from "@/lib/types";
 
+/** Tone drives the per-card hue: sparkline area+line+dot, metric icon,
+ * "⊕ combiné" chip, and focus outline. Defaults to "accent" so cards
+ * without an explicit tone fall back to the existing monochrome look. */
+export type SatelliteTone =
+  | "accent"
+  | "success"
+  | "info"
+  | "warn"
+  | "danger"
+  | "purple";
+
 export type Satellite = {
   label: string;
   value: string;
@@ -15,6 +26,7 @@ export type Satellite = {
   target: string;
   sparkTarget: number;
   modalKey: ModalKey;
+  tone?: SatelliteTone;
 };
 
 function trendDirection(trend: string): "up" | "down" | "flat" {
@@ -32,13 +44,14 @@ const trendColorByDir: Record<"up" | "down" | "flat", string> = {
 };
 
 function SatelliteSparkline({
-  data, target, width = 280, height = 44, idSeed,
+  data, target, width = 280, height = 44, idSeed, color = "var(--accent)",
 }: {
   data: number[];
   target?: number;
   width?: number;
   height?: number;
   idSeed: string;
+  color?: string;
 }) {
   if (data.length === 0) return null;
   const lo = Math.min(...data, target ?? Infinity);
@@ -62,23 +75,23 @@ function SatelliteSparkline({
       aria-hidden>
       <defs>
         <linearGradient id={gradId} x1="0" x2="0" y1="0" y2="1">
-          <stop offset="0%" stopColor="var(--accent)" stopOpacity="0.22" />
-          <stop offset="100%" stopColor="var(--accent)" stopOpacity="0" />
+          <stop offset="0%" stopColor={color} stopOpacity="0.22" />
+          <stop offset="100%" stopColor={color} stopOpacity="0" />
         </linearGradient>
       </defs>
       <path d={areaPath} fill={`url(#${gradId})`} stroke="none" />
       {targetY !== null && (
         <line x1={0} x2={width} y1={targetY} y2={targetY}
-          stroke="var(--accent)" strokeOpacity="0.35"
+          stroke={color} strokeOpacity="0.35"
           strokeWidth="1" strokeDasharray="3 3"
           vectorEffect="non-scaling-stroke" />
       )}
       <path d={linePath} fill="none"
-        stroke="var(--accent)" strokeWidth="1.5"
+        stroke={color} strokeWidth="1.5"
         strokeLinecap="round" strokeLinejoin="round"
         vectorEffect="non-scaling-stroke" />
       <circle cx={last[0]} cy={last[1]} r="3"
-        fill="var(--accent)" stroke="var(--surface)" strokeWidth="1.5" />
+        fill={color} stroke="var(--surface)" strokeWidth="1.5" />
     </svg>
   );
 }
@@ -93,6 +106,16 @@ export function SatelliteKPI({
   const TrendIcon = trendIconByDir[dir];
   const trendColor = trendColorByDir[dir];
   const MetricIcon = kpi.Icon;
+
+  /* Tone resolution — picks the CSS variable for this card's hue. The
+   * full var() string is computed once and threaded through the sparkline
+   * fill/stroke, the metric icon, the "⊕ combiné" chip, and the focus
+   * outline so the card reads as a unified colored cell rather than a
+   * monochrome accent surface. Defaults to "accent" so existing data with
+   * no tone field renders unchanged. */
+  const tone: SatelliteTone = kpi.tone ?? "accent";
+  const toneVar = `var(--${tone})`;
+  const toneTintVar = `var(--${tone}-tint)`;
 
   return (
     <button
@@ -118,6 +141,7 @@ export function SatelliteKPI({
         width: "100%",
         minHeight: 132,
         border: "none",
+        ["--kpi-tone" as string]: toneVar,
       }}
     >
       <span
@@ -143,7 +167,7 @@ export function SatelliteKPI({
         paddingRight: "1.4rem",
         minWidth: 0,
       }}>
-        <MetricIcon size={13} strokeWidth={2.25} color="var(--text-3)" style={{ flexShrink: 0 }} />
+        <MetricIcon size={13} strokeWidth={2.25} color={toneVar} style={{ flexShrink: 0 }} />
         <span style={{
           overflow: "hidden",
           textOverflow: "ellipsis",
@@ -152,8 +176,8 @@ export function SatelliteKPI({
         {kpi.combined && (
           <span style={{
             fontSize: "0.55rem", fontWeight: 700,
-            color: "var(--accent)",
-            background: "var(--accent-tint)",
+            color: toneVar,
+            background: toneTintVar,
             padding: "0.05rem 0.3rem",
             borderRadius: "3px",
             letterSpacing: "0.04em",
@@ -216,7 +240,8 @@ export function SatelliteKPI({
           <SatelliteSparkline
             data={kpi.spark}
             target={kpi.sparkTarget}
-            idSeed={kpi.label.replace(/\s+/g, "-")} />
+            idSeed={kpi.label.replace(/\s+/g, "-")}
+            color={toneVar} />
         </div>
         <div className="satellite-kpi-break"
           aria-hidden="true"
@@ -255,12 +280,12 @@ export function SatelliteKPI({
           transform: translateY(-1px);
         }
         .satellite-kpi:focus-visible {
-          outline: 2px solid var(--accent);
+          outline: 2px solid var(--kpi-tone, var(--accent));
           outline-offset: 2px;
         }
         .satellite-kpi:hover .satellite-kpi-arrow,
         .satellite-kpi:focus-within .satellite-kpi-arrow {
-          color: var(--accent);
+          color: var(--kpi-tone, var(--accent));
           transform: translate(2px, -2px);
         }
         .satellite-kpi-break { opacity: 0; }

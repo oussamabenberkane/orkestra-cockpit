@@ -165,7 +165,8 @@ export function CreateTicketModal({
               display: "flex",
               alignItems: "center",
               gap: "0.75rem",
-              padding: "1.1rem 1.25rem 0.9rem",
+              padding: "clamp(0.9rem, 3vw, 1.1rem) clamp(0.9rem, 3.5vw, 1.25rem) clamp(0.7rem, 2.5vw, 0.9rem)",
+              minWidth: 0,
             }}
           >
             <span
@@ -241,10 +242,11 @@ export function CreateTicketModal({
           {/* Body */}
           <div
             style={{
-              padding: "0 1.25rem 1.25rem",
+              padding: "0 clamp(0.9rem, 3.5vw, 1.25rem) clamp(0.9rem, 3.5vw, 1.25rem)",
               display: "flex",
               flexDirection: "column",
               gap: "1rem",
+              minWidth: 0,
             }}
           >
             {/* Type toggle */}
@@ -260,7 +262,7 @@ export function CreateTicketModal({
               >
                 Type
               </span>
-              <div style={{ display: "flex", gap: "0.5rem" }}>
+              <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
                 {typeOptions.map((opt) => {
                   const active = form.type === opt.value;
                   return (
@@ -270,8 +272,9 @@ export function CreateTicketModal({
                       onClick={() => handleTypeChange(opt.value)}
                       aria-pressed={active}
                       style={{
-                        flex: 1,
+                        flex: "1 1 120px",
                         padding: "0.7rem 0.85rem",
+                        minHeight: 44,
                         fontFamily: "inherit",
                         fontSize: "0.86rem",
                         fontWeight: 600,
@@ -285,7 +288,7 @@ export function CreateTicketModal({
                           : "var(--surface)",
                         color: active ? "#fff" : "var(--text-2)",
                         boxShadow: active
-                          ? "inset 0 1px 0 rgba(255,255,255,0.18), 0 1px 2px rgba(88,86,214,0.22)"
+                          ? "inset 0 1px 0 rgba(255,255,255,0.2), 0 1px 2px rgba(0,98,204,0.22)"
                           : "var(--tier-1)",
                         transition: "transform 0.15s, background 0.15s",
                       }}
@@ -502,24 +505,27 @@ export function CreateTicketModal({
 
           {/* Footer */}
           <div
+            className="support-modal-footer"
             style={{
               display: "flex",
               justifyContent: "flex-end",
               gap: "0.5rem",
-              padding: "0.95rem 1.25rem",
+              padding: "clamp(0.75rem, 3vw, 0.95rem) clamp(0.9rem, 3.5vw, 1.25rem)",
               borderTop: "1px solid var(--border)",
               background: "var(--surface-2)",
               position: "sticky",
               bottom: 0,
+              flexWrap: "wrap",
             }}
           >
             <button
               type="button"
               onClick={handleClose}
               disabled={busy}
+              className="support-modal-cancel"
               style={{
-                padding: "0.6rem 1.05rem",
-                minHeight: 40,
+                padding: "0.7rem 1.05rem",
+                minHeight: 44,
                 background: "var(--surface)",
                 border: "1px solid var(--border)",
                 color: "var(--text-2)",
@@ -529,6 +535,7 @@ export function CreateTicketModal({
                 cursor: busy ? "not-allowed" : "pointer",
                 borderRadius: "9px",
                 opacity: busy ? 0.6 : 1,
+                whiteSpace: "nowrap",
               }}
             >
               Annuler
@@ -537,9 +544,10 @@ export function CreateTicketModal({
               type="button"
               onClick={handleSubmit}
               disabled={busy}
+              className="support-modal-submit"
               style={{
-                padding: "0.6rem 1.15rem",
-                minHeight: 40,
+                padding: "0.7rem 1.15rem",
+                minHeight: 44,
                 background:
                   "linear-gradient(180deg, var(--accent) 0%, var(--accent-2) 100%)",
                 border: "1px solid var(--accent-2)",
@@ -550,13 +558,24 @@ export function CreateTicketModal({
                 cursor: busy ? "wait" : "pointer",
                 borderRadius: "9px",
                 boxShadow:
-                  "inset 0 1px 0 rgba(255,255,255,0.2), 0 1px 2px rgba(88,86,214,0.22), 0 6px 16px -8px rgba(88,86,214,0.5)",
+                  "inset 0 1px 0 rgba(255,255,255,0.22), 0 1px 2px rgba(0,98,204,0.25), 0 8px 18px -8px rgba(0,122,255,0.55)",
                 opacity: busy ? 0.7 : 1,
+                whiteSpace: "nowrap",
               }}
             >
               {busy ? "Envoi…" : "Créer le ticket"}
             </button>
           </div>
+
+          <style jsx>{`
+            /* Very narrow phones — stack footer buttons full-width so the
+               primary action stays easy to reach with the thumb. */
+            @media (max-width: 420px) {
+              .support-modal-footer { flex-direction: column-reverse; }
+              .support-modal-cancel,
+              .support-modal-submit { width: 100%; }
+            }
+          `}</style>
         </motion.div>
       </DialogContent>
     </Dialog>

@@ -6,8 +6,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Home, Target, FolderArchive, Flame, Wallet, Globe,
-  MessageSquare, AlertTriangle, Settings, HelpCircle,
   ChevronLeft, ChevronRight, Search, Bell, Menu,
   type LucideIcon,
 } from "lucide-react";
@@ -15,6 +13,7 @@ import type { ModalKey } from "@/lib/types";
 import { NotificationsContent } from "@/components/shared/NotificationsContent";
 import { UserMenuContent } from "@/components/shared/UserMenuContent";
 import { useNotifications } from "@/components/dashboard/NotificationsProvider";
+import { useWorkspace } from "@/lib/workspaces";
 
 interface SidebarProps {
   collapsed: boolean;
@@ -37,39 +36,6 @@ type NavItemData = {
 };
 
 type OpenPopup = "profile" | "notif";
-
-const sections: { title: string; items: NavItemData[] }[] = [
-  {
-    title: "Espace",
-    items: [
-      { Icon: Home, label: "Vue 360", iconColor: "var(--accent)", href: "/dashboard" },
-    ],
-  },
-  {
-    title: "Métier",
-    items: [
-      { Icon: Target,        label: "Prospection",       iconColor: "var(--nav-prospection)",  modalKey: "prospection", badge: "12", badgeTone: "neutral" },
-      { Icon: FolderArchive, label: "Portefeuille",      iconColor: "var(--nav-portefeuille)", modalKey: "portefeuille" },
-      { Icon: Flame,         label: "Sinistres",         iconColor: "var(--nav-sinistres)",    modalKey: "sinistres",   badge: "3", badgeTone: "danger" },
-      { Icon: Wallet,        label: "Finance",           iconColor: "var(--nav-finance)",      modalKey: "finance",     badge: "2", badgeTone: "warn" },
-      { Icon: Globe,         label: "Tous les rapports", iconColor: "var(--nav-vue-ensemble)", href: "/rapports" },
-    ],
-  },
-  {
-    title: "Intelligence",
-    items: [
-      { Icon: MessageSquare,  label: "Chat IA",  iconColor: "var(--nav-chat)",    href: "/chat",     badge: "3", badgeTone: "warn" },
-      { Icon: AlertTriangle,  label: "Alertes",  iconColor: "var(--nav-alertes)", href: "/alertes", badge: "5", badgeTone: "danger" },
-    ],
-  },
-  {
-    title: "Administration",
-    items: [
-      { Icon: Settings,   label: "Paramètres", iconColor: "var(--nav-neutral)", href: "/parametres" },
-      { Icon: HelpCircle, label: "Support",    iconColor: "var(--nav-neutral)", href: "/support" },
-    ],
-  },
-];
 
 const EXPANDED_W = 248;
 const COLLAPSED_W = 64;
@@ -175,18 +141,21 @@ function NavItem({
     fontFamily: "inherit",
     fontSize: "0.85rem",
     fontWeight: active ? 600 : 500,
-    color: active ? "var(--text)" : "var(--text-2)",
+    /* Active sits on a white pill (var(--surface)) so uses --text (dark).
+     * Inactive sits directly on the sidebar surface so uses --rail-text-muted,
+     * which is dark on light sidebars and light on the Cobalt deep-blue sidebar. */
+    color: active ? "var(--text)" : "var(--rail-text-muted)",
     cursor: "pointer",
     textAlign: "left",
     textDecoration: "none",
-    boxShadow: active && !collapsed ? "var(--tier-1)" : "none",
+    boxShadow: active && !collapsed ? "var(--tier-active)" : "none",
     transition: "background 0.18s, color 0.18s, transform 0.18s",
     margin: "1px 0",
   };
 
   const handleMouseEnter = (e: React.MouseEvent<HTMLElement>) => {
     if (!active && !collapsed) {
-      e.currentTarget.style.background = "rgba(0,0,0,0.03)";
+      e.currentTarget.style.background = "var(--rail-hover)";
       const iconEl = e.currentTarget.querySelector("[data-nav-icon]") as HTMLElement | null;
       if (iconEl) {
         iconEl.style.opacity = "1";
@@ -195,7 +164,7 @@ function NavItem({
     }
     if (collapsed) {
       const wrap = e.currentTarget.querySelector("[data-nav-icon-collapsed]") as HTMLElement | null;
-      if (wrap) wrap.style.background = active ? "var(--surface)" : "rgba(0,0,0,0.05)";
+      if (wrap) wrap.style.background = active ? "var(--surface)" : "var(--rail-hover)";
       showTip(item.label + (item.badge ? ` · ${item.badge}` : ""), e.currentTarget);
     }
   };
@@ -219,6 +188,9 @@ function NavItem({
   const inner = collapsed ? (
     <span
       data-nav-icon-collapsed
+      /* rail-on-white when active: the wrap becomes a white card on the
+       * cobalt rail, so its text/icon tokens re-scope to dark variants. */
+      className={active ? "rail-on-white" : undefined}
       style={{
         width: ICON_BTN,
         height: ICON_BTN,
@@ -227,7 +199,7 @@ function NavItem({
         justifyContent: "center",
         background: active ? "var(--surface)" : "transparent",
         borderRadius: "9px",
-        boxShadow: active ? "var(--tier-1)" : "none",
+        boxShadow: active ? "var(--tier-active)" : "none",
         position: "relative",
         flexShrink: 0,
         transition: "background 0.18s, box-shadow 0.18s",
@@ -267,27 +239,42 @@ function NavItem({
         {item.label}
       </span>
       {item.badge && (
-        <span style={{
-          fontFamily: "var(--font-mono)",
-          fontSize: "0.66rem",
-          fontWeight: 600,
-          color: badgeColor,
-          padding: "0.05rem 0.4rem",
-          background: "var(--surface-2)",
-          border: "1px solid var(--border)",
-          borderRadius: "100px",
-          flexShrink: 0,
-        }}>
+        /* Count chip — uses --rail-badge-* tokens so colored-sidebar palettes
+         * (Cobalt) can flip the chip to a solid white pill with dark text.
+         * The rail-on-white class kicks in the semantic-color reset there so
+         * the badge count reads in the deep semantic variant on the white pill. */
+        <span
+          className="rail-on-white"
+          style={{
+            fontFamily: "var(--font-mono)",
+            fontSize: "0.66rem",
+            fontWeight: 600,
+            color: badgeColor,
+            padding: "0.05rem 0.4rem",
+            background: "var(--rail-badge-bg)",
+            border: "1px solid var(--rail-badge-border)",
+            borderRadius: "100px",
+            flexShrink: 0,
+          }}
+        >
           {item.badge}
         </span>
       )}
     </>
   );
 
+  /* When the expanded pill is active, the surface flips to var(--surface)
+   * (white). Mark it rail-on-white so text + nav-icon tokens re-scope to
+   * dark variants on the Cobalt palette where the surrounding sidebar
+   * tokens are light. No-op in light-sidebar palettes (no scope rule
+   * matches). */
+  const activeWhiteClass = active && !collapsed ? "rail-on-white" : undefined;
+
   if (isLink) {
     return (
       <Link
         href={item.href!}
+        className={activeWhiteClass}
         style={commonStyle}
         onClick={handleClick}
         onMouseEnter={handleMouseEnter}
@@ -304,6 +291,7 @@ function NavItem({
       onClick={handleClick}
       disabled={!isModalTrigger}
       aria-label={item.label}
+      className={activeWhiteClass}
       style={{
         ...commonStyle,
         cursor: isModalTrigger ? "pointer" : "default",
@@ -323,6 +311,10 @@ export function Sidebar({
   const { unreadCount: notifCount } = useNotifications();
   const unreadCount = serverUnreadCount ?? notifCount;
   const pathname = usePathname() ?? "";
+  /* Nav items are workspace-scoped — switching the top-of-page tab swaps
+   * the Métier/Trading section in place without remounting the rail. */
+  const { shape } = useWorkspace();
+  const sections = shape.nav;
   const [tooltip, setTooltip] = useState<TooltipState | null>(null);
   const [mounted, setMounted] = useState(false);
 
@@ -600,13 +592,13 @@ export function Sidebar({
               }}>
                 <svg viewBox="0 0 60 70" fill="none" style={{ width: 30, height: 30 }}>
                   <polygon points="30,2 58,17.5 58,52.5 30,68 2,52.5 2,17.5"
-                    fill="none" stroke="var(--accent)" strokeWidth="3.5" />
+                    fill="none" stroke="var(--rail-accent)" strokeWidth="3.5" />
                   <polygon points="30,12 48,22.5 48,47.5 30,58 12,47.5 12,22.5"
-                    fill="var(--accent)" opacity="0.22" />
+                    fill="var(--rail-accent)" opacity="0.22" />
                   <polygon points="30,20 40,26 40,44 30,50 20,44 20,26"
-                    fill="var(--accent)" opacity="0.55" />
+                    fill="var(--rail-accent)" opacity="0.55" />
                   <polygon points="30,28 36,31.5 36,38.5 30,42 24,38.5 24,31.5"
-                    fill="var(--accent)" />
+                    fill="var(--rail-accent)" />
                 </svg>
               </div>
 
@@ -618,11 +610,11 @@ export function Sidebar({
               }}>
                 <div style={{
                   fontSize: "0.92rem", fontWeight: 900,
-                  color: "var(--accent)", letterSpacing: "2.4px",
+                  color: "var(--rail-accent)", letterSpacing: "2.4px",
                   textTransform: "uppercase",
                 }}>Malyz</div>
                 <div style={{
-                  fontSize: "0.55rem", color: "var(--text-4)",
+                  fontSize: "0.55rem", color: "var(--rail-text-soft)",
                   letterSpacing: "0.7px", textTransform: "uppercase",
                   marginTop: "3px", fontWeight: 500,
                 }}>Consulting Sàrl</div>
@@ -640,7 +632,7 @@ export function Sidebar({
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.background = "transparent";
-              e.currentTarget.style.color = "var(--text-3)";
+              e.currentTarget.style.color = "var(--rail-text-muted)";
               hideTip();
             }}
             aria-label={
@@ -655,7 +647,7 @@ export function Sidebar({
               background: "transparent",
               border: "none",
               borderRadius: "8px",
-              color: "var(--text-3)",
+              color: "var(--rail-text-muted)",
               cursor: "pointer",
               transition: "background 0.16s, color 0.16s",
             }}
@@ -668,9 +660,11 @@ export function Sidebar({
           </button>
         </div>
 
-        {/* Search */}
+        {/* Search — always a white card on the rail, so rail-on-white scopes
+         * its text tokens to dark variants on Cobalt (no-op elsewhere). */}
         <div style={{ padding: "0 0.55rem 0.65rem", flexShrink: 0 }}>
           <button
+            className="rail-on-white"
             onClick={() => { hideTip(); onOpenPalette(); }}
             onMouseEnter={(e) => {
               e.currentTarget.style.transform = "translateY(-1px)";
@@ -720,7 +714,7 @@ export function Sidebar({
               <div style={{
                 padding: "0 0.55rem 0.3rem",
                 fontSize: "0.62rem", fontWeight: 700,
-                color: "var(--text-4)",
+                color: "var(--rail-text-soft)",
                 textTransform: "uppercase",
                 letterSpacing: "0.1em",
                 opacity: isOpen ? 1 : 0,
@@ -799,7 +793,7 @@ export function Sidebar({
                   fontFamily: "var(--font-mono)",
                   fontSize: "0.68rem", fontWeight: 700,
                   letterSpacing: "0.02em",
-                  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.22), 0 2px 6px rgba(88,86,214,0.35)",
+                  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.22), 0 2px 6px rgba(0,98,204,0.35)",
                 }}>TM</span>
                 <span aria-hidden style={{
                   position: "absolute",
@@ -813,23 +807,24 @@ export function Sidebar({
               <div style={{ minWidth: 0, lineHeight: 1.2 }}>
                 <div style={{
                   fontSize: "0.78rem", fontWeight: 600,
-                  color: "var(--text)",
+                  color: "var(--rail-text)",
                   letterSpacing: "-0.01em",
                   whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
                 }}>Mirko Ferretti</div>
                 <div style={{
                   fontSize: "0.6rem",
-                  color: "var(--text-3)",
+                  color: "var(--rail-text-soft)",
                   whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
                   marginTop: "1px",
                 }}>m.ferretti@helvebroker.ch</div>
               </div>
             </button>
 
-            {/* Bell button */}
+            {/* Bell button — always a white card on the rail */}
             <button
               type="button"
               data-popup-trigger="notif"
+              className="rail-on-white"
               onClick={() => handlePopupTrigger("notif")}
               aria-label="Notifications"
               aria-expanded={openPopup === "notif"}
@@ -907,6 +902,7 @@ export function Sidebar({
             >
               <span
                 data-icon-wrap
+                className={openPopup === "notif" ? "rail-on-white" : undefined}
                 style={{
                   width: ICON_BTN, height: ICON_BTN,
                   display: "flex", alignItems: "center", justifyContent: "center",
@@ -916,7 +912,7 @@ export function Sidebar({
                   transition: "background 0.16s, box-shadow 0.16s",
                 }}
               >
-                <Bell size={18} strokeWidth={2.1} color="var(--text-2)" />
+                <Bell size={18} strokeWidth={2.1} color="var(--rail-text-muted)" />
               </span>
               {unreadCount > 0 && (
                 <span aria-hidden style={{
@@ -951,6 +947,7 @@ export function Sidebar({
             >
               <span
                 data-icon-wrap
+                className={openPopup === "profile" ? "rail-on-white" : undefined}
                 style={{
                   width: ICON_BTN, height: ICON_BTN,
                   display: "flex", alignItems: "center", justifyContent: "center",
@@ -983,6 +980,10 @@ export function Sidebar({
             <motion.div
               ref={popupRef}
               key="popup-panel"
+              /* The popup is a white card rendered inside the sidebar scope,
+               * so its text tokens need to flip back to dark for legibility
+               * on the Cobalt palette. */
+              className="rail-on-white"
               initial={{ opacity: 0, y: 10, scale: 0.97 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 6, scale: 0.97 }}

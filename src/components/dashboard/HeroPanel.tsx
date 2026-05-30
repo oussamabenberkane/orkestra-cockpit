@@ -281,12 +281,27 @@ export function HeroPanel({
             transition={{ duration: 1.4, ease: [0.22, 1, 0.36, 1] }} />
         </svg>
 
-        {/* Event markers and 'Aujourd'hui' overlays */}
+        {/* Event markers and 'Aujourd'hui' overlays.
+         *
+         * Each event picks its hue from the SIGN of its label: amounts
+         * starting with "+" read as wins (success/emerald), amounts
+         * starting with "−" / "-" read as losses (danger/red). Labels
+         * with no signed amount fall back to the accent so chart-level
+         * identity stays consistent. This gives the chart two
+         * semantically-meaningful color points beyond the accent line
+         * without needing per-event color data. */}
         <div style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
           {events.map((ev) => {
             if (ev.i < 0 || ev.i >= pts.length) return null;
             const [x, y] = pts[ev.i];
             const isHovered = hoveredEvent === ev.i;
+            const lbl = ev.label.trim();
+            const tone: "success" | "danger" | "accent" =
+              lbl.startsWith("+") ? "success"
+              : (lbl.startsWith("−") || lbl.startsWith("-")) ? "danger"
+              : "accent";
+            const toneVar = `var(--${tone})`;
+            const toneTintVar = `var(--${tone}-tint)`;
             return (
               <div key={ev.i} style={{
                 position: "absolute",
@@ -309,20 +324,20 @@ export function HeroPanel({
                     padding: 0,
                     borderRadius: "50%",
                     background: "var(--surface)",
-                    border: "1.75px solid var(--accent)",
+                    border: `1.75px solid ${toneVar}`,
                     cursor: "pointer",
                     fontFamily: "inherit",
                     transition: "transform 0.18s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.18s ease",
                     transform: isHovered ? "scale(1.18)" : "scale(1)",
                     boxShadow: isHovered
-                      ? "0 0 0 5px var(--accent-tint), 0 2px 6px rgba(0,122,255,0.18)"
+                      ? `0 0 0 5px ${toneTintVar}, 0 2px 6px rgba(15,23,42,0.18)`
                       : "0 1px 2px rgba(0,0,0,0.08)",
                   }}>
                   <span aria-hidden style={{
                     position: "absolute",
                     inset: "32%",
                     borderRadius: "50%",
-                    background: "var(--accent)",
+                    background: toneVar,
                   }} />
                 </button>
               </div>
