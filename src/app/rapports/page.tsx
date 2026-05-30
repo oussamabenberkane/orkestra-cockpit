@@ -633,12 +633,29 @@ export default function RapportsPage() {
         onOpenPalette={() => setPaletteOpen(true)}
       />
 
+      <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
+        {/* Top strip — 58px to align with the sidebar header height so the
+         * workspace switcher sits on the same horizontal line as the Malyz
+         * brand mark in the rail. */}
+        <div
+          className="app-topbar"
+          style={{
+            height: 58,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "0 clamp(1rem, 3vw, 2.5rem)",
+            flexShrink: 0,
+          }}
+        >
+          <WorkspaceTabs />
+        </div>
+
       <main className="app-main rapports-main" style={{
-        flex: 1, minWidth: 0,
-        padding: "clamp(1.5rem, 4vw, 3rem) clamp(1rem, 3vw, 2.5rem) 4rem",
+        minWidth: 0,
+        padding: "0 clamp(1rem, 3vw, 2.5rem) 4rem",
         maxWidth: "1240px", marginInline: "auto", width: "100%",
       }}>
-        <WorkspaceTabs />
         {/* Page header */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
@@ -993,6 +1010,7 @@ export default function RapportsPage() {
           }
         `}</style>
       </main>
+      </div>
 
       <CommandPalette
         open={paletteOpen}

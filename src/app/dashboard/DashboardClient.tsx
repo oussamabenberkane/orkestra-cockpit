@@ -280,18 +280,41 @@ export default function DashboardClient({
         serverUnreadCount={unreadCount}
       />
 
-      <main
-        className="app-main"
+      <div
         style={{
           flex: 1,
           minWidth: 0,
-          padding: "clamp(1.25rem, 3vw, 2.5rem) clamp(1rem, 3vw, 2.5rem) 3rem",
-          maxWidth: "1240px",
-          marginInline: "auto",
-          width: "100%",
+          display: "flex",
+          flexDirection: "column",
         }}
       >
-        <WorkspaceTabs />
+        {/* Top strip — 58px to align with the sidebar header height so the
+         * workspace switcher sits on the same horizontal line as the Malyz
+         * brand mark in the rail. */}
+        <div
+          className="app-topbar"
+          style={{
+            height: 58,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "0 clamp(1rem, 3vw, 2.5rem)",
+            flexShrink: 0,
+          }}
+        >
+          <WorkspaceTabs />
+        </div>
+
+        <main
+          className="app-main"
+          style={{
+            minWidth: 0,
+            padding: "0 clamp(1rem, 3vw, 2.5rem) 3rem",
+            maxWidth: "1240px",
+            marginInline: "auto",
+            width: "100%",
+          }}
+        >
         <header className="dash-section" style={{
           display: "flex",
           alignItems: "center",
@@ -457,7 +480,8 @@ export default function DashboardClient({
             isCommodity ? "MiFID II Art.17 · Infomaniak CH" : "LPD Art.16 · Infomaniak CH"
           }
         />
-      </main>
+        </main>
+      </div>
 
       <DashboardModal
         open={modalKey !== null}

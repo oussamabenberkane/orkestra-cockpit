@@ -707,10 +707,16 @@ export function Sidebar({
           </button>
         </div>
 
-        {/* Nav */}
-        <nav style={{
+        {/* Nav — overflow hidden so no scrollbar (or reserved gutter) is
+         * ever painted on the rail. Content is sized to fit the viewport
+         * across all supported breakpoints; if a future addition would
+         * overflow, the bottom section pins to the rail floor and the
+         * extra items would be clipped — at which point this should be
+         * reconsidered. */}
+        <nav className="sidebar-nav" style={{
           flex: 1,
-          overflowY: "auto", overflowX: "hidden",
+          minHeight: 0,
+          overflow: "hidden",
           padding: "0 0.55rem 0.6rem",
         }}>
           {sections.map((section) => (

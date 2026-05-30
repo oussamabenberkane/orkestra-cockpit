@@ -1221,6 +1221,21 @@ html.scroll-locked body {
   overscroll-behavior: none;
 }
 
+/* Sidebar nav scrollbar — fully hidden. overflow: auto on the nav keeps
+ * wheel/touch scroll working when items genuinely exceed the rail height
+ * on short viewports, but no scrollbar (or reserved gutter) is ever
+ * painted. When content fits, the rail reads as a clean column with
+ * zero scroll affordance. */
+.sidebar-nav {
+  scrollbar-width: none;                   /* Firefox — hide entirely */
+  -ms-overflow-style: none;                /* legacy IE/Edge */
+}
+.sidebar-nav::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
+}
+
 /* ── Dashboard responsive helpers ────────────────────────────
  * Breakpoints used throughout the dashboard:
  *   320  → smallest mobile (default styles)

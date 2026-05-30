@@ -3,22 +3,37 @@
 import { Landmark, LineChart, type LucideIcon } from "lucide-react";
 import { useWorkspace, WORKSPACES, type Workspace } from "@/lib/workspaces";
 
-/* Segmented pill — BFSI / Commodities — centered above the page header in
- * every shell-using surface. The active tab reads from WorkspaceContext
- * (persisted to localStorage), so switching here also re-renders the
- * sidebar nav and dashboard data.
+/* Segmented pill — BFSI / Commodities — centered in the app top strip.
+ * The active tab reads from WorkspaceContext (persisted to localStorage),
+ * so switching here also re-renders the sidebar nav and dashboard data.
  *
- * The outer wrapper is a full-width flex container with justify-content:
- * center; the pill itself stays width:fit-content. That way the pill
- * always sits in the visual centerline of the main column regardless of
- * the surrounding page's own padding.
+ * Each tab carries its own accent color so the switcher reads in palette
+ * even at a glance: BFSI uses the brand blue (advisory/financial), and
+ * Commodities uses an amber/warn tone (trading desk). Active state tints
+ * the pill with the tab's color; inactive keeps the colored icon as a
+ * cue while the label stays neutral.
  *
  * Icon choices: Landmark (institutional columns) reads as BFSI;
  * LineChart (P&L curves) reads as a commodity trading desk. */
 
-const META: Record<Workspace, { Icon: LucideIcon; fallback: string }> = {
-  broker:    { Icon: Landmark,  fallback: "BFSI" },
-  commodity: { Icon: LineChart, fallback: "Commodities" },
+const META: Record<Workspace, {
+  Icon: LucideIcon;
+  fallback: string;
+  color: string;
+  tint: string;
+}> = {
+  broker:    {
+    Icon: Landmark,
+    fallback: "BFSI",
+    color: "var(--info)",
+    tint:  "var(--info-tint)",
+  },
+  commodity: {
+    Icon: LineChart,
+    fallback: "Commodities",
+    color: "var(--warn)",
+    tint:  "var(--warn-tint)",
+  },
 };
 
 export function WorkspaceTabs() {
@@ -31,7 +46,6 @@ export function WorkspaceTabs() {
         display: "flex",
         justifyContent: "center",
         width: "100%",
-        marginBottom: "clamp(0.85rem, 2vw, 1.1rem)",
       }}
     >
       <div
@@ -52,7 +66,7 @@ export function WorkspaceTabs() {
       >
         {WORKSPACES.map((ws) => {
           const active = ws === workspace;
-          const { Icon, fallback } = META[ws];
+          const { Icon, fallback, color, tint } = META[ws];
           /* Use the live shape label for the active tab (single source of
            * truth), and the static fallback for the inactive one (so the
            * UI doesn't have to re-derive both workspaces' labels). */
@@ -67,17 +81,19 @@ export function WorkspaceTabs() {
               style={{
                 display: "inline-flex",
                 alignItems: "center",
-                gap: "0.32rem",
+                gap: "0.36rem",
                 fontFamily: "inherit",
-                fontSize: "0.74rem",
+                fontSize: "0.76rem",
                 fontWeight: active ? 700 : 500,
-                color: active ? "var(--text)" : "var(--text-3)",
-                background: active ? "var(--surface)" : "transparent",
+                color: active ? color : "var(--text-3)",
+                background: active ? tint : "transparent",
                 border: "none",
                 borderRadius: 7,
-                padding: "0.3rem 0.65rem",
+                padding: "0.32rem 0.7rem",
                 cursor: active ? "default" : "pointer",
-                boxShadow: active ? "var(--tier-1)" : "none",
+                boxShadow: active
+                  ? `inset 0 0 0 1px color-mix(in srgb, ${color} 28%, transparent), 0 1px 2px rgba(15,23,42,0.06)`
+                  : "none",
                 transition: "background 0.18s, color 0.18s, box-shadow 0.18s",
                 letterSpacing: "-0.005em",
                 whiteSpace: "nowrap",
@@ -90,9 +106,9 @@ export function WorkspaceTabs() {
               }}
             >
               <Icon
-                size={12}
+                size={13}
                 strokeWidth={2.25}
-                color={active ? "var(--accent)" : "currentColor"}
+                color={color}
                 style={{ flexShrink: 0 }}
               />
               {label}
