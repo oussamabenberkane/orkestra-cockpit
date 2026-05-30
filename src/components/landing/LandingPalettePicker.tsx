@@ -39,11 +39,41 @@ const SURFACE_SAMPLES: Record<
     sidebarLine?: string;
   }
 > = {
-  aurora:   { bg: "#F2F4F9", surface: "#FFFFFF", surface2: "#D6DEEC", border: "rgba(15,23,42,0.14)" },
-  marble:   { bg: "#EEF1F8", surface: "#FFFFFF", surface2: "#C8D2E6", border: "rgba(70,90,150,0.18)" },
-  pearl:    { bg: "#EBEBEE", surface: "#FFFFFF", surface2: "#D4D4D8", border: "rgba(24,24,27,0.16)" },
-  mineral:  { bg: "#E6ECF3", surface: "#FFFFFF", surface2: "#B5C1D2", border: "rgba(30,41,59,0.18)" },
-  atelier:  { bg: "#DDE2EB", surface: "#FFFFFF", surface2: "#B5BDCB", border: "rgba(30,41,59,0.22)" },
+  aurora:   {
+    bg: "#F2F4F9", surface: "#FFFFFF",
+    surface2: "#1E293B",                     /* slate-800 rail */
+    border: "rgba(15,23,42,0.14)",
+    sidebarItem: "#C7D2FE",                  /* --rail-accent: indigo-200 */
+    sidebarLine: "rgba(255,255,255,0.34)",
+  },
+  marble:   {
+    bg: "#EEF1F8", surface: "#FFFFFF",
+    surface2: "#3730A3",                     /* indigo-800 rail */
+    border: "rgba(70,90,150,0.18)",
+    sidebarItem: "#C4B5FD",                  /* --rail-accent: violet-300 */
+    sidebarLine: "rgba(255,255,255,0.34)",
+  },
+  pearl:    {
+    bg: "#EBEBEE", surface: "#FFFFFF",
+    surface2: "#18181B",                     /* zinc-900 rail */
+    border: "rgba(24,24,27,0.16)",
+    sidebarItem: "#FAFAFA",                  /* --rail-accent: zinc-50 */
+    sidebarLine: "rgba(255,255,255,0.34)",
+  },
+  mineral:  {
+    bg: "#E6ECF3", surface: "#FFFFFF",
+    surface2: "#155E75",                     /* cyan-800 rail */
+    border: "rgba(30,41,59,0.18)",
+    sidebarItem: "#A5F3FC",                  /* --rail-accent: cyan-200 */
+    sidebarLine: "rgba(255,255,255,0.34)",
+  },
+  atelier:  {
+    bg: "#DDE2EB", surface: "#FFFFFF",
+    surface2: "#0F172A",                     /* slate-900 rail */
+    border: "rgba(30,41,59,0.22)",
+    sidebarItem: "#BFDBFE",                  /* --rail-accent: blue-200 */
+    sidebarLine: "rgba(255,255,255,0.34)",
+  },
   cobalt:   {
     bg: "#F4F7FB",
     surface: "#FFFFFF",

@@ -94,8 +94,8 @@
 
   --bg:           #F2F4F9;   /* canvas — visibly tinted (was near-white) */
   --surface:      #FFFFFF;   /* cards — POP, ~9 L* above canvas */
-  --surface-2:    #D6DEEC;   /* sidebar — markedly deeper slate, ~18 L* below canvas */
-  --surface-3:    #BEC9DD;   /* hover */
+  --surface-2:    #D6DEEC;   /* LIGHT — main-app pills/badges/modal headers */
+  --surface-3:    #BEC9DD;   /* LIGHT — main-app hover */
   --border:       rgba(15,23,42,0.12);
   --border-strong:rgba(15,23,42,0.20);
 
@@ -120,15 +120,30 @@
   --purple:       #7C3AED;
   --purple-tint:  rgba(124,58,237,0.12);
 
-  --nav-prospection:    #10B981;
-  --nav-portefeuille:   #0891B2;
-  --nav-sinistres:      #E11D48;
-  --nav-finance:        #D97706;
-  --nav-vue-ensemble:   var(--accent);
-  --nav-chat:           #7C3AED;
-  --nav-alertes:        #DC2626;
-  --nav-agents:         var(--accent);
-  --nav-neutral:        var(--text-3);
+  /* Nav category icon colors — BRIGHT variants because the Aurora rail is
+   * now a deep slate-800 surface (see the scoped rule below). Deep
+   * semantic variants would disappear; bright variants pop. */
+  --nav-prospection:    #34D399;   /* mint */
+  --nav-portefeuille:   #7DD3FC;   /* sky */
+  --nav-sinistres:      #FB7185;   /* rose */
+  --nav-finance:        #FCD34D;   /* amber */
+  --nav-vue-ensemble:   var(--rail-accent);
+  --nav-chat:           #C4B5FD;   /* lavender */
+  --nav-alertes:        #FB7185;
+  --nav-agents:         var(--rail-accent);
+  --nav-neutral:        rgba(255,255,255,0.62);
+
+  /* Rail tokens — light values for white text/glyphs on the slate-800
+   * rail. rail-accent uses indigo-200, a light sibling of the accent. */
+  --rail-text:        #FFFFFF;
+  --rail-text-muted:  rgba(255,255,255,0.92);
+  --rail-text-soft:   rgba(255,255,255,0.70);
+  --rail-border:      rgba(255,255,255,0.30);
+  --rail-hover:       rgba(255,255,255,0.18);
+  --rail-accent:      #C7D2FE;     /* indigo-200 — Malyz brand + active glyph */
+
+  --rail-badge-bg:     #FFFFFF;
+  --rail-badge-border: rgba(15,23,42,0.18);
 
   /* Elevation tokens — stronger drops because the deeper canvas
    * would otherwise swallow a faint shadow. */
@@ -150,6 +165,34 @@
   --tier-press:
     inset 0 1px 2px rgba(15,23,42,0.10),
     0 0 0 1px rgba(15,23,42,0.08);
+}
+
+/* Sidebar-scope flip for Aurora — Cobalt architecture: --surface-2/-3 +
+ * text/border/semantic tokens push to dark-rail-appropriate values. The
+ * Aurora rail surface is slate-800 #1E293B — a desaturated cool slate
+ * that fits Aurora's Stripe-dashboard cool-fintech identity. */
+:root[data-palette="aurora"] .app-sidebar,
+:root[data-palette="aurora"] .agent-sidebar,
+:root[data-palette="aurora"] .agent-sidebar-content {
+  --surface-2: #1E293B;                  /* slate-800 rail */
+  --surface-3: rgba(255,255,255,0.16);   /* on-rail hover overlay */
+  --text:      #FFFFFF;
+  --text-2:    rgba(255,255,255,0.92);
+  --text-3:    rgba(255,255,255,0.74);
+  --text-4:    rgba(255,255,255,0.58);
+  --border:    rgba(255,255,255,0.22);
+  --border-strong: rgba(255,255,255,0.32);
+
+  /* Bright semantic variants for badges + status pills on the rail. */
+  --danger:        #FB7185;
+  --danger-tint:   rgba(251,113,133,0.18);
+  --warn:          #FBBF24;
+  --warn-tint:     rgba(251,191,36,0.18);
+  --success:       #34D399;
+  --success-tint:  rgba(52,211,153,0.18);
+
+  --rail-hover:    rgba(255,255,255,0.18);
+  --rail-border:   rgba(255,255,255,0.30);
 }
 
 /* ════════════════════════════════════════════════════════════
@@ -193,15 +236,31 @@
   --purple:       #0EA5E9;
   --purple-tint:  rgba(14,165,233,0.12);
 
-  --nav-prospection:    #047857;
-  --nav-portefeuille:   #0E7490;
-  --nav-sinistres:      #BE123C;
-  --nav-finance:        #B45309;
-  --nav-vue-ensemble:   var(--accent);
-  --nav-chat:           #0891B2;   /* cyan-600, distinct cool hue (was indigo) */
-  --nav-alertes:        #B91C1C;
-  --nav-agents:         var(--accent);
-  --nav-neutral:        var(--text-3);
+  /* Nav category icon colors — BRIGHT variants because the Marble rail is
+   * now indigo-800 (see scoped rule below). Deep semantic variants would
+   * disappear on the dark rail. */
+  --nav-prospection:    #34D399;   /* mint */
+  --nav-portefeuille:   #BFDBFE;   /* blue-200 — sibling of accent */
+  --nav-sinistres:      #FB7185;   /* rose */
+  --nav-finance:        #FCD34D;   /* amber */
+  --nav-vue-ensemble:   var(--rail-accent);
+  --nav-chat:           #C4B5FD;   /* lavender */
+  --nav-alertes:        #FB7185;
+  --nav-agents:         var(--rail-accent);
+  --nav-neutral:        rgba(255,255,255,0.62);
+
+  /* Rail tokens — light values for white text/glyphs on the indigo-800
+   * rail. rail-accent uses violet-300 (a bridge between the indigo
+   * rail and the sapphire accent — pops against deep indigo). */
+  --rail-text:        #FFFFFF;
+  --rail-text-muted:  rgba(255,255,255,0.92);
+  --rail-text-soft:   rgba(255,255,255,0.70);
+  --rail-border:      rgba(255,255,255,0.30);
+  --rail-hover:       rgba(255,255,255,0.18);
+  --rail-accent:      #C4B5FD;     /* violet-300 — Malyz brand + active glyph */
+
+  --rail-badge-bg:     #FFFFFF;
+  --rail-badge-border: rgba(15,23,42,0.18);
 
   --tier-1:
     inset 0 1px 0 rgba(255,255,255,1),
@@ -221,6 +280,31 @@
   --tier-press:
     inset 0 1px 2px rgba(30,40,80,0.14),
     0 0 0 1px rgba(30,40,80,0.10);
+}
+
+/* Sidebar-scope flip for Marble — indigo-800 rail with violet leaning,
+ * deliberately a different blue family from Cobalt's pure navy. */
+:root[data-palette="marble"] .app-sidebar,
+:root[data-palette="marble"] .agent-sidebar,
+:root[data-palette="marble"] .agent-sidebar-content {
+  --surface-2: #3730A3;                  /* indigo-800 rail */
+  --surface-3: rgba(255,255,255,0.16);
+  --text:      #FFFFFF;
+  --text-2:    rgba(255,255,255,0.92);
+  --text-3:    rgba(255,255,255,0.74);
+  --text-4:    rgba(255,255,255,0.58);
+  --border:    rgba(255,255,255,0.22);
+  --border-strong: rgba(255,255,255,0.32);
+
+  --danger:        #FB7185;
+  --danger-tint:   rgba(251,113,133,0.18);
+  --warn:          #FBBF24;
+  --warn-tint:     rgba(251,191,36,0.18);
+  --success:       #34D399;
+  --success-tint:  rgba(52,211,153,0.18);
+
+  --rail-hover:    rgba(255,255,255,0.18);
+  --rail-border:   rgba(255,255,255,0.30);
 }
 
 /* ════════════════════════════════════════════════════════════
@@ -261,15 +345,30 @@
   --purple:       #7C3AED;
   --purple-tint:  rgba(124,58,237,0.12);
 
-  --nav-prospection:    #16A34A;
-  --nav-portefeuille:   #0EA5E9;
-  --nav-sinistres:      #DC2626;
-  --nav-finance:        #D97706;
-  --nav-vue-ensemble:   var(--accent);
-  --nav-chat:           #7C3AED;
-  --nav-alertes:        #DC2626;
-  --nav-agents:         var(--accent);
-  --nav-neutral:        var(--text-3);
+  /* Nav category icon colors — BRIGHT variants because the Pearl rail is
+   * now zinc-900 (see scoped rule below). */
+  --nav-prospection:    #34D399;   /* mint */
+  --nav-portefeuille:   #7DD3FC;   /* sky */
+  --nav-sinistres:      #FB7185;   /* rose */
+  --nav-finance:        #FCD34D;   /* amber */
+  --nav-vue-ensemble:   var(--rail-accent);
+  --nav-chat:           #C4B5FD;   /* lavender */
+  --nav-alertes:        #FB7185;
+  --nav-agents:         var(--rail-accent);
+  --nav-neutral:        rgba(255,255,255,0.62);
+
+  /* Rail tokens — light values for white text/glyphs on the zinc-900
+   * rail. rail-accent uses zinc-50 (pure near-white) — editorial
+   * white-on-ink Vercel-dark register, no accent hue on the rail glyph. */
+  --rail-text:        #FFFFFF;
+  --rail-text-muted:  rgba(255,255,255,0.92);
+  --rail-text-soft:   rgba(255,255,255,0.70);
+  --rail-border:      rgba(255,255,255,0.30);
+  --rail-hover:       rgba(255,255,255,0.18);
+  --rail-accent:      #FAFAFA;     /* zinc-50 — Malyz brand + active glyph */
+
+  --rail-badge-bg:     #FFFFFF;
+  --rail-badge-border: rgba(24,24,27,0.20);
 
   --tier-1:
     inset 0 1px 0 rgba(255,255,255,1),
@@ -289,6 +388,31 @@
   --tier-press:
     inset 0 1px 2px rgba(24,24,27,0.16),
     0 0 0 1px rgba(24,24,27,0.10);
+}
+
+/* Sidebar-scope flip for Pearl — zinc-900 rail, near-black editorial
+ * Vercel-dark sidebar against the zinc-neutral light app. */
+:root[data-palette="pearl"] .app-sidebar,
+:root[data-palette="pearl"] .agent-sidebar,
+:root[data-palette="pearl"] .agent-sidebar-content {
+  --surface-2: #18181B;                  /* zinc-900 rail */
+  --surface-3: rgba(255,255,255,0.14);
+  --text:      #FFFFFF;
+  --text-2:    rgba(255,255,255,0.92);
+  --text-3:    rgba(255,255,255,0.72);
+  --text-4:    rgba(255,255,255,0.56);
+  --border:    rgba(255,255,255,0.20);
+  --border-strong: rgba(255,255,255,0.30);
+
+  --danger:        #FB7185;
+  --danger-tint:   rgba(251,113,133,0.18);
+  --warn:          #FBBF24;
+  --warn-tint:     rgba(251,191,36,0.18);
+  --success:       #34D399;
+  --success-tint:  rgba(52,211,153,0.18);
+
+  --rail-hover:    rgba(255,255,255,0.18);
+  --rail-border:   rgba(255,255,255,0.30);
 }
 
 /* ════════════════════════════════════════════════════════════
@@ -329,15 +453,29 @@
   --purple:       #6D28D9;
   --purple-tint:  rgba(109,40,217,0.12);
 
-  --nav-prospection:    #047857;
-  --nav-portefeuille:   #0369A1;
-  --nav-sinistres:      #BE123C;
-  --nav-finance:        #B45309;
-  --nav-vue-ensemble:   var(--accent);
-  --nav-chat:           #6D28D9;
-  --nav-alertes:        #B91C1C;
-  --nav-agents:         var(--accent);
-  --nav-neutral:        var(--text-3);
+  /* Nav category icon colors — BRIGHT variants because the Mineral rail is
+   * now cyan-800 (see scoped rule below). */
+  --nav-prospection:    #34D399;   /* mint */
+  --nav-portefeuille:   #A5F3FC;   /* cyan-200 — sibling of accent */
+  --nav-sinistres:      #FB7185;   /* rose */
+  --nav-finance:        #FCD34D;   /* amber */
+  --nav-vue-ensemble:   var(--rail-accent);
+  --nav-chat:           #C4B5FD;   /* lavender */
+  --nav-alertes:        #FB7185;
+  --nav-agents:         var(--rail-accent);
+  --nav-neutral:        rgba(255,255,255,0.62);
+
+  /* Rail tokens — light values for white text/glyphs on the cyan-800
+   * rail. rail-accent uses cyan-200, sibling of the cyan-700 accent. */
+  --rail-text:        #FFFFFF;
+  --rail-text-muted:  rgba(255,255,255,0.92);
+  --rail-text-soft:   rgba(255,255,255,0.70);
+  --rail-border:      rgba(255,255,255,0.30);
+  --rail-hover:       rgba(255,255,255,0.18);
+  --rail-accent:      #A5F3FC;     /* cyan-200 — Malyz brand + active glyph */
+
+  --rail-badge-bg:     #FFFFFF;
+  --rail-badge-border: rgba(15,23,42,0.18);
 
   --tier-1:
     inset 0 1px 0 rgba(255,255,255,1),
@@ -357,6 +495,31 @@
   --tier-press:
     inset 0 1px 2px rgba(30,41,59,0.14),
     0 0 0 1px rgba(30,41,59,0.10);
+}
+
+/* Sidebar-scope flip for Mineral — cyan-800 rail, sibling of the cyan-700
+ * accent. Reinforces the data-tool / observability identity. */
+:root[data-palette="mineral"] .app-sidebar,
+:root[data-palette="mineral"] .agent-sidebar,
+:root[data-palette="mineral"] .agent-sidebar-content {
+  --surface-2: #155E75;                  /* cyan-800 rail */
+  --surface-3: rgba(255,255,255,0.16);
+  --text:      #FFFFFF;
+  --text-2:    rgba(255,255,255,0.92);
+  --text-3:    rgba(255,255,255,0.74);
+  --text-4:    rgba(255,255,255,0.58);
+  --border:    rgba(255,255,255,0.22);
+  --border-strong: rgba(255,255,255,0.32);
+
+  --danger:        #FB7185;
+  --danger-tint:   rgba(251,113,133,0.18);
+  --warn:          #FBBF24;
+  --warn-tint:     rgba(251,191,36,0.18);
+  --success:       #34D399;
+  --success-tint:  rgba(52,211,153,0.18);
+
+  --rail-hover:    rgba(255,255,255,0.18);
+  --rail-border:   rgba(255,255,255,0.30);
 }
 
 /* ════════════════════════════════════════════════════════════
@@ -397,15 +560,30 @@
   --purple:       #6D28D9;
   --purple-tint:  rgba(109,40,217,0.12);
 
-  --nav-prospection:    #047857;
-  --nav-portefeuille:   #0369A1;
-  --nav-sinistres:      #BE123C;
-  --nav-finance:        #B45309;
-  --nav-vue-ensemble:   var(--accent);
-  --nav-chat:           #6D28D9;
-  --nav-alertes:        #B91C1C;
-  --nav-agents:         var(--accent);
-  --nav-neutral:        var(--text-3);
+  /* Nav category icon colors — BRIGHT variants because the Atelier rail
+   * is now slate-900 (see scoped rule below). */
+  --nav-prospection:    #34D399;   /* mint */
+  --nav-portefeuille:   #BFDBFE;   /* blue-200 — sibling of accent */
+  --nav-sinistres:      #FB7185;   /* rose */
+  --nav-finance:        #FCD34D;   /* amber */
+  --nav-vue-ensemble:   var(--rail-accent);
+  --nav-chat:           #C4B5FD;   /* lavender */
+  --nav-alertes:        #FB7185;
+  --nav-agents:         var(--rail-accent);
+  --nav-neutral:        rgba(255,255,255,0.62);
+
+  /* Rail tokens — light values for white text/glyphs on the slate-900
+   * rail. rail-accent uses blue-200 (sibling of the blue-700 accent),
+   * reinforcing the CAD-tool blueprint identity. */
+  --rail-text:        #FFFFFF;
+  --rail-text-muted:  rgba(255,255,255,0.92);
+  --rail-text-soft:   rgba(255,255,255,0.70);
+  --rail-border:      rgba(255,255,255,0.30);
+  --rail-hover:       rgba(255,255,255,0.18);
+  --rail-accent:      #BFDBFE;     /* blue-200 — Malyz brand + active glyph */
+
+  --rail-badge-bg:     #FFFFFF;
+  --rail-badge-border: rgba(15,23,42,0.18);
 
   --tier-1:
     inset 0 1px 0 rgba(255,255,255,1),
@@ -425,6 +603,31 @@
   --tier-press:
     inset 0 1px 2px rgba(30,41,59,0.18),
     0 0 0 1px rgba(30,41,59,0.14);
+}
+
+/* Sidebar-scope flip for Atelier — slate-900 rail. Deepest of the
+ * dark-sidebar palettes, reinforcing the CAD-blueprint identity. */
+:root[data-palette="atelier"] .app-sidebar,
+:root[data-palette="atelier"] .agent-sidebar,
+:root[data-palette="atelier"] .agent-sidebar-content {
+  --surface-2: #0F172A;                  /* slate-900 rail */
+  --surface-3: rgba(255,255,255,0.16);
+  --text:      #FFFFFF;
+  --text-2:    rgba(255,255,255,0.92);
+  --text-3:    rgba(255,255,255,0.74);
+  --text-4:    rgba(255,255,255,0.58);
+  --border:    rgba(255,255,255,0.22);
+  --border-strong: rgba(255,255,255,0.32);
+
+  --danger:        #FB7185;
+  --danger-tint:   rgba(251,113,133,0.18);
+  --warn:          #FBBF24;
+  --warn-tint:     rgba(251,191,36,0.18);
+  --success:       #34D399;
+  --success-tint:  rgba(52,211,153,0.18);
+
+  --rail-hover:    rgba(255,255,255,0.18);
+  --rail-border:   rgba(255,255,255,0.30);
 }
 
 /* ════════════════════════════════════════════════════════════
@@ -586,7 +789,17 @@
 :root[data-palette="cobalt"] .app-sidebar .rail-on-white,
 :root[data-palette="cobalt"] .agent-sidebar .rail-on-white,
 :root[data-palette="azure"] .app-sidebar .rail-on-white,
-:root[data-palette="azure"] .agent-sidebar .rail-on-white {
+:root[data-palette="azure"] .agent-sidebar .rail-on-white,
+:root[data-palette="aurora"] .app-sidebar .rail-on-white,
+:root[data-palette="aurora"] .agent-sidebar .rail-on-white,
+:root[data-palette="marble"] .app-sidebar .rail-on-white,
+:root[data-palette="marble"] .agent-sidebar .rail-on-white,
+:root[data-palette="pearl"] .app-sidebar .rail-on-white,
+:root[data-palette="pearl"] .agent-sidebar .rail-on-white,
+:root[data-palette="mineral"] .app-sidebar .rail-on-white,
+:root[data-palette="mineral"] .agent-sidebar .rail-on-white,
+:root[data-palette="atelier"] .app-sidebar .rail-on-white,
+:root[data-palette="atelier"] .agent-sidebar .rail-on-white {
   --surface-2: #DDE5F0;
   --surface-3: #C9D3E3;
   /* Border tokens — sidebar scope sets these to WHITE rgba for hairlines

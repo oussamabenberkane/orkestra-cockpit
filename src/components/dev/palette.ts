@@ -39,11 +39,11 @@ export interface PaletteMeta {
 /* Sample swatches mirror each palette's sidebar surface (--surface-2)
  * and accent color so the previews reflect the exact CSS values. */
 export const PALETTES: readonly PaletteMeta[] = [
-  { id: "aurora",   label: "Aurora",   blurb: "Cool slate sidebar, indigo accent",         bg: "#D6DEEC", accent: "#4F46E5", text: "#0F172A" },
-  { id: "marble",   label: "Marble",   blurb: "Saturated dove-blue sidebar, sapphire",     bg: "#C8D2E6", accent: "#1E40AF", text: "#1A1E2E" },
-  { id: "pearl",    label: "Pearl",    blurb: "Zinc-neutral chrome, editorial ink",        bg: "#D4D4D8", accent: "#18181B", text: "#09090B" },
-  { id: "mineral",  label: "Mineral",  blurb: "Heaviest cool slate, technical cyan",       bg: "#B5C1D2", accent: "#0E7490", text: "#0F172A" },
-  { id: "atelier",  label: "Atelier",  blurb: "Industrial slate, engineering blue",        bg: "#B5BDCB", accent: "#1D4ED8", text: "#0F172A" },
+  { id: "aurora",   label: "Aurora",   blurb: "Slate-800 sidebar, indigo accent",          bg: "#1E293B", accent: "#4F46E5", text: "#0F172A" },
+  { id: "marble",   label: "Marble",   blurb: "Indigo-800 sidebar, sapphire accent",       bg: "#3730A3", accent: "#1E40AF", text: "#1A1E2E" },
+  { id: "pearl",    label: "Pearl",    blurb: "Zinc-900 sidebar, editorial ink",           bg: "#18181B", accent: "#18181B", text: "#09090B" },
+  { id: "mineral",  label: "Mineral",  blurb: "Cyan-800 sidebar, technical cyan",          bg: "#155E75", accent: "#0E7490", text: "#0F172A" },
+  { id: "atelier",  label: "Atelier",  blurb: "Slate-900 sidebar, engineering blue",       bg: "#0F172A", accent: "#1D4ED8", text: "#0F172A" },
   { id: "cobalt",   label: "Cobalt",   blurb: "Deep cobalt sidebar, light app",            bg: "#1E3A8A", accent: "#2563EB", text: "#0F172A" },
   { id: "azure",    label: "Azure",    blurb: "All-blue · #2563EB throughout",             bg: "#2563EB", accent: "#2563EB", text: "#0F172A" },
 ] as const;
