@@ -51,17 +51,21 @@ export function PaletteSwitcher() {
   const activePalette =
     PALETTES.find((p) => p.id === palette) ?? PALETTES[0];
 
-  /* Pinned to the top-right corner with zero viewport margin. maxWidth
-   * keeps the expanded form on-screen if the viewport is very narrow. */
+  /* Pinned to the top-right corner with a small viewport gutter so the
+   * border + shadow read as a discrete floating control rather than a
+   * UI element butted against the screen edge. maxWidth keeps the
+   * expanded form on-screen if the viewport is very narrow. */
   const anchorStyle: React.CSSProperties = {
     position: "fixed",
-    top: 0,
-    right: 0,
+    top: "0.5rem",
+    right: "0.5rem",
     zIndex: 9000,
     background: "var(--surface)",
     border: "1px solid var(--border)",
     boxShadow: "var(--tier-1)",
     fontFamily: "inherit",
+    /* Never extend past the opposite gutter — keeps it tidy on phones. */
+    maxWidth: "calc(100vw - 1rem)",
   };
 
   if (collapsed) {
@@ -148,6 +152,11 @@ export function PaletteSwitcher() {
           color: active ? "var(--text)" : "var(--text-3)",
           boxShadow: active ? "var(--tier-1)" : "none",
           transition: "background 0.18s, color 0.18s, box-shadow 0.18s",
+          /* Keep chips one-line so the row stays scannable while the
+           * outer container scrolls horizontally on narrow viewports
+           * instead of stacking into multiple rows. */
+          flexShrink: 0,
+          whiteSpace: "nowrap",
         }}
       >
         <span
@@ -184,12 +193,12 @@ export function PaletteSwitcher() {
       aria-label="Palette preview switcher"
       style={{
         ...anchorStyle,
-        maxWidth: "100vw",
         display: "flex",
         alignItems: "center",
         gap: "0.2rem",
         padding: "0.22rem 0.26rem",
         borderRadius: "10px",
+        minWidth: 0,
       }}
     >
       <span
@@ -208,15 +217,17 @@ export function PaletteSwitcher() {
         Palette
       </span>
       <div
+        className="palette-switcher-chips"
         style={{
           display: "flex",
-          flexWrap: "wrap",
+          flexWrap: "nowrap",
           alignItems: "center",
           gap: "0.08rem",
           padding: "0.14rem",
           background: "var(--surface-2)",
           borderRadius: "8px",
           minWidth: 0,
+          overflowX: "auto",
         }}
       >
         {PALETTES.map(segment)}
@@ -251,9 +262,15 @@ export function PaletteSwitcher() {
       >
         <ChevronDown size={12} strokeWidth={2.25} />
       </button>
-      {/* Hide the "PALETTE" label on narrow viewports so the segmented row
-       * stays compact. */}
+      {/* Narrow-viewport polish:
+       *   - hide the "PALETTE" eyebrow so the row of swatches gets the budget;
+       *   - hide the native scrollbar on the chip strip (it scrolls horizontally
+       *     on narrow viewports thanks to flex-nowrap + overflow-x:auto, but the
+       *     scrollbar would draw an ugly line under the chips). The strip stays
+       *     scrollable via touch / trackpad. */}
       <style>{`
+        .palette-switcher-chips { scrollbar-width: none; -ms-overflow-style: none; }
+        .palette-switcher-chips::-webkit-scrollbar { display: none; }
         @media (max-width: 640px) {
           [aria-label="Palette preview switcher"] .palette-switcher-label { display: none; }
         }

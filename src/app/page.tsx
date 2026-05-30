@@ -668,15 +668,20 @@ export default function LandingPage() {
         .ba-cockpit-kpi[data-tone="success"] .ba-cockpit-kpi-value { color: var(--success); }
         .ba-cockpit-kpi[data-tone="info"]    .ba-cockpit-kpi-value { color: var(--info); }
 
-        /* ── CTA band (compact) ─────────────────────────────────────── */
+        /* ── CTA band (compact) ─────────────────────────────────────────
+         * .cta-band is the centered, padded gutter wrapper — it holds the
+         * left/right breathing room on narrow viewports. The rounded gradient
+         * card lives on .cta-band-inner, which already owns border-radius +
+         * overflow:hidden (so the HexGridBg stays clipped). Putting margin +
+         * border-radius on both layers caused a sub-400px bug where the
+         * margin-left/right:auto centering wiped out the margin-inline gutter
+         * and the card hit both screen edges. */
         .cta-band {
           position: relative;
           margin-block: clamp(1rem, 3vw, 2.5rem) clamp(1.25rem, 3.5vw, 3rem);
-          margin-inline: clamp(1rem, 3vw, 2.5rem);
+          padding-inline: clamp(0.85rem, 3vw, 2.5rem);
           max-width: 1240px;
-          margin-left: auto; margin-right: auto;
-          overflow: hidden;
-          border-radius: 18px;
+          margin-inline: auto;
         }
         .cta-band-inner {
           position: relative;
