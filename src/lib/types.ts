@@ -53,7 +53,16 @@ export type ModalKey =
   | "prospection"
   | "portefeuille"
   | "agents"
-  | "rapport";
+  | "rapport"
+  /* Commodity workspace — namespaced so the modal renderer stays generic
+   * and tile/sidebar code in either workspace can never collide. */
+  | "commodity:positions"
+  | "commodity:hedges"
+  | "commodity:counterparties"
+  | "commodity:pnl"
+  | "commodity:risk"
+  | "commodity:vue360"
+  | "commodity:agents";
 
 export interface KPICardProps {
   label: string;

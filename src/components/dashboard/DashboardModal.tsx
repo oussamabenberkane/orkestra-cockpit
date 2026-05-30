@@ -23,6 +23,11 @@ import {
   Sparkles,
   FileText,
   Circle,
+  ArrowLeftRight,
+  TrendingUp,
+  Activity,
+  Users,
+  Globe,
   type LucideIcon,
 } from "lucide-react";
 
@@ -42,6 +47,13 @@ const sectionTag: Record<ModalKey, { label: string; tone: string; bg: string }> 
   portefeuille: { label: "Portefeuille",   tone: "var(--info)",   bg: "var(--info-tint)" },
   agents:       { label: "Agents IA",      tone: "var(--purple)", bg: "var(--purple-tint)" },
   rapport:      { label: "Rapport",        tone: "var(--accent)", bg: "var(--accent-tint)" },
+  "commodity:positions":      { label: "Positions",     tone: "var(--accent)",  bg: "var(--accent-tint)" },
+  "commodity:hedges":         { label: "Couvertures",   tone: "var(--info)",    bg: "var(--info-tint)" },
+  "commodity:counterparties": { label: "Contreparties", tone: "var(--warn)",    bg: "var(--warn-tint)" },
+  "commodity:pnl":            { label: "P&L",           tone: "var(--success)", bg: "var(--success-tint)" },
+  "commodity:risk":           { label: "Risque",        tone: "var(--danger)",  bg: "var(--danger-tint)" },
+  "commodity:vue360":         { label: "Vue 360°",      tone: "var(--accent)",  bg: "var(--accent-tint)" },
+  "commodity:agents":         { label: "Agents IA",     tone: "var(--purple)",  bg: "var(--purple-tint)" },
 };
 
 const sectionIcon: Record<ModalKey, LucideIcon> = {
@@ -52,6 +64,13 @@ const sectionIcon: Record<ModalKey, LucideIcon> = {
   portefeuille: Briefcase,
   agents: Sparkles,
   rapport: FileText,
+  "commodity:positions":      ArrowLeftRight,
+  "commodity:hedges":         Layers,
+  "commodity:counterparties": Users,
+  "commodity:pnl":            TrendingUp,
+  "commodity:risk":           Activity,
+  "commodity:vue360":         Globe,
+  "commodity:agents":         Sparkles,
 };
 
 export default function DashboardModal({

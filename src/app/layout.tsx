@@ -5,6 +5,7 @@ import { AgentConversationProvider } from "@/components/dashboard/AgentConversat
 import { AuthProvider } from "@/components/dashboard/AuthProvider";
 import { NotificationsProvider } from "@/components/dashboard/NotificationsProvider";
 import { PaletteSwitcher } from "@/components/dev/PaletteSwitcher";
+import { WorkspaceProvider } from "@/lib/workspaces";
 
 /* Synchronous palette init — runs in <head> before first paint so a reload
  * with `?palette=slate` or the persisted choice never flashes Aurora first.
@@ -52,7 +53,9 @@ export default function RootLayout({
       <body>
         <AuthProvider>
           <NotificationsProvider>
-            <AgentConversationProvider>{children}</AgentConversationProvider>
+            <WorkspaceProvider>
+              <AgentConversationProvider>{children}</AgentConversationProvider>
+            </WorkspaceProvider>
           </NotificationsProvider>
         </AuthProvider>
         <PaletteSwitcher />

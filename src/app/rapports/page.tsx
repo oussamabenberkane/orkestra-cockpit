@@ -13,6 +13,7 @@ import { Sidebar } from "@/components/dashboard/Sidebar";
 import { CommandPalette } from "@/components/shared/CommandPalette";
 import { Sparkline } from "@/components/shared/Sparkline";
 import { FloatingDock } from "@/components/dashboard/FloatingDock";
+import { WorkspaceTabs } from "@/components/dashboard/WorkspaceTabs";
 
 const SIDEBAR_KEY = "orkestra.sidebar.collapsed";
 
@@ -637,6 +638,7 @@ export default function RapportsPage() {
         padding: "clamp(1.5rem, 4vw, 3rem) clamp(1rem, 3vw, 2.5rem) 4rem",
         maxWidth: "1240px", marginInline: "auto", width: "100%",
       }}>
+        <WorkspaceTabs />
         {/* Page header */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}

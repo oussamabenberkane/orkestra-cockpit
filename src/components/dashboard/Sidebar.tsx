@@ -6,8 +6,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Home, Target, FolderArchive, Flame, Wallet, Globe,
-  MessageSquare, AlertTriangle, Settings, HelpCircle,
   ChevronLeft, ChevronRight, Search, Bell, Menu,
   type LucideIcon,
 } from "lucide-react";
@@ -15,6 +13,7 @@ import type { ModalKey } from "@/lib/types";
 import { NotificationsContent } from "@/components/shared/NotificationsContent";
 import { UserMenuContent } from "@/components/shared/UserMenuContent";
 import { useNotifications } from "@/components/dashboard/NotificationsProvider";
+import { useWorkspace } from "@/lib/workspaces";
 
 interface SidebarProps {
   collapsed: boolean;
@@ -37,39 +36,6 @@ type NavItemData = {
 };
 
 type OpenPopup = "profile" | "notif";
-
-const sections: { title: string; items: NavItemData[] }[] = [
-  {
-    title: "Espace",
-    items: [
-      { Icon: Home, label: "Vue 360", iconColor: "var(--accent)", href: "/dashboard" },
-    ],
-  },
-  {
-    title: "Métier",
-    items: [
-      { Icon: Target,        label: "Prospection",       iconColor: "var(--nav-prospection)",  modalKey: "prospection", badge: "12", badgeTone: "neutral" },
-      { Icon: FolderArchive, label: "Portefeuille",      iconColor: "var(--nav-portefeuille)", modalKey: "portefeuille" },
-      { Icon: Flame,         label: "Sinistres",         iconColor: "var(--nav-sinistres)",    modalKey: "sinistres",   badge: "3", badgeTone: "danger" },
-      { Icon: Wallet,        label: "Finance",           iconColor: "var(--nav-finance)",      modalKey: "finance",     badge: "2", badgeTone: "warn" },
-      { Icon: Globe,         label: "Tous les rapports", iconColor: "var(--nav-vue-ensemble)", href: "/rapports" },
-    ],
-  },
-  {
-    title: "Intelligence",
-    items: [
-      { Icon: MessageSquare,  label: "Chat IA",  iconColor: "var(--nav-chat)",    href: "/chat",     badge: "3", badgeTone: "warn" },
-      { Icon: AlertTriangle,  label: "Alertes",  iconColor: "var(--nav-alertes)", href: "/alertes", badge: "5", badgeTone: "danger" },
-    ],
-  },
-  {
-    title: "Administration",
-    items: [
-      { Icon: Settings,   label: "Paramètres", iconColor: "var(--nav-neutral)", href: "/parametres" },
-      { Icon: HelpCircle, label: "Support",    iconColor: "var(--nav-neutral)", href: "/support" },
-    ],
-  },
-];
 
 const EXPANDED_W = 248;
 const COLLAPSED_W = 64;
@@ -345,6 +311,10 @@ export function Sidebar({
   const { unreadCount: notifCount } = useNotifications();
   const unreadCount = serverUnreadCount ?? notifCount;
   const pathname = usePathname() ?? "";
+  /* Nav items are workspace-scoped — switching the top-of-page tab swaps
+   * the Métier/Trading section in place without remounting the rail. */
+  const { shape } = useWorkspace();
+  const sections = shape.nav;
   const [tooltip, setTooltip] = useState<TooltipState | null>(null);
   const [mounted, setMounted] = useState(false);
 

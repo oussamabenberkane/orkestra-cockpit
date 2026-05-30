@@ -205,6 +205,187 @@ export const modalData: Record<ModalKey, ModalData> = {
     ],
     cta: "Envoyer aux associés",
   },
+
+  /* ─── Commodity workspace ──────────────────────────────────────── */
+
+  "commodity:positions": {
+    title: "Positions ouvertes — Bureau Genève",
+    body: "Toutes les positions courantes consolidées depuis Trayport et Murex.",
+    sections: [
+      {
+        kind: "kv-list",
+        subtitle: "Trayport — par sous-jacent",
+        rows: [
+          { label: "Brent ICE",   value: "5 lots · 2.1 M" },
+          { label: "WTI NYMEX",   value: "3 lots · 1.4 M" },
+          { label: "TTF Gas",     value: "2 lots · 1.8 M" },
+          { label: "Cuivre LME",  value: "2 lots · 3.1 M" },
+        ],
+      },
+      {
+        kind: "kv-list",
+        rows: [
+          { combined: true, label: "Notionnel total",  value: "8.4 M CHF" },
+          { combined: true, label: "Exposition nette", value: "4.2 M CHF" },
+        ],
+      },
+    ],
+    cta: "Ouvrir le blotter",
+  },
+
+  "commodity:hedges": {
+    title: "Couvertures — Ratio global 82%",
+    body: "Détail des couvertures actives, par classe d'actif.",
+    sections: [
+      {
+        kind: "kv-list",
+        subtitle: "Murex — couvertures actives",
+        rows: [
+          { label: "Brent — futures Q3",       value: "couvert 92%" },
+          { label: "WTI — options collar",     value: "couvert 78%" },
+          { label: "TTF — swap fixe",          value: "couvert 85%" },
+          { label: "Cuivre — pas de hedge",    value: "0%" },
+        ],
+      },
+      {
+        kind: "kv-list",
+        rows: [
+          { combined: true, label: "Ratio global", value: "82 %" },
+        ],
+      },
+      {
+        kind: "footnote",
+        text: "2 couvertures arrivent à échéance dans les 30 prochains jours.",
+      },
+    ],
+    cta: "Voir les expirations",
+  },
+
+  "commodity:counterparties": {
+    title: "Contreparties — 24 actives",
+    body: "Exposition par contrepartie, limites et incidents.",
+    sections: [
+      {
+        kind: "status-list",
+        subtitle: "Top 5 par exposition",
+        rows: [
+          { tone: "warn",    title: "Trafigura PTE",     detail: "1.6 M · limite 95% atteinte" },
+          { tone: "neutral", title: "Gunvor SA",         detail: "1.1 M · limite 65%" },
+          { tone: "good",    title: "Vitol Holding",     detail: "0.9 M · limite 48%" },
+          { tone: "good",    title: "Mercuria Energy",   detail: "0.7 M · limite 41%" },
+          { tone: "neutral", title: "Glencore Intl",     detail: "0.5 M · limite 28%" },
+        ],
+      },
+      {
+        kind: "footnote",
+        text: "Limites recalculées chaque nuit · Trafigura à surveiller.",
+      },
+    ],
+    cta: "Revue de risque",
+  },
+
+  "commodity:pnl": {
+    title: "P&L — +312 K CHF (mois)",
+    body: "Décomposition du P&L réalisé et marqué au marché.",
+    sections: [
+      {
+        kind: "kv-list",
+        subtitle: "Juin 2026 — par desk",
+        rows: [
+          { source: "Trayport", label: "Énergie",  value: "+218 K CHF" },
+          { source: "Trayport", label: "Métaux",   value: "+82 K CHF"  },
+          { source: "Trayport", label: "Agri",     value: "+12 K CHF"  },
+          { source: "Murex",    label: "Coûts de financement", value: "−42 K CHF" },
+          { source: "Murex",    label: "Frais de courtage",     value: "−18 K CHF" },
+          { combined: true,     label: "Net réalisé",           value: "+252 K CHF" },
+          { combined: true,     label: "MtM ouvert",            value: "+60 K CHF"  },
+        ],
+      },
+    ],
+    cta: "Exporter P&L",
+  },
+
+  "commodity:risk": {
+    title: "Risque — VaR 1j 99% à 184 K CHF",
+    body: "VaR par classe d'actif et stress tests.",
+    sections: [
+      {
+        kind: "kv-list",
+        subtitle: "VaR 1j · 99% par sous-jacent",
+        rows: [
+          { label: "Énergie", value: "112 K · 92% limite" },
+          { label: "Métaux",  value: "48 K · 64% limite"  },
+          { label: "Agri",    value: "24 K · 32% limite"  },
+        ],
+      },
+      {
+        kind: "kv-list",
+        rows: [
+          { combined: true, label: "VaR consolidée",  value: "184 K CHF" },
+          { combined: true, label: "Limite globale",  value: "250 K CHF" },
+        ],
+      },
+      {
+        kind: "footnote",
+        text: "Stress test pétrole −15% : impact −340 K. Couverture conseillée.",
+      },
+    ],
+    cta: "Ajuster les couvertures",
+  },
+
+  "commodity:vue360": {
+    title: "Vue 360° — Trading desk",
+    body: "Vision consolidée du desk : positions, couvertures, risque, P&L.",
+    sections: [
+      {
+        kind: "kv-list",
+        subtitle: "Trayport + Murex — Vue globale",
+        rows: [
+          { label: "Exposition nette",   value: "4.2 M CHF" },
+          { label: "Ratio de couverture", value: "82 %" },
+          { label: "VaR 1j (99%)",        value: "184 K CHF" },
+          { label: "P&L mois",            value: "+312 K CHF" },
+        ],
+      },
+      {
+        kind: "kv-list",
+        subtitle: "Synchronisations",
+        rows: [
+          { source: "Trayport", label: "Dernière sync", value: "il y a 1 min" },
+          { source: "Murex",    label: "Dernière sync", value: "il y a 4 min" },
+        ],
+      },
+    ],
+    cta: "Voir les détails",
+  },
+
+  "commodity:agents": {
+    title: "Agents IA — 2 actions en attente",
+    body: "Vos agents trading ont travaillé pendant la session asiatique.",
+    sections: [
+      {
+        kind: "action-list",
+        subtitle: "Actions en attente",
+        items: [
+          {
+            source: "Trayport",
+            title: "Hedge advisor — WTI Q3",
+            detail: "Proposition collar 70/85 USD · couvre 18 K VaR",
+          },
+          {
+            source: "Murex",
+            title: "Pricing alert — TTF Gas",
+            detail: "Spread élargi 4.2σ · revoir limite",
+          },
+        ],
+      },
+      {
+        kind: "footnote",
+        text: "Toutes actions loguées — conforme MiFID II Art.17.",
+      },
+    ],
+    cta: "Tout valider",
+  },
 };
 
 /**

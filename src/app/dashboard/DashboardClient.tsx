@@ -21,12 +21,13 @@ import {
   satellites as mockSatellites,
   troisItems as mockTroisItems,
   tiles,
-  sourceBadges,
   type Period,
   type HeroDataset,
 } from "@/lib/dashboard-mock";
 import type { SatelliteValues, AgentTaskRow, TileMetrics } from "@/lib/dashboard-data";
 import { Percent, Wallet, Users } from "lucide-react";
+import { useWorkspace } from "@/lib/workspaces";
+import { WorkspaceTabs } from "@/components/dashboard/WorkspaceTabs";
 
 const SIDEBAR_KEY = "orkestra.sidebar.collapsed";
 
@@ -199,6 +200,7 @@ export default function DashboardClient({
   unreadCount,
 }: DashboardClientProps) {
   const router = useRouter();
+  const { workspace, shape: workspaceShape } = useWorkspace();
   const [modalKey, setModalKey] = useState<ModalKey | null>(null);
   const [collapsed, setCollapsed] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
@@ -224,7 +226,7 @@ export default function DashboardClient({
   const onOpen  = (k: ModalKey) => setModalKey(k);
   const onClose = () => setModalKey(null);
   const handleModalAction = (k: ModalKey) => {
-    if (k === "rapport" || k === "vue360") router.push("/rapports");
+    if (k === "rapport" || k === "vue360" || k === "commodity:vue360") router.push("/rapports");
   };
   const onLogout = async () => {
     const { supabase } = await import("@/lib/supabase");
@@ -232,17 +234,32 @@ export default function DashboardClient({
     router.replace("/login");
   };
 
-  const hero = initialHero[period];
+  /* Broker uses live Supabase values overlaid on mocks; commodity is pure
+   * mock for now (no upstream data yet). The chrome (Sidebar, FloatingDock,
+   * CommandPalette, modal) stays identical so switching the workspace tab
+   * is a clean in-place data swap. */
+  const isCommodity = workspace === "commodity";
+  const hero = isCommodity ? workspaceShape.heroByPeriod[period] : initialHero[period];
 
-  const satellites = useMemo(() => mergeSatellites(satelliteValues), [satelliteValues]);
+  const satellites = useMemo(
+    () => isCommodity ? workspaceShape.satellites : mergeSatellites(satelliteValues),
+    [isCommodity, workspaceShape, satelliteValues],
+  );
   const troisItems = useMemo(
-    () => agentTaskRows.length > 0 ? agentTaskRows.map(taskRowToTroisItem) : mockTroisItems,
-    [agentTaskRows],
+    () => {
+      if (isCommodity) return workspaceShape.troisItems;
+      return agentTaskRows.length > 0 ? agentTaskRows.map(taskRowToTroisItem) : mockTroisItems;
+    },
+    [isCommodity, workspaceShape, agentTaskRows],
   );
   const liveTiles = useMemo(
-    () => tileMetrics ? buildLiveTiles(tileMetrics) : tiles,
-    [tileMetrics],
+    () => {
+      if (isCommodity) return workspaceShape.tiles;
+      return tileMetrics ? buildLiveTiles(tileMetrics) : tiles;
+    },
+    [isCommodity, workspaceShape, tileMetrics],
   );
+  const sourceBadges = workspaceShape.sourceBadges;
 
   return (
     <div
@@ -274,6 +291,7 @@ export default function DashboardClient({
           width: "100%",
         }}
       >
+        <WorkspaceTabs />
         <header className="dash-section" style={{
           display: "flex",
           alignItems: "center",
@@ -360,10 +378,15 @@ export default function DashboardClient({
               letterSpacing: "-0.02em",
               margin: 0,
               lineHeight: 1.25,
-            }}>Validez. Relancez. Signez.</h2>
+            }}>{isCommodity ? "Roll. Couvrez. Validez." : "Validez. Relancez. Signez."}</h2>
           </div>
           <ActionCarousel
-            actions={[
+            actions={isCommodity ? [
+              { label: "Roll des futures Brent",  Icon: RefreshCw,   run: () => onOpen("commodity:positions") },
+              { label: "Ajuster la couverture",   Icon: ShieldAlert, run: () => onOpen("commodity:risk") },
+              { label: "Approuver hedge WTI Q3",  Icon: FileText,    run: () => onOpen("commodity:agents") },
+              { label: "Revoir Trafigura",        Icon: AlertCircle, run: () => onOpen("commodity:counterparties") },
+            ] : [
               { label: "Signer le rapport direction", Icon: FileText,      run: () => router.push("/rapports") },
               { label: "Valider les renouvellements", Icon: RefreshCw,     run: () => onOpen("portefeuille") },
               { label: "Relancer les impayés",        Icon: AlertCircle,   run: () => onOpen("finance") },
@@ -424,7 +447,16 @@ export default function DashboardClient({
           ))}
         </div>
 
-        <Footer />
+        <Footer
+          syncLine={
+            isCommodity
+              ? "Sync Trayport 1 min · Murex 4 min"
+              : "Sync BrokerStar 3 min · Odoo 5 min"
+          }
+          complianceLine={
+            isCommodity ? "MiFID II Art.17 · Infomaniak CH" : "LPD Art.16 · Infomaniak CH"
+          }
+        />
       </main>
 
       <DashboardModal
@@ -959,7 +991,13 @@ function ActionCarousel({ actions }: { actions: CarouselAction[] }) {
   );
 }
 
-function Footer() {
+function Footer({
+  syncLine,
+  complianceLine,
+}: {
+  syncLine: string;
+  complianceLine: string;
+}) {
   return (
     <footer style={{
       marginTop: "2.5rem",
@@ -974,8 +1012,8 @@ function Footer() {
       flexWrap: "wrap",
     }}>
       <span>© 2026 Helvebroker · Zürich</span>
-      <span>Sync BrokerStar 3 min · Odoo 5 min</span>
-      <span>LPD Art.16 · Infomaniak CH</span>
+      <span>{syncLine}</span>
+      <span>{complianceLine}</span>
     </footer>
   );
 }
