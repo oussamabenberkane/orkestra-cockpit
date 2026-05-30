@@ -6,7 +6,6 @@ import type { ModalKey } from "@/lib/types";
 import { Sidebar } from "@/components/dashboard/Sidebar";
 import DashboardModal from "@/components/dashboard/DashboardModal";
 import { CommandPalette } from "@/components/shared/CommandPalette";
-import { WorkspaceTabs } from "@/components/dashboard/WorkspaceTabs";
 import { supabase } from "@/lib/supabase";
 
 const SIDEBAR_KEY = "orkestra.sidebar.collapsed";
@@ -106,7 +105,6 @@ export function AppShell({ children, mainStyle }: AppShellProps) {
           ...mainStyle,
         }}
       >
-        <WorkspaceTabs />
         {children}
       </main>
 

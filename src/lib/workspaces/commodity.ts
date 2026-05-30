@@ -189,7 +189,9 @@ export const commodityWorkspace: WorkspaceShape = {
     {
       title: "Espace",
       items: [
-        { Icon: Home, label: "Vue 360", iconColor: "var(--accent)", href: "/dashboard" },
+        { Icon: Home,          label: "Vue 360",           iconColor: "var(--nav-vue-ensemble)", href: "/dashboard" },
+        { Icon: Globe,          label: "Tous les rapports", iconColor: "var(--nav-vue-ensemble)", href: "/rapports" },
+        { Icon: AlertTriangle, label: "Alertes",           iconColor: "var(--nav-alertes)",      href: "/alertes" },
       ],
     },
     {
@@ -200,14 +202,12 @@ export const commodityWorkspace: WorkspaceShape = {
         { Icon: Users,          label: "Contreparties",    iconColor: "var(--nav-finance)",      modalKey: "commodity:counterparties", badge: "1",  badgeTone: "warn" },
         { Icon: TrendingUp,     label: "P&L",               iconColor: "var(--nav-vue-ensemble)", modalKey: "commodity:pnl" },
         { Icon: Activity,       label: "Risque",            iconColor: "var(--nav-sinistres)",    modalKey: "commodity:risk",           badge: "92%", badgeTone: "danger" },
-        { Icon: Globe,          label: "Tous les rapports", iconColor: "var(--nav-vue-ensemble)", href: "/rapports" },
       ],
     },
     {
       title: "Intelligence",
       items: [
         { Icon: MessageSquare, label: "Chat IA", iconColor: "var(--nav-chat)",    href: "/chat" },
-        { Icon: AlertTriangle, label: "Alertes", iconColor: "var(--nav-alertes)", href: "/alertes" },
       ],
     },
     {

@@ -992,6 +992,20 @@
 
   --rail-hover:    rgba(255,255,255,0.18);
   --rail-border:   rgba(255,255,255,0.32);
+
+  /* Profile avatar — defaults to var(--accent) on white (other palettes),
+   * but azure's rail surface IS var(--accent), so the chip would disappear.
+   * Flip to a white card with hero-blue text + a soft ring, matching the
+   * search/bell rail-on-white treatment used elsewhere in the rail. */
+  --rail-avatar-bg: #FFFFFF;
+  --rail-avatar-fg: #2563EB;
+  --rail-avatar-shadow:
+    inset 0 1px 0 rgba(255,255,255,1),
+    0 0 0 1px rgba(15,23,42,0.06),
+    0 2px 6px rgba(15,23,42,0.22);
+  --rail-avatar-shadow-collapsed:
+    inset 0 1px 0 rgba(255,255,255,1),
+    0 0 0 1px rgba(15,23,42,0.06);
 }
 
 /* shadcn / Tailwind compatibility — palette-token-driven so the

@@ -626,8 +626,12 @@ export function Sidebar({
           <button
             onClick={handleSidebarToggle}
             onMouseEnter={(e) => {
+              /* Hover: white card on the rail. Color uses --accent so the
+               * chevron stays legible on dark-rail palettes (azure/cobalt
+               * etc.) where --text resolves to white inside .app-sidebar
+               * scope and would disappear against the white hover card. */
               e.currentTarget.style.background = "var(--surface)";
-              e.currentTarget.style.color = "var(--text)";
+              e.currentTarget.style.color = "var(--accent)";
               if (!isMobile && collapsed) showTip("Déployer le panneau", e.currentTarget);
             }}
             onMouseLeave={(e) => {
@@ -786,14 +790,14 @@ export function Sidebar({
               <span style={{ position: "relative", flexShrink: 0 }}>
                 <span style={{
                   width: 30, height: 30,
-                  background: "var(--accent)",
-                  color: "#FFFFFF",
+                  background: "var(--rail-avatar-bg, var(--accent))",
+                  color: "var(--rail-avatar-fg, #FFFFFF)",
                   borderRadius: "50%",
                   display: "flex", alignItems: "center", justifyContent: "center",
                   fontFamily: "var(--font-mono)",
                   fontSize: "0.68rem", fontWeight: 700,
                   letterSpacing: "0.02em",
-                  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.22), 0 2px 6px rgba(0,98,204,0.35)",
+                  boxShadow: "var(--rail-avatar-shadow, inset 0 1px 0 rgba(255,255,255,0.22), 0 2px 6px rgba(0,98,204,0.35))",
                 }}>TM</span>
                 <span aria-hidden style={{
                   position: "absolute",
@@ -960,14 +964,14 @@ export function Sidebar({
               >
                 <span style={{
                   width: 26, height: 26,
-                  background: "var(--accent)",
-                  color: "#FFFFFF",
+                  background: "var(--rail-avatar-bg, var(--accent))",
+                  color: "var(--rail-avatar-fg, #FFFFFF)",
                   borderRadius: "50%",
                   display: "flex", alignItems: "center", justifyContent: "center",
                   fontFamily: "var(--font-mono)",
                   fontSize: "0.68rem", fontWeight: 700,
                   letterSpacing: "0.02em",
-                  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.22)",
+                  boxShadow: "var(--rail-avatar-shadow-collapsed, inset 0 1px 0 rgba(255,255,255,0.22))",
                 }}>TM</span>
               </span>
             </button>
