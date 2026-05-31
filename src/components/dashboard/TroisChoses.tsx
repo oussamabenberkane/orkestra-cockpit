@@ -47,7 +47,7 @@ export function TroisChoses({ items, onOpen }: TroisChosesProps) {
           marginBottom: "0.4rem",
           display: "flex", alignItems: "center", gap: "0.45rem",
         }}>
-        Trois choses aujourd&apos;hui
+        Trois actions aujourd&apos;hui
         {!allDone && (
           <span style={{
             fontSize: "0.62rem", fontWeight: 700,
