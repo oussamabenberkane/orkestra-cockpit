@@ -2258,7 +2258,6 @@ function Footer() {
         </div>
 
         <nav className="footer-links" aria-label="Liens secondaires">
-          <a href="#metiers">Métiers</a>
           <a href="#ia">L’IA</a>
           <Link href="/login">Cockpit</Link>
           <Link href="/rapports">Rapports</Link>
