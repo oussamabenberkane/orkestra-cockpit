@@ -14,6 +14,17 @@ import {
 } from "lucide-react";
 import { SatelliteKPI, type Satellite } from "@/components/dashboard/SatelliteKPI";
 
+// useReducedMotion reads a media query unavailable during SSR, so it returns
+// false on the server and the real value on the client — a hydration mismatch
+// for visitors with "reduce motion" enabled. Gate it behind a mounted flag so
+// the first client render matches the server, then update after hydration.
+function useReducedMotionSafe() {
+  const reduce = useReducedMotion();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  return mounted ? reduce : false;
+}
+
 // ── Preview data (mirrors the cockpit so the landing FEELS like the product) ──
 
 const previewData = [62, 64, 70, 68, 72, 78, 80, 82, 86, 88, 92, 92];
@@ -79,41 +90,6 @@ const miniTiles: MiniTile[] = [
   { Icon: Sparkles,      color: "var(--purple)", bg: "var(--purple-tint)", title: "Agents IA",     metric: "3",   unit: "",  caption: "Actions préparées",  alert: "Prêtes à valider", alertTone: "neutral" },
 ];
 
-// 6 métiers — hybrid: 3-square grid on small screens, classic icon+title+body
-// on ≥960px (matches the original landing design).
-const metiers = [
-  {
-    Icon: Target, color: "var(--accent)", bg: "var(--accent-tint)",
-    title: "Prospection",  hint: "Pipeline + relances",
-    body: "Pipeline qualifié, relances automatiques, taux de conversion en temps réel.",
-  },
-  {
-    Icon: FolderArchive, color: "var(--info)", bg: "var(--info-tint)",
-    title: "Portefeuille", hint: "Contrats · J-30",
-    body: "Contrats actifs, renouvellements J-30 préparés, primes consolidées par client.",
-  },
-  {
-    Icon: Flame, color: "var(--danger)", bg: "var(--danger-tint)",
-    title: "Sinistres",    hint: "Dossiers ouverts",
-    body: "Dossiers ouverts, délais de traitement, ratio sinistralité — toujours à jour.",
-  },
-  {
-    Icon: Wallet, color: "var(--warn)", bg: "var(--warn-tint)",
-    title: "Finance",      hint: "Cash-flow · marge",
-    body: "Cash-flow, marge nette, impayés détectés tôt — BrokerStar et Odoo réconciliés.",
-  },
-  {
-    Icon: Globe, color: "var(--accent)", bg: "var(--accent-tint)",
-    title: "Vue 360°",     hint: "Marge consolidée",
-    body: "Une marge consolidée, une rétention, une santé d’ensemble. Le cabinet d’un coup d’œil.",
-  },
-  {
-    Icon: Sparkles, color: "var(--purple)", bg: "var(--purple-tint)",
-    title: "Agents IA",    hint: "Préparent · vous validez",
-    body: "Renouvellements, impayés, rapports — vos agents préparent. Vous validez.",
-  },
-];
-
 // ─────────────────────────────────────────────────────────────────────────────
 
 export default function LandingPage() {
@@ -134,10 +110,8 @@ export default function LandingPage() {
       <TopNav />
       <main style={{ flex: 1 }}>
         <Hero period={period} onPeriodChange={setPeriod} onCta={goLogin} />
-        <MetiersSection />
         <AISection />
         <CalmChaosSection />
-        <CtaBand />
       </main>
       <Footer />
 
@@ -208,103 +182,6 @@ export default function LandingPage() {
         /* ── Top nav anchor links ───────────────────────────────────── */
         .nav-anchor { display: none; }
         @media (min-width: 760px) { .nav-anchor { display: inline-flex; } }
-
-        /* ── Métiers — 3 squares on small screens, classic layout ≥960px ── */
-        .metiers-grid {
-          display: grid;
-          grid-template-columns: repeat(3, 1fr);
-          gap: 0.5rem;
-        }
-        @media (min-width: 480px) { .metiers-grid { gap: 0.7rem; } }
-        @media (min-width: 720px) { .metiers-grid { gap: 0.9rem; } }
-        @media (min-width: 960px) { .metiers-grid { gap: 1rem; } }
-
-        /* Small-screen square card (default) */
-        .metier-card {
-          aspect-ratio: 1 / 1;
-          display: flex; flex-direction: column;
-          align-items: center; justify-content: center;
-          text-align: center;
-          gap: 0.4rem;
-          padding: 0.6rem;
-          background: var(--surface);
-          border: 1px solid var(--border);
-          border-radius: 14px;
-          transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s;
-        }
-        .metier-card:hover {
-          transform: translateY(-2px);
-          box-shadow: var(--tier-1);
-          border-color: color-mix(in srgb, var(--metier-color, var(--accent)) 32%, var(--border));
-        }
-        .metier-icon {
-          width: 36px; height: 36px; border-radius: 10px;
-          background: var(--metier-bg);
-          color: var(--metier-color);
-          display: inline-flex; align-items: center; justify-content: center;
-          box-shadow: inset 0 1px 0 rgba(255,255,255,0.6);
-          flex-shrink: 0;
-        }
-        .metier-icon svg { width: 17px; height: 17px; }
-        .metier-title {
-          font-size: 0.78rem; font-weight: 700;
-          letter-spacing: -0.012em;
-          color: var(--text);
-          margin: 0;
-          line-height: 1.15;
-        }
-        .metier-hint {
-          font-family: var(--font-mono);
-          font-size: 0.58rem;
-          color: var(--text-4);
-          letter-spacing: 0.04em;
-          text-transform: uppercase;
-          margin: 0;
-          line-height: 1.2;
-          overflow: hidden;
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-        }
-        .metier-body { display: none; }
-
-        @media (min-width: 480px) {
-          .metier-card { padding: 0.8rem; gap: 0.5rem; }
-          .metier-icon { width: 40px; height: 40px; }
-          .metier-icon svg { width: 19px; height: 19px; }
-          .metier-title { font-size: 0.9rem; }
-          .metier-hint { font-size: 0.62rem; }
-        }
-        @media (min-width: 720px) {
-          .metier-card { padding: 1.1rem; gap: 0.7rem; }
-          .metier-icon { width: 46px; height: 46px; border-radius: 12px; }
-          .metier-icon svg { width: 22px; height: 22px; }
-          .metier-title { font-size: 1rem; }
-          .metier-hint { font-size: 0.66rem; }
-        }
-
-        /* ≥960px — classic layout: left-aligned, icon + title + body, no square */
-        @media (min-width: 960px) {
-          .metier-card {
-            aspect-ratio: auto;
-            align-items: flex-start;
-            justify-content: flex-start;
-            text-align: left;
-            padding: 1.4rem 1.4rem 1.2rem;
-            gap: 0.8rem;
-          }
-          .metier-icon { width: 40px; height: 40px; border-radius: 10px; }
-          .metier-icon svg { width: 18px; height: 18px; }
-          .metier-title { font-size: 1.05rem; letter-spacing: -0.018em; }
-          .metier-hint { display: none; }
-          .metier-body {
-            display: block;
-            font-size: 0.92rem;
-            line-height: 1.55;
-            color: var(--text-3);
-            margin: 0;
-          }
-        }
 
         .ai-grid { display: grid; grid-template-columns: 1fr; gap: 1.25rem; align-items: stretch; }
         @media (min-width: 960px) { .ai-grid { grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr); gap: clamp(1.5rem, 3vw, 3rem); align-items: center; } }
@@ -668,108 +545,6 @@ export default function LandingPage() {
         .ba-cockpit-kpi[data-tone="success"] .ba-cockpit-kpi-value { color: var(--success); }
         .ba-cockpit-kpi[data-tone="info"]    .ba-cockpit-kpi-value { color: var(--info); }
 
-        /* ── CTA band (compact) ─────────────────────────────────────────
-         * .cta-band is the centered, padded gutter wrapper — it holds the
-         * left/right breathing room on narrow viewports. The rounded gradient
-         * card lives on .cta-band-inner, which already owns border-radius +
-         * overflow:hidden (so the HexGridBg stays clipped). Putting margin +
-         * border-radius on both layers caused a sub-400px bug where the
-         * margin-left/right:auto centering wiped out the margin-inline gutter
-         * and the card hit both screen edges. */
-        .cta-band {
-          position: relative;
-          margin-block: clamp(1rem, 3vw, 2.5rem) clamp(1.25rem, 3.5vw, 3rem);
-          padding-inline: clamp(0.85rem, 3vw, 2.5rem);
-          max-width: 1240px;
-          margin-inline: auto;
-        }
-        .cta-band-inner {
-          position: relative;
-          background:
-            linear-gradient(135deg,
-              color-mix(in srgb, var(--accent) 96%, black) 0%,
-              color-mix(in srgb, var(--accent-2) 92%, black) 100%);
-          color: #FFFFFF;
-          padding: clamp(1.6rem, 5vw, 3.5rem) clamp(1.1rem, 4vw, 3rem);
-          border-radius: 18px;
-          overflow: hidden;
-          border: 1px solid color-mix(in srgb, var(--accent) 60%, black);
-        }
-        .cta-band-sheen {
-          position: absolute; inset: 0;
-          background:
-            radial-gradient(60% 50% at 50% 0%, rgba(255,255,255,0.16), transparent 60%),
-            radial-gradient(70% 60% at 90% 100%, rgba(0,0,0,0.30), transparent 60%);
-          pointer-events: none;
-        }
-        .cta-band-body {
-          position: relative;
-          max-width: 640px;
-          margin-inline: auto;
-          text-align: center;
-        }
-        .cta-band-eyebrow {
-          display: inline-flex; align-items: center; gap: 0.35rem;
-          padding: 0.22rem 0.55rem;
-          border-radius: 100px;
-          background: rgba(255,255,255,0.14);
-          border: 1px solid rgba(255,255,255,0.24);
-          font-family: var(--font-mono);
-          font-size: 0.6rem; font-weight: 700;
-          letter-spacing: 0.1em; text-transform: uppercase;
-          margin-bottom: 0.85rem;
-        }
-        .cta-band-title {
-          font-size: clamp(1.4rem, 4.5vw, 2.4rem);
-          font-weight: 800;
-          letter-spacing: -0.028em;
-          line-height: 1.1;
-          margin: 0;
-        }
-        .cta-band-title-soft { opacity: 0.78; }
-        .cta-band-actions {
-          margin-top: 1.2rem;
-          display: flex; justify-content: center; gap: 0.5rem;
-          flex-direction: column;
-        }
-        .cta-band-actions > * { width: 100%; justify-content: center; }
-        @media (min-width: 520px) {
-          .cta-band-actions { flex-direction: row; flex-wrap: wrap; gap: 0.6rem; }
-          .cta-band-actions > * { width: auto; }
-        }
-        .cta-band-primary {
-          display: inline-flex; align-items: center; gap: 0.4rem;
-          height: 42px; padding: 0 1.2rem;
-          background: #FFFFFF;
-          color: var(--accent);
-          font-family: inherit;
-          font-size: 0.92rem; font-weight: 700;
-          border-radius: 10px;
-          text-decoration: none;
-          box-shadow: 0 10px 24px -10px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.6);
-          transition: transform 0.22s, box-shadow 0.22s;
-        }
-        .cta-band-primary:hover {
-          transform: translateY(-1px);
-          box-shadow: 0 14px 28px -10px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.6);
-        }
-        .cta-band-secondary {
-          display: inline-flex; align-items: center; justify-content: center;
-          height: 42px; padding: 0 1rem;
-          color: #FFFFFF;
-          background: transparent;
-          border: 1px solid rgba(255,255,255,0.34);
-          font-family: inherit;
-          font-size: 0.88rem; font-weight: 600;
-          border-radius: 10px;
-          text-decoration: none;
-          transition: background 0.18s;
-        }
-        .cta-band-secondary:hover { background: rgba(255,255,255,0.10); }
-        @media (min-width: 720px) {
-          .cta-band-primary, .cta-band-secondary { height: 46px; font-size: 0.95rem; padding: 0 1.35rem; }
-        }
-
         /* ── Footer (compact, single row on desktop, stacked on phone) ── */
         .footer {
           background: #0B0F1E;
@@ -1011,9 +786,6 @@ function TopNav() {
           aria-label="Navigation principale"
           style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}
         >
-          <NavAnchor href="#metiers" label="Métiers" />
-          <NavAnchor href="#ia"      label="L’IA"   />
-          <NavAnchor href="#calme"   label="Avant / après" />
           <Link
             href="/login"
             style={{
@@ -1122,7 +894,7 @@ function Hero({
   onPeriodChange: (p: "M" | "T" | "A") => void;
   onCta: () => void;
 }) {
-  const reduceMotion = useReducedMotion();
+  const reduceMotion = useReducedMotionSafe();
   const fadeIn = (delay = 0) =>
     reduceMotion
       ? { initial: { opacity: 1 }, animate: { opacity: 1 } }
@@ -1198,14 +970,14 @@ function Hero({
               marginInline: "auto",
             }}
           >
-            Pilotez votre cabinet{" "}
+            Orchestrez vos données. Pilotez votre PME.{" "}
             <span style={{
               background: "linear-gradient(180deg, var(--accent) 0%, var(--accent-2) 100%)",
               WebkitBackgroundClip: "text",
               WebkitTextFillColor: "transparent",
               backgroundClip: "text",
             }}>
-              avec intelligence.
+              Agissez.
             </span>
           </motion.h1>
 
@@ -1668,57 +1440,6 @@ function SourcePill({ dot, label, combined }: { dot: string; label: string; comb
   );
 }
 
-// ── Métiers grid ─────────────────────────────────────────────────────────────
-
-function MetiersSection() {
-  return (
-    <section id="metiers" className="landing-section">
-      <SectionHeader
-        eyebrow="Un seul cockpit"
-        title="Tous vos métiers, sur une même surface."
-        sub="BrokerStar et Odoo fusionnés. Six modules, une langue commune. Aucun export à recoller."
-      />
-
-      <div className="metiers-grid" style={{ marginTop: "clamp(1.5rem, 3vw, 2.2rem)" }}>
-        {metiers.map((m, i) => (
-          <MetierCard key={m.title} metier={m} index={i} />
-        ))}
-      </div>
-    </section>
-  );
-}
-
-function MetierCard({
-  metier, index,
-}: {
-  metier: typeof metiers[number];
-  index: number;
-}) {
-  const reduce = useReducedMotion();
-  const { Icon } = metier;
-  return (
-    <motion.article
-      initial={reduce ? { opacity: 1 } : { opacity: 0, y: 12, scale: 0.96 }}
-      whileInView={{ opacity: 1, y: 0, scale: 1 }}
-      viewport={{ once: true, margin: "-60px" }}
-      transition={{ duration: 0.4, delay: index * 0.05, ease: [0.22, 1, 0.36, 1] }}
-      className="metier-card"
-      style={{
-        // expose tile color so hover border / icon glow follow the métier hue
-        ["--metier-color" as string]: metier.color,
-        ["--metier-bg" as string]: metier.bg,
-      } as React.CSSProperties}
-    >
-      <span className="metier-icon" aria-hidden>
-        <Icon strokeWidth={1.85} />
-      </span>
-      <h3 className="metier-title">{metier.title}</h3>
-      <p className="metier-hint">{metier.hint}</p>
-      <p className="metier-body">{metier.body}</p>
-    </motion.article>
-  );
-}
-
 // ── AI section — streaming assistant + chat mockup ───────────────────────────
 
 const aiFeatures = [
@@ -1739,7 +1460,7 @@ function AISection() {
             Agent IA · Mistral
           </div>
           <h2 className="ai-title">
-            Posez la question. L’IA répond sur vos données.
+            Posez une question. Obtenez une réponse, pas un fichier.
           </h2>
           <p className="ai-lede">
             L’assistant interroge BrokerStar et Odoo en direct, raisonne sur vos
@@ -1768,7 +1489,7 @@ function AISection() {
 }
 
 function AIFeatureCarousel() {
-  const reduce = useReducedMotion();
+  const reduce = useReducedMotionSafe();
   const [idx, setIdx] = useState(0);
 
   useEffect(() => {
@@ -1839,7 +1560,7 @@ function AIFeatureRow({ feature }: { feature: typeof aiFeatures[number] }) {
 
 // Animated chat mockup — simulated streaming + tool call
 function ChatMockup() {
-  const reduce = useReducedMotion();
+  const reduce = useReducedMotionSafe();
   const [, forceTick] = useReducer((n) => n + 1, 0);
   const [step, setStep] = useState(0);
 
@@ -2160,8 +1881,7 @@ function CalmChaosSection() {
     <section id="calme" className="landing-section">
       <SectionHeader
         eyebrow="Avant / Après"
-        title="Le calme remplace les onglets."
-        sub="Cinq fenêtres, trois exports, deux PDF — devenus un seul écran."
+        title="Moins d'onglets. Plus de décisions."
       />
       <div className="ba-shell" style={{ marginTop: "clamp(1.2rem, 3vw, 2rem)" }}>
         <BeforeAfterCard />
@@ -2171,7 +1891,7 @@ function CalmChaosSection() {
 }
 
 function BeforeAfterCard() {
-  const reduce = useReducedMotion();
+  const reduce = useReducedMotionSafe();
   const [state, setState] = useState<"before" | "after">("before");
 
   useEffect(() => {
@@ -2327,46 +2047,12 @@ function AfterContent() {
   );
 }
 
-// ── Closing CTA band ─────────────────────────────────────────────────────────
-
-function CtaBand() {
-  return (
-    <section className="cta-band">
-      <div className="cta-band-inner">
-        <HexGridBg density={6} opacity={0.07} color="#FFFFFF" />
-        <div aria-hidden className="cta-band-sheen" />
-
-        <div className="cta-band-body">
-          <div className="cta-band-eyebrow">
-            <Sparkles size={10} strokeWidth={2.5} />
-            Démo · sans mot de passe
-          </div>
-          <h2 className="cta-band-title">
-            Un cockpit, chaque matin.
-            <br />
-            <span className="cta-band-title-soft">Trois actions, jamais plus.</span>
-          </h2>
-          <div className="cta-band-actions">
-            <Link href="/login" className="cta-band-primary">
-              Accéder au cockpit
-              <ArrowRight size={15} strokeWidth={2.25} />
-            </Link>
-            <a href="#metiers" className="cta-band-secondary">
-              Revoir les modules
-            </a>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
 // ── Section header (shared) ──────────────────────────────────────────────────
 
 function SectionHeader({
   eyebrow, title, sub,
 }: { eyebrow: string; title: string; sub?: string }) {
-  const reduce = useReducedMotion();
+  const reduce = useReducedMotionSafe();
   return (
     <motion.div
       initial={reduce ? { opacity: 1 } : { opacity: 0, y: 12 }}
@@ -2434,7 +2120,6 @@ function Footer() {
         </div>
 
         <nav className="footer-links" aria-label="Liens secondaires">
-          <a href="#metiers">Métiers</a>
           <a href="#ia">L’IA</a>
           <Link href="/login">Cockpit</Link>
           <Link href="/rapports">Rapports</Link>
