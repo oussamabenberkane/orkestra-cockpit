@@ -59,6 +59,11 @@ export default function AlertesPage() {
   const read = alerts.filter((a) => a.read);
   const list = tab === "nonlu" ? unread : read;
 
+  // Closed-alerts counter (top-right of header). Denominator = total alerts
+  // currently in the system, numerator = alerts already treated (read).
+  const closedCount = read.length;
+  const totalCount = alerts.length;
+
   /** Desktop master/detail: auto-pick the first row so the preview is never empty.
    *  Mobile (compact): never auto-select — the row is a nav target, not a selector. */
   const selected = isCompact
@@ -170,6 +175,74 @@ export default function AlertesPage() {
                   : "Aucune alerte active"}
               </p>
             </div>
+          </div>
+
+          {/* Closed-alerts counter — mono ratio over total in system */}
+          <div
+            aria-label={`${closedCount} alertes traitées sur ${totalCount}`}
+            title={`${closedCount} alertes traitées sur ${totalCount}`}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "0.55rem",
+              padding: "0.4rem 0.7rem 0.4rem 0.8rem",
+              borderRadius: "100px",
+              background: "var(--surface-2)",
+              boxShadow: "var(--tier-1)",
+              flexShrink: 0,
+            }}
+          >
+            <span
+              style={{
+                display: "inline-flex",
+                alignItems: "baseline",
+                gap: "0.18rem",
+                fontFamily: "var(--font-mono)",
+                lineHeight: 1,
+              }}
+            >
+              <span
+                style={{
+                  fontSize: "1rem",
+                  fontWeight: 700,
+                  color: closedCount > 0 ? "var(--success)" : "var(--text-3)",
+                  letterSpacing: "-0.02em",
+                  fontVariantNumeric: "tabular-nums",
+                }}
+              >
+                {closedCount}
+              </span>
+              <span
+                style={{
+                  fontSize: "0.85rem",
+                  fontWeight: 500,
+                  color: "var(--text-4)",
+                }}
+              >
+                /
+              </span>
+              <span
+                style={{
+                  fontSize: "0.85rem",
+                  fontWeight: 600,
+                  color: "var(--text-3)",
+                  fontVariantNumeric: "tabular-nums",
+                }}
+              >
+                {totalCount}
+              </span>
+            </span>
+            <span
+              style={{
+                fontSize: "0.58rem",
+                fontWeight: 700,
+                letterSpacing: "0.12em",
+                textTransform: "uppercase",
+                color: "var(--text-4)",
+              }}
+            >
+              traités
+            </span>
           </div>
         </motion.div>
 
