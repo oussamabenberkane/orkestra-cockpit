@@ -1913,10 +1913,7 @@ function PillarsSection() {
   const reduce = useReducedMotionSafe();
   return (
     <section id="piliers" className="landing-section">
-      <SectionHeader
-        eyebrow="Trois piliers"
-        title="Conçu pour les cabinets BFSI suisses."
-      />
+      <SectionHeader title="Conçu pour les cabinets BFSI suisses." />
       <div className="pillars-grid" style={{ marginTop: "clamp(1.5rem, 3vw, 2.5rem)" }}>
         {pillars.map((p, i) => (
           <PillarCard key={p.title} pillar={p} index={i} reduce={reduce} />
@@ -2187,7 +2184,7 @@ function AfterContent() {
 
 function SectionHeader({
   eyebrow, title, sub,
-}: { eyebrow: string; title: string; sub?: string }) {
+}: { eyebrow?: string; title: string; sub?: string }) {
   const reduce = useReducedMotionSafe();
   return (
     <motion.div
@@ -2197,18 +2194,20 @@ function SectionHeader({
       transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
       style={{ textAlign: "center", maxWidth: 720, marginInline: "auto" }}
     >
-      <span
-        style={{
-          display: "inline-block",
-          fontFamily: "var(--font-mono)",
-          fontSize: "0.66rem", fontWeight: 700,
-          color: "var(--accent)",
-          letterSpacing: "0.16em", textTransform: "uppercase",
-          marginBottom: "0.65rem",
-        }}
-      >
-        {eyebrow}
-      </span>
+      {eyebrow && (
+        <span
+          style={{
+            display: "inline-block",
+            fontFamily: "var(--font-mono)",
+            fontSize: "0.66rem", fontWeight: 700,
+            color: "var(--accent)",
+            letterSpacing: "0.16em", textTransform: "uppercase",
+            marginBottom: "0.65rem",
+          }}
+        >
+          {eyebrow}
+        </span>
+      )}
       <h2
         style={{
           fontSize: "clamp(1.7rem, 3.4vw, 2.4rem)",
