@@ -79,41 +79,6 @@ const miniTiles: MiniTile[] = [
   { Icon: Sparkles,      color: "var(--purple)", bg: "var(--purple-tint)", title: "Agents IA",     metric: "3",   unit: "",  caption: "Actions préparées",  alert: "Prêtes à valider", alertTone: "neutral" },
 ];
 
-// 6 métiers — hybrid: 3-square grid on small screens, classic icon+title+body
-// on ≥960px (matches the original landing design).
-const metiers = [
-  {
-    Icon: Target, color: "var(--accent)", bg: "var(--accent-tint)",
-    title: "Prospection",  hint: "Pipeline + relances",
-    body: "Pipeline qualifié, relances automatiques, taux de conversion en temps réel.",
-  },
-  {
-    Icon: FolderArchive, color: "var(--info)", bg: "var(--info-tint)",
-    title: "Portefeuille", hint: "Contrats · J-30",
-    body: "Contrats actifs, renouvellements J-30 préparés, primes consolidées par client.",
-  },
-  {
-    Icon: Flame, color: "var(--danger)", bg: "var(--danger-tint)",
-    title: "Sinistres",    hint: "Dossiers ouverts",
-    body: "Dossiers ouverts, délais de traitement, ratio sinistralité — toujours à jour.",
-  },
-  {
-    Icon: Wallet, color: "var(--warn)", bg: "var(--warn-tint)",
-    title: "Finance",      hint: "Cash-flow · marge",
-    body: "Cash-flow, marge nette, impayés détectés tôt — BrokerStar et Odoo réconciliés.",
-  },
-  {
-    Icon: Globe, color: "var(--accent)", bg: "var(--accent-tint)",
-    title: "Vue 360°",     hint: "Marge consolidée",
-    body: "Une marge consolidée, une rétention, une santé d’ensemble. Le cabinet d’un coup d’œil.",
-  },
-  {
-    Icon: Sparkles, color: "var(--purple)", bg: "var(--purple-tint)",
-    title: "Agents IA",    hint: "Préparent · vous validez",
-    body: "Renouvellements, impayés, rapports — vos agents préparent. Vous validez.",
-  },
-];
-
 // ─────────────────────────────────────────────────────────────────────────────
 
 export default function LandingPage() {
@@ -134,7 +99,6 @@ export default function LandingPage() {
       <TopNav />
       <main style={{ flex: 1 }}>
         <Hero period={period} onPeriodChange={setPeriod} onCta={goLogin} />
-        <MetiersSection />
         <AISection />
         <CalmChaosSection />
         <CtaBand />
@@ -208,103 +172,6 @@ export default function LandingPage() {
         /* ── Top nav anchor links ───────────────────────────────────── */
         .nav-anchor { display: none; }
         @media (min-width: 760px) { .nav-anchor { display: inline-flex; } }
-
-        /* ── Métiers — 3 squares on small screens, classic layout ≥960px ── */
-        .metiers-grid {
-          display: grid;
-          grid-template-columns: repeat(3, 1fr);
-          gap: 0.5rem;
-        }
-        @media (min-width: 480px) { .metiers-grid { gap: 0.7rem; } }
-        @media (min-width: 720px) { .metiers-grid { gap: 0.9rem; } }
-        @media (min-width: 960px) { .metiers-grid { gap: 1rem; } }
-
-        /* Small-screen square card (default) */
-        .metier-card {
-          aspect-ratio: 1 / 1;
-          display: flex; flex-direction: column;
-          align-items: center; justify-content: center;
-          text-align: center;
-          gap: 0.4rem;
-          padding: 0.6rem;
-          background: var(--surface);
-          border: 1px solid var(--border);
-          border-radius: 14px;
-          transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s;
-        }
-        .metier-card:hover {
-          transform: translateY(-2px);
-          box-shadow: var(--tier-1);
-          border-color: color-mix(in srgb, var(--metier-color, var(--accent)) 32%, var(--border));
-        }
-        .metier-icon {
-          width: 36px; height: 36px; border-radius: 10px;
-          background: var(--metier-bg);
-          color: var(--metier-color);
-          display: inline-flex; align-items: center; justify-content: center;
-          box-shadow: inset 0 1px 0 rgba(255,255,255,0.6);
-          flex-shrink: 0;
-        }
-        .metier-icon svg { width: 17px; height: 17px; }
-        .metier-title {
-          font-size: 0.78rem; font-weight: 700;
-          letter-spacing: -0.012em;
-          color: var(--text);
-          margin: 0;
-          line-height: 1.15;
-        }
-        .metier-hint {
-          font-family: var(--font-mono);
-          font-size: 0.58rem;
-          color: var(--text-4);
-          letter-spacing: 0.04em;
-          text-transform: uppercase;
-          margin: 0;
-          line-height: 1.2;
-          overflow: hidden;
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-        }
-        .metier-body { display: none; }
-
-        @media (min-width: 480px) {
-          .metier-card { padding: 0.8rem; gap: 0.5rem; }
-          .metier-icon { width: 40px; height: 40px; }
-          .metier-icon svg { width: 19px; height: 19px; }
-          .metier-title { font-size: 0.9rem; }
-          .metier-hint { font-size: 0.62rem; }
-        }
-        @media (min-width: 720px) {
-          .metier-card { padding: 1.1rem; gap: 0.7rem; }
-          .metier-icon { width: 46px; height: 46px; border-radius: 12px; }
-          .metier-icon svg { width: 22px; height: 22px; }
-          .metier-title { font-size: 1rem; }
-          .metier-hint { font-size: 0.66rem; }
-        }
-
-        /* ≥960px — classic layout: left-aligned, icon + title + body, no square */
-        @media (min-width: 960px) {
-          .metier-card {
-            aspect-ratio: auto;
-            align-items: flex-start;
-            justify-content: flex-start;
-            text-align: left;
-            padding: 1.4rem 1.4rem 1.2rem;
-            gap: 0.8rem;
-          }
-          .metier-icon { width: 40px; height: 40px; border-radius: 10px; }
-          .metier-icon svg { width: 18px; height: 18px; }
-          .metier-title { font-size: 1.05rem; letter-spacing: -0.018em; }
-          .metier-hint { display: none; }
-          .metier-body {
-            display: block;
-            font-size: 0.92rem;
-            line-height: 1.55;
-            color: var(--text-3);
-            margin: 0;
-          }
-        }
 
         .ai-grid { display: grid; grid-template-columns: 1fr; gap: 1.25rem; align-items: stretch; }
         @media (min-width: 960px) { .ai-grid { grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr); gap: clamp(1.5rem, 3vw, 3rem); align-items: center; } }
@@ -1011,9 +878,6 @@ function TopNav() {
           aria-label="Navigation principale"
           style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}
         >
-          <NavAnchor href="#metiers" label="Métiers" />
-          <NavAnchor href="#ia"      label="L’IA"   />
-          <NavAnchor href="#calme"   label="Avant / après" />
           <Link
             href="/login"
             style={{
@@ -1198,14 +1062,14 @@ function Hero({
               marginInline: "auto",
             }}
           >
-            Pilotez votre cabinet{" "}
+            Orchestrez vos données. Pilotez votre PME.{" "}
             <span style={{
               background: "linear-gradient(180deg, var(--accent) 0%, var(--accent-2) 100%)",
               WebkitBackgroundClip: "text",
               WebkitTextFillColor: "transparent",
               backgroundClip: "text",
             }}>
-              avec intelligence.
+              Agissez.
             </span>
           </motion.h1>
 
@@ -1668,57 +1532,6 @@ function SourcePill({ dot, label, combined }: { dot: string; label: string; comb
   );
 }
 
-// ── Métiers grid ─────────────────────────────────────────────────────────────
-
-function MetiersSection() {
-  return (
-    <section id="metiers" className="landing-section">
-      <SectionHeader
-        eyebrow="Un seul cockpit"
-        title="Tous vos métiers, sur une même surface."
-        sub="BrokerStar et Odoo fusionnés. Six modules, une langue commune. Aucun export à recoller."
-      />
-
-      <div className="metiers-grid" style={{ marginTop: "clamp(1.5rem, 3vw, 2.2rem)" }}>
-        {metiers.map((m, i) => (
-          <MetierCard key={m.title} metier={m} index={i} />
-        ))}
-      </div>
-    </section>
-  );
-}
-
-function MetierCard({
-  metier, index,
-}: {
-  metier: typeof metiers[number];
-  index: number;
-}) {
-  const reduce = useReducedMotion();
-  const { Icon } = metier;
-  return (
-    <motion.article
-      initial={reduce ? { opacity: 1 } : { opacity: 0, y: 12, scale: 0.96 }}
-      whileInView={{ opacity: 1, y: 0, scale: 1 }}
-      viewport={{ once: true, margin: "-60px" }}
-      transition={{ duration: 0.4, delay: index * 0.05, ease: [0.22, 1, 0.36, 1] }}
-      className="metier-card"
-      style={{
-        // expose tile color so hover border / icon glow follow the métier hue
-        ["--metier-color" as string]: metier.color,
-        ["--metier-bg" as string]: metier.bg,
-      } as React.CSSProperties}
-    >
-      <span className="metier-icon" aria-hidden>
-        <Icon strokeWidth={1.85} />
-      </span>
-      <h3 className="metier-title">{metier.title}</h3>
-      <p className="metier-hint">{metier.hint}</p>
-      <p className="metier-body">{metier.body}</p>
-    </motion.article>
-  );
-}
-
 // ── AI section — streaming assistant + chat mockup ───────────────────────────
 
 const aiFeatures = [
@@ -1739,7 +1552,7 @@ function AISection() {
             Agent IA · Mistral
           </div>
           <h2 className="ai-title">
-            Posez la question. L’IA répond sur vos données.
+            Posez une question. Obtenez une réponse, pas un fichier.
           </h2>
           <p className="ai-lede">
             L’assistant interroge BrokerStar et Odoo en direct, raisonne sur vos
