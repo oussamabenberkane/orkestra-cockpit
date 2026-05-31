@@ -27,8 +27,6 @@ export const brokerWorkspace: WorkspaceShape = {
       title: "Espace",
       items: [
         { Icon: Home,          label: "Vue 360",           iconColor: "var(--nav-vue-ensemble)",  href: "/dashboard" },
-        { Icon: Globe,         label: "Tous les rapports", iconColor: "var(--nav-vue-ensemble)",  href: "/rapports" },
-        { Icon: AlertTriangle, label: "Alertes",           iconColor: "var(--nav-alertes)",       href: "/alertes", badge: "5", badgeTone: "danger" },
       ],
     },
     {
@@ -38,12 +36,14 @@ export const brokerWorkspace: WorkspaceShape = {
         { Icon: FolderArchive, label: "Portefeuille",      iconColor: "var(--nav-portefeuille)", modalKey: "portefeuille" },
         { Icon: Flame,         label: "Sinistres",         iconColor: "var(--nav-sinistres)",    modalKey: "sinistres",   badge: "3", badgeTone: "danger" },
         { Icon: Wallet,        label: "Finance",           iconColor: "var(--nav-finance)",      modalKey: "finance",     badge: "2", badgeTone: "warn" },
+        { Icon: Globe,         label: "Tous les rapports", iconColor: "var(--nav-vue-ensemble)", href: "/rapports" },
       ],
     },
     {
       title: "Intelligence",
       items: [
         { Icon: MessageSquare, label: "Chat IA",  iconColor: "var(--nav-chat)",    href: "/chat",     badge: "3", badgeTone: "warn" },
+        { Icon: AlertTriangle, label: "Alertes",  iconColor: "var(--nav-alertes)", href: "/alertes",  badge: "5", badgeTone: "danger" },
       ],
     },
     {

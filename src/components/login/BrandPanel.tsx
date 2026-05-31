@@ -125,14 +125,14 @@ export default function BrandPanel() {
             maxWidth: "36ch",
           }}
         >
-          Cockpit unifié BrokerStar + Odoo pour les cabinets BFSI suisses.
+          Cockpit unifié Helvebroker SA + Odoo pour les cabinets BFSI suisses.
         </p>
       </div>
 
       {/* Bottom: Pills + compliance */}
       <div style={{ position: "relative", zIndex: 1 }}>
         <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", marginBottom: "1.5rem" }}>
-          <Pill bg="rgba(0,122,255,0.14)"  fg="#9CCAFF"  bd="rgba(0,122,255,0.30)">● BrokerStar</Pill>
+          <Pill bg="rgba(0,122,255,0.14)"  fg="#9CCAFF"  bd="rgba(0,122,255,0.30)">● Helvebroker SA</Pill>
           <Pill bg="rgba(88,86,214,0.18)"  fg="#C7C5FF"  bd="rgba(88,86,214,0.34)">● Odoo</Pill>
           <Pill bg="rgba(52,168,83,0.16)"  fg="#A6E3B5"  bd="rgba(52,168,83,0.30)">⊕ Combiné</Pill>
         </div>

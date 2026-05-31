@@ -340,7 +340,7 @@ function DockHeader({
               transition: "background 0.2s, box-shadow 0.2s",
             }}
           />
-          {loading ? "Réflexion en cours…" : "BrokerStar + Odoo"}
+          {loading ? "Réflexion en cours…" : "Helvebroker SA + Odoo"}
         </div>
       </div>
       <Link

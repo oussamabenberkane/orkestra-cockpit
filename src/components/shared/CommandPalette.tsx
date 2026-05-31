@@ -40,7 +40,7 @@ function buildCommands(opts: { onLogout: () => void }): Command[] {
     {
       group: "Navigation",
       label: "Tous les rapports",
-      desc: "Index des rapports BrokerStar + Odoo",
+      desc: "Index des rapports Helvebroker SA + Odoo",
       Icon: BarChart3,
       iconColor: "var(--accent)",
       iconBg: "var(--accent-tint)",

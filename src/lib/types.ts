@@ -5,7 +5,7 @@
 
 /** A single key-value row, optionally tagged by source. */
 export interface KvRow {
-  /** Source pill (e.g. "BrokerStar", "Odoo"). Omit for plain rows. */
+  /** Source pill (e.g. "Helvebroker SA", "Odoo"). Omit for plain rows. */
   source?: string;
   /** Renders the row with the accent treatment for combined-source values. */
   combined?: boolean;
@@ -41,7 +41,7 @@ export type ModalSection =
 
 export interface ModalData {
   title: string;
-  body: string;
+  body?: string;
   sections: ModalSection[];
   cta: string;
 }
