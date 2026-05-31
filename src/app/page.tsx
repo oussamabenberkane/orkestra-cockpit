@@ -1881,8 +1881,7 @@ function CalmChaosSection() {
     <section id="calme" className="landing-section">
       <SectionHeader
         eyebrow="Avant / Après"
-        title="Le calme remplace les onglets."
-        sub="Cinq fenêtres, trois exports, deux PDF — devenus un seul écran."
+        title="Moins d'onglets. Plus de décisions."
       />
       <div className="ba-shell" style={{ marginTop: "clamp(1.2rem, 3vw, 2rem)" }}>
         <BeforeAfterCard />
