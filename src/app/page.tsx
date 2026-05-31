@@ -14,6 +14,17 @@ import {
 } from "lucide-react";
 import { SatelliteKPI, type Satellite } from "@/components/dashboard/SatelliteKPI";
 
+// useReducedMotion reads a media query unavailable during SSR, so it returns
+// false on the server and the real value on the client — a hydration mismatch
+// for visitors with "reduce motion" enabled. Gate it behind a mounted flag so
+// the first client render matches the server, then update after hydration.
+function useReducedMotionSafe() {
+  const reduce = useReducedMotion();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  return mounted ? reduce : false;
+}
+
 // ── Preview data (mirrors the cockpit so the landing FEELS like the product) ──
 
 const previewData = [62, 64, 70, 68, 72, 78, 80, 82, 86, 88, 92, 92];
@@ -986,7 +997,7 @@ function Hero({
   onPeriodChange: (p: "M" | "T" | "A") => void;
   onCta: () => void;
 }) {
-  const reduceMotion = useReducedMotion();
+  const reduceMotion = useReducedMotionSafe();
   const fadeIn = (delay = 0) =>
     reduceMotion
       ? { initial: { opacity: 1 }, animate: { opacity: 1 } }
@@ -1581,7 +1592,7 @@ function AISection() {
 }
 
 function AIFeatureCarousel() {
-  const reduce = useReducedMotion();
+  const reduce = useReducedMotionSafe();
   const [idx, setIdx] = useState(0);
 
   useEffect(() => {
@@ -1652,7 +1663,7 @@ function AIFeatureRow({ feature }: { feature: typeof aiFeatures[number] }) {
 
 // Animated chat mockup — simulated streaming + tool call
 function ChatMockup() {
-  const reduce = useReducedMotion();
+  const reduce = useReducedMotionSafe();
   const [, forceTick] = useReducer((n) => n + 1, 0);
   const [step, setStep] = useState(0);
 
@@ -1984,7 +1995,7 @@ function CalmChaosSection() {
 }
 
 function BeforeAfterCard() {
-  const reduce = useReducedMotion();
+  const reduce = useReducedMotionSafe();
   const [state, setState] = useState<"before" | "after">("before");
 
   useEffect(() => {
@@ -2179,7 +2190,7 @@ function CtaBand() {
 function SectionHeader({
   eyebrow, title, sub,
 }: { eyebrow: string; title: string; sub?: string }) {
-  const reduce = useReducedMotion();
+  const reduce = useReducedMotionSafe();
   return (
     <motion.div
       initial={reduce ? { opacity: 1 } : { opacity: 0, y: 12 }}
