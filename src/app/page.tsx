@@ -112,7 +112,6 @@ export default function LandingPage() {
         <Hero period={period} onPeriodChange={setPeriod} onCta={goLogin} />
         <AISection />
         <CalmChaosSection />
-        <CtaBand />
       </main>
       <Footer />
 
@@ -545,108 +544,6 @@ export default function LandingPage() {
         }
         .ba-cockpit-kpi[data-tone="success"] .ba-cockpit-kpi-value { color: var(--success); }
         .ba-cockpit-kpi[data-tone="info"]    .ba-cockpit-kpi-value { color: var(--info); }
-
-        /* ── CTA band (compact) ─────────────────────────────────────────
-         * .cta-band is the centered, padded gutter wrapper — it holds the
-         * left/right breathing room on narrow viewports. The rounded gradient
-         * card lives on .cta-band-inner, which already owns border-radius +
-         * overflow:hidden (so the HexGridBg stays clipped). Putting margin +
-         * border-radius on both layers caused a sub-400px bug where the
-         * margin-left/right:auto centering wiped out the margin-inline gutter
-         * and the card hit both screen edges. */
-        .cta-band {
-          position: relative;
-          margin-block: clamp(1rem, 3vw, 2.5rem) clamp(1.25rem, 3.5vw, 3rem);
-          padding-inline: clamp(0.85rem, 3vw, 2.5rem);
-          max-width: 1240px;
-          margin-inline: auto;
-        }
-        .cta-band-inner {
-          position: relative;
-          background:
-            linear-gradient(135deg,
-              color-mix(in srgb, var(--accent) 96%, black) 0%,
-              color-mix(in srgb, var(--accent-2) 92%, black) 100%);
-          color: #FFFFFF;
-          padding: clamp(1.6rem, 5vw, 3.5rem) clamp(1.1rem, 4vw, 3rem);
-          border-radius: 18px;
-          overflow: hidden;
-          border: 1px solid color-mix(in srgb, var(--accent) 60%, black);
-        }
-        .cta-band-sheen {
-          position: absolute; inset: 0;
-          background:
-            radial-gradient(60% 50% at 50% 0%, rgba(255,255,255,0.16), transparent 60%),
-            radial-gradient(70% 60% at 90% 100%, rgba(0,0,0,0.30), transparent 60%);
-          pointer-events: none;
-        }
-        .cta-band-body {
-          position: relative;
-          max-width: 640px;
-          margin-inline: auto;
-          text-align: center;
-        }
-        .cta-band-eyebrow {
-          display: inline-flex; align-items: center; gap: 0.35rem;
-          padding: 0.22rem 0.55rem;
-          border-radius: 100px;
-          background: rgba(255,255,255,0.14);
-          border: 1px solid rgba(255,255,255,0.24);
-          font-family: var(--font-mono);
-          font-size: 0.6rem; font-weight: 700;
-          letter-spacing: 0.1em; text-transform: uppercase;
-          margin-bottom: 0.85rem;
-        }
-        .cta-band-title {
-          font-size: clamp(1.4rem, 4.5vw, 2.4rem);
-          font-weight: 800;
-          letter-spacing: -0.028em;
-          line-height: 1.1;
-          margin: 0;
-        }
-        .cta-band-title-soft { opacity: 0.78; }
-        .cta-band-actions {
-          margin-top: 1.2rem;
-          display: flex; justify-content: center; gap: 0.5rem;
-          flex-direction: column;
-        }
-        .cta-band-actions > * { width: 100%; justify-content: center; }
-        @media (min-width: 520px) {
-          .cta-band-actions { flex-direction: row; flex-wrap: wrap; gap: 0.6rem; }
-          .cta-band-actions > * { width: auto; }
-        }
-        .cta-band-primary {
-          display: inline-flex; align-items: center; gap: 0.4rem;
-          height: 42px; padding: 0 1.2rem;
-          background: #FFFFFF;
-          color: var(--accent);
-          font-family: inherit;
-          font-size: 0.92rem; font-weight: 700;
-          border-radius: 10px;
-          text-decoration: none;
-          box-shadow: 0 10px 24px -10px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.6);
-          transition: transform 0.22s, box-shadow 0.22s;
-        }
-        .cta-band-primary:hover {
-          transform: translateY(-1px);
-          box-shadow: 0 14px 28px -10px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.6);
-        }
-        .cta-band-secondary {
-          display: inline-flex; align-items: center; justify-content: center;
-          height: 42px; padding: 0 1rem;
-          color: #FFFFFF;
-          background: transparent;
-          border: 1px solid rgba(255,255,255,0.34);
-          font-family: inherit;
-          font-size: 0.88rem; font-weight: 600;
-          border-radius: 10px;
-          text-decoration: none;
-          transition: background 0.18s;
-        }
-        .cta-band-secondary:hover { background: rgba(255,255,255,0.10); }
-        @media (min-width: 720px) {
-          .cta-band-primary, .cta-band-secondary { height: 46px; font-size: 0.95rem; padding: 0 1.35rem; }
-        }
 
         /* ── Footer (compact, single row on desktop, stacked on phone) ── */
         .footer {
@@ -2148,40 +2045,6 @@ function AfterContent() {
         </div>
       </div>
     </>
-  );
-}
-
-// ── Closing CTA band ─────────────────────────────────────────────────────────
-
-function CtaBand() {
-  return (
-    <section className="cta-band">
-      <div className="cta-band-inner">
-        <HexGridBg density={6} opacity={0.07} color="#FFFFFF" />
-        <div aria-hidden className="cta-band-sheen" />
-
-        <div className="cta-band-body">
-          <div className="cta-band-eyebrow">
-            <Sparkles size={10} strokeWidth={2.5} />
-            Démo · sans mot de passe
-          </div>
-          <h2 className="cta-band-title">
-            Un cockpit, chaque matin.
-            <br />
-            <span className="cta-band-title-soft">Trois actions, jamais plus.</span>
-          </h2>
-          <div className="cta-band-actions">
-            <Link href="/login" className="cta-band-primary">
-              Accéder au cockpit
-              <ArrowRight size={15} strokeWidth={2.25} />
-            </Link>
-            <a href="#metiers" className="cta-band-secondary">
-              Revoir les modules
-            </a>
-          </div>
-        </div>
-      </div>
-    </section>
   );
 }
 
