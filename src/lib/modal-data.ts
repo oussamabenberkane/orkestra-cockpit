@@ -7,14 +7,14 @@ import type { ModalValues } from "./dashboard-data";
 export const modalData: Record<ModalKey, ModalData> = {
   finance: {
     title: "Finance & Trésorerie — Vue combinée",
-    body: "Ce rapport combine les données de commissions BrokerStar avec la comptabilité Odoo. C'est un KPI impossible à obtenir depuis un seul système.",
+    body: "Ce rapport combine les données de commissions Helvebroker SA avec la comptabilité Odoo. C'est un KPI impossible à obtenir depuis un seul système.",
     sections: [
       {
         kind: "kv-list",
-        subtitle: "Sources combinées — BrokerStar + Odoo",
+        subtitle: "Sources combinées — Helvebroker SA + Odoo",
         rows: [
-          { source: "BrokerStar", label: "Commissions encaissées", value: "11 200 CHF" },
-          { source: "BrokerStar", label: "Primes en attente",       value: "4 800 CHF" },
+          { source: "Helvebroker SA", label: "Commissions encaissées", value: "11 200 CHF" },
+          { source: "Helvebroker SA", label: "Primes en attente",       value: "4 800 CHF" },
           { source: "Odoo",       label: "Charges fixes juin",      value: "8 400 CHF" },
           { source: "Odoo",       label: "Impayés clients",         value: "3 200 CHF" },
           { combined: true,       label: "Marge nette réelle",      value: "68 %" },
@@ -31,7 +31,7 @@ export const modalData: Record<ModalKey, ModalData> = {
     sections: [
       {
         kind: "kv-list",
-        subtitle: "BrokerStar + Odoo — Vue globale",
+        subtitle: "Helvebroker SA + Odoo — Vue globale",
         rows: [
           { label: "CA mensuel consolidé",     value: "92 400 CHF" },
           { label: "Marge nette réelle",       value: "68 %" },
@@ -43,7 +43,7 @@ export const modalData: Record<ModalKey, ModalData> = {
         kind: "kv-list",
         subtitle: "Synchronisations",
         rows: [
-          { source: "BrokerStar", label: "Dernière sync", value: "il y a 3 min" },
+          { source: "Helvebroker SA", label: "Dernière sync", value: "il y a 3 min" },
           { source: "Odoo",       label: "Dernière sync", value: "il y a 5 min" },
         ],
       },
@@ -61,7 +61,7 @@ export const modalData: Record<ModalKey, ModalData> = {
     sections: [
       {
         kind: "status-list",
-        subtitle: "BrokerStar — Dossiers ouverts",
+        subtitle: "Helvebroker SA — Dossiers ouverts",
         rows: [
           {
             tone: "danger",
@@ -91,12 +91,12 @@ export const modalData: Record<ModalKey, ModalData> = {
   },
 
   prospection: {
-    title: "Prospection — Pipeline BrokerStar",
-    body: "Suivi du pipeline commercial depuis le CRM BrokerStar.",
+    title: "Prospection — Pipeline Helvebroker SA",
+    body: "Suivi du pipeline commercial depuis le CRM Helvebroker SA.",
     sections: [
       {
         kind: "kv-list",
-        subtitle: "BrokerStar CRM — Pipeline actif",
+        subtitle: "Helvebroker SA CRM — Pipeline actif",
         rows: [
           { label: "Nouveaux contacts",  value: "3" },
           { label: "En qualification",   value: "4" },
@@ -120,12 +120,11 @@ export const modalData: Record<ModalKey, ModalData> = {
   },
 
   portefeuille: {
-    title: "Portefeuille — BrokerStar",
-    body: "Vue complète du portefeuille de contrats actifs.",
+    title: "Portefeuille — Helvebroker SA",
     sections: [
       {
         kind: "kv-list",
-        subtitle: "BrokerStar — Par branche",
+        subtitle: "Helvebroker SA — Par branche",
         rows: [
           { label: "RC Professionnelle",   value: "42 contrats" },
           { label: "Incendie & bâtiment",  value: "38 contrats" },
@@ -155,7 +154,7 @@ export const modalData: Record<ModalKey, ModalData> = {
         subtitle: "Actions en attente",
         items: [
           {
-            source: "BrokerStar",
+            source: "Helvebroker SA",
             title: "Agent Renouvellement",
             detail: "4 emails — primes 18 400 CHF",
           },
@@ -167,7 +166,7 @@ export const modalData: Record<ModalKey, ModalData> = {
           {
             source: "Combiné",
             title: "Agent Rapport direction",
-            detail: "BrokerStar + Odoo combinés",
+            detail: "Helvebroker SA + Odoo combinés",
           },
         ],
       },
@@ -181,13 +180,13 @@ export const modalData: Record<ModalKey, ModalData> = {
 
   rapport: {
     title: "Rapport direction — Combiné",
-    body: "Rapport généré automatiquement — BrokerStar + Odoo.",
+    body: "Rapport généré automatiquement — Helvebroker SA + Odoo.",
     sections: [
       {
         kind: "kv-list",
         subtitle: "Rapport direction — Juin 2026",
         rows: [
-          { source: "BrokerStar", label: "CA primes",        value: "85 000 CHF/an" },
+          { source: "Helvebroker SA", label: "CA primes",        value: "85 000 CHF/an" },
           { source: "Odoo",       label: "Charges",          value: "27 200 CHF/mois" },
           { combined: true,       label: "Marge nette",      value: "68 %" },
           { combined: true,       label: "Cash-flow 3 mois", value: "+54 K CHF" },
@@ -411,10 +410,10 @@ export function getModalData(vals: ModalValues | null): Record<ModalKey, ModalDa
     sections: [
       {
         kind: "kv-list" as const,
-        subtitle: "Sources combinées — BrokerStar + Odoo",
+        subtitle: "Sources combinées — Helvebroker SA + Odoo",
         rows: [
-          { source: "BrokerStar", label: "Commissions encaissées", value: fin ? fmtCHF(fin.commissions_actives) : "11 200 CHF" },
-          { source: "BrokerStar", label: "Primes en attente",       value: "4 800 CHF" },
+          { source: "Helvebroker SA", label: "Commissions encaissées", value: fin ? fmtCHF(fin.commissions_actives) : "11 200 CHF" },
+          { source: "Helvebroker SA", label: "Primes en attente",       value: "4 800 CHF" },
           { source: "Odoo",       label: "Charges fixes juin",      value: "8 400 CHF" },
           { source: "Odoo",       label: "Impayés clients",         value: sat ? fmtCHF(sat.impayes_montant) : "3 200 CHF" },
           { combined: true,       label: "Marge nette réelle",      value: sat ? fmtPct(sat.marge_pct) : "68 %" },
@@ -429,7 +428,7 @@ export function getModalData(vals: ModalValues | null): Record<ModalKey, ModalDa
     sections: [
       {
         kind: "kv-list" as const,
-        subtitle: "BrokerStar + Odoo — Vue globale",
+        subtitle: "Helvebroker SA + Odoo — Vue globale",
         rows: [
           { label: "CA mensuel consolidé",     value: "92 400 CHF" },
           { label: "Marge nette réelle",       value: fmtPct(sat.marge_pct) },

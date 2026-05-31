@@ -154,15 +154,17 @@ export default function DashboardModal({
             }}>
               {data.title}
             </h2>
-            <p className="dm-body" style={{
-              fontSize: "clamp(0.84rem, 2vw, 0.92rem)",
-              lineHeight: 1.55,
-              color: "var(--text-2)",
-              margin: 0,
-              overflowWrap: "break-word",
-            }}>
-              {data.body}
-            </p>
+            {data.body && (
+              <p className="dm-body" style={{
+                fontSize: "clamp(0.84rem, 2vw, 0.92rem)",
+                lineHeight: 1.55,
+                color: "var(--text-2)",
+                margin: 0,
+                overflowWrap: "break-word",
+              }}>
+                {data.body}
+              </p>
+            )}
           </div>
 
           {/* Sections */}

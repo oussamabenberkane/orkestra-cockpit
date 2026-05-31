@@ -158,14 +158,6 @@ export function TileCard({ tile, onOpen }: TileCardProps) {
         )}
       </div>
 
-      <p style={{
-        fontSize: "clamp(0.74rem, 1.8vw, 0.8rem)",
-        color: "var(--text-3)",
-        lineHeight: 1.45,
-        margin: 0,
-        minHeight: "1.15rem",
-      }}>{tile.caption}</p>
-
       <div style={{
         display: "flex", alignItems: "center",
         gap: "0.5rem", flexWrap: "wrap", rowGap: "0.3rem",

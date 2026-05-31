@@ -861,7 +861,7 @@
  *         accents, focus rings, the active dock pill, the Aujourd'hui
  *         chip on the hero chart, the modal "OUVRIR" CTA, …)
  *       - the --info slot (collapsed into accent so two competing blues
- *         don't fight; the Portefeuille tile and BrokerStar source pill
+ *         don't fight; the Portefeuille tile and Helvebroker SA source pill
  *         now read as the same hero blue)
  *     Hover and press states use blue-700 (#1D4ED8) — one Tailwind
  *     shade darker — as the only shade variation, plus the standard
@@ -908,7 +908,7 @@
   --danger:       #B91C1C;
   --danger-tint:  rgba(185,28,28,0.12);
   /* --info collapses into the accent — info slot is conceptually a
-   * blue role (Portefeuille tile chip, BrokerStar source pill dot,
+   * blue role (Portefeuille tile chip, Helvebroker SA source pill dot,
    * Cash-flow callout). Pointing it at the hero blue removes the
    * second competing blue and lets the palette stay monochrome. */
   --info:         #2563EB;

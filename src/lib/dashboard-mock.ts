@@ -138,7 +138,7 @@ export const troisItems: TroisItem[] = [
   {
     Icon: Mail,
     color: "var(--info)", bg: "var(--info-tint)",
-    sentence: "Valider 4 renouvellements préparés par l'agent BrokerStar.",
+    sentence: "Valider 4 renouvellements préparés par l'agent Helvebroker SA.",
     cta: "Valider",
   },
   {
@@ -151,7 +151,7 @@ export const troisItems: TroisItem[] = [
   {
     Icon: FileText,
     color: "var(--accent)", bg: "var(--accent-tint)",
-    sentence: "Signer le rapport mensuel combiné BrokerStar + Odoo.",
+    sentence: "Signer le rapport mensuel combiné Helvebroker SA + Odoo.",
     cta: "Signer",
     modalKey: "rapport",
   },
@@ -165,7 +165,7 @@ export const tiles: TileEntry[] = [
     title: "Prospection", metric: "18", unit: "%",
     caption: "Taux de conversion · 12 prospects actifs",
     alert: "3 relances dues", alertTone: "warn",
-    sources: ["BrokerStar"], modalKey: "prospection",
+    sources: ["Helvebroker SA"], modalKey: "prospection",
     spark: [10, 12, 11, 14, 14, 15, 16, 17, 17, 18, 18, 18],
   },
   {
@@ -174,7 +174,7 @@ export const tiles: TileEntry[] = [
     title: "Portefeuille", metric: "189", unit: "",
     caption: "Contrats actifs · 85 K CHF de primes",
     alert: "4 renouv. J-30", alertTone: "neutral",
-    sources: ["BrokerStar"], modalKey: "portefeuille",
+    sources: ["Helvebroker SA"], modalKey: "portefeuille",
     spark: [182, 183, 184, 184, 185, 186, 186, 187, 188, 188, 189, 189],
   },
   {
@@ -183,7 +183,7 @@ export const tiles: TileEntry[] = [
     title: "Sinistres", metric: "3", unit: "",
     caption: "Dossiers ouverts · ratio 12 % CA",
     alert: "SIN-0047 · 68 j", alertTone: "danger",
-    sources: ["BrokerStar"], modalKey: "sinistres",
+    sources: ["Helvebroker SA"], modalKey: "sinistres",
   },
   {
     Icon: Wallet, iconColor: "var(--warn)", iconBg: "var(--warn-tint)",
@@ -191,7 +191,7 @@ export const tiles: TileEntry[] = [
     title: "Finance", metric: "+18", unit: "K",
     caption: "Cash-flow net · commissions 11.2 K",
     alert: "2 impayés", alertTone: "warn",
-    sources: ["BrokerStar", "Odoo"], modalKey: "finance",
+    sources: ["Helvebroker SA", "Odoo"], modalKey: "finance",
     spark: [4, 6, 8, 7, 10, 12, 11, 14, 15, 16, 17, 18],
   },
   {
@@ -200,7 +200,7 @@ export const tiles: TileEntry[] = [
     title: "Vue d'ensemble", metric: "68", unit: "%",
     caption: "Marge consolidée · vision combinée",
     alert: "+4 pt vs marché CH", alertTone: "good",
-    sources: ["BrokerStar", "Odoo"], modalKey: "vue360",
+    sources: ["Helvebroker SA", "Odoo"], modalKey: "vue360",
     spark: [55, 58, 60, 62, 63, 64, 64, 66, 67, 67, 68, 68],
   },
   {
@@ -209,12 +209,12 @@ export const tiles: TileEntry[] = [
     title: "Agents IA", metric: "3", unit: "",
     caption: "Actions préparées · prêtes à valider",
     alert: "Validation requise", alertTone: "neutral",
-    sources: ["BrokerStar", "Odoo"], modalKey: "agents",
+    sources: ["Helvebroker SA", "Odoo"], modalKey: "agents",
   },
 ];
 
 /** Source badges shown next to the greeting row. */
 export const sourceBadges: Array<{ dot: string; label: string }> = [
-  { dot: "var(--info)",   label: "BrokerStar · 3 min" },
+  { dot: "var(--info)",   label: "Helvebroker SA · 3 min" },
   { dot: "var(--accent)", label: "Odoo · 5 min" },
 ];

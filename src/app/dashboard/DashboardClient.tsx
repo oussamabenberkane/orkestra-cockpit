@@ -451,14 +451,6 @@ export default function DashboardClient({
           </div>
         </div>
 
-        <div style={{
-          fontSize: "clamp(0.7rem, 1.8vw, 0.78rem)",
-          fontWeight: 700,
-          color: "var(--text-3)",
-          letterSpacing: "0.06em",
-          textTransform: "uppercase",
-          marginBottom: "clamp(0.6rem, 1.5vw, 0.85rem)",
-        }}>Domaines</div>
         <div className="dashboard-tiles dashboard-tiles-desktop">
           {liveTiles.map((t) => (
             <TileCard key={t.title} tile={t} onOpen={onOpen} />
@@ -474,7 +466,7 @@ export default function DashboardClient({
           syncLine={
             isCommodity
               ? "Sync Trayport 1 min · Murex 4 min"
-              : "Sync BrokerStar 3 min · Odoo 5 min"
+              : "Sync Helvebroker SA 3 min · Odoo 5 min"
           }
           complianceLine={
             isCommodity ? "MiFID II Art.17 · Infomaniak CH" : "LPD Art.16 · Infomaniak CH"

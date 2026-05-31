@@ -2773,7 +2773,7 @@ function UsageFooter({ datasetLabel }: { datasetLabel: string | null }) {
             textOverflow: "ellipsis",
             whiteSpace: "nowrap",
           }}>
-            BrokerStar · 3 min · Odoo · 5 min
+            Helvebroker SA · 3 min · Odoo · 5 min
           </span>
         </div>
       </div>

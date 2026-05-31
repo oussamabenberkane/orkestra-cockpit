@@ -70,9 +70,9 @@ const previewSatellites: Satellite[] = [
 
 // Trois choses preview rows
 const troisPreview = [
-  { Icon: Mail,        color: "var(--info)",   bg: "var(--info-tint)",   text: "Valider 4 renouvellements préparés par l’agent BrokerStar.", cta: "Valider" },
+  { Icon: Mail,        color: "var(--info)",   bg: "var(--info-tint)",   text: "Valider 4 renouvellements préparés par l’agent Helvebroker SA.", cta: "Valider" },
   { Icon: AlertCircle, color: "var(--warn)",   bg: "var(--warn-tint)",   text: "Relancer Rossi SA pour son impayé de 1 800 CHF (67 jours).",   cta: "Ouvrir"  },
-  { Icon: FileText,    color: "var(--accent)", bg: "var(--accent-tint)", text: "Signer le rapport mensuel combiné BrokerStar + Odoo.",         cta: "Signer"  },
+  { Icon: FileText,    color: "var(--accent)", bg: "var(--accent-tint)", text: "Signer le rapport mensuel combiné Helvebroker SA + Odoo.",         cta: "Signer"  },
 ];
 
 // Mini-tile data for the mockup (6 cockpit domains)
@@ -1096,7 +1096,7 @@ function Hero({
             }}
           >
             Un cockpit qui répond à <em style={{ fontStyle: "normal", color: "var(--text)", fontWeight: 600 }}>« que dois-je faire aujourd’hui&nbsp;? »</em> dès la connexion.
-            BrokerStar et Odoo enfin parlent la même langue.
+            Helvebroker SA et Odoo enfin parlent la même langue.
           </motion.p>
 
           <motion.div
@@ -1167,7 +1167,7 @@ function Hero({
               gap: "0.4rem", flexWrap: "wrap",
             }}
           >
-            <SourcePill dot="var(--info)"    label="BrokerStar" />
+            <SourcePill dot="var(--info)"    label="Helvebroker SA" />
             <SourcePill dot="var(--purple)"  label="Odoo" />
             <SourcePill dot="var(--success)" label="⊕ Combiné" combined />
             <span
@@ -1546,7 +1546,7 @@ function SourcePill({ dot, label, combined }: { dot: string; label: string; comb
 // ── AI section — streaming assistant + chat mockup ───────────────────────────
 
 const aiFeatures = [
-  { Icon: Database, title: "Sur vos données",       body: "BrokerStar + Odoo + CSV interrogés en direct, jamais recopiés." },
+  { Icon: Database, title: "Sur vos données",       body: "Helvebroker SA + Odoo + CSV interrogés en direct, jamais recopiés." },
   { Icon: Cpu,      title: "Outils transparents",   body: "Chaque appel d’outil est visible et auditable côté cabinet." },
   { Icon: Mic,      title: "Voix + texte",          body: "Dictez « renouvellements de mars » — réponse immédiate." },
   { Icon: Layers,   title: "Mémoire qui persiste",  body: "L’assistant retient vos préférences, vos clients, vos seuils." },
@@ -1566,7 +1566,7 @@ function AISection() {
             Posez une question. Obtenez une réponse, pas un fichier.
           </h2>
           <p className="ai-lede">
-            L’assistant interroge BrokerStar et Odoo en direct, raisonne sur vos
+            L’assistant interroge Helvebroker SA et Odoo en direct, raisonne sur vos
             contrats et primes, et vous renvoie une réponse — pas un export.
           </p>
 
@@ -1781,7 +1781,7 @@ function ChatMockup() {
             className="chat-tool-chip"
           >
             <Cpu size={12} strokeWidth={2} color="var(--accent)" />
-            <span style={{ fontWeight: 600 }}>query_brokerstar</span>
+            <span style={{ fontWeight: 600 }}>query_helvebroker</span>
             <span style={{ color: "var(--text-4)" }}>renouv.j30=true · impayé=auto</span>
             {step >= 2 && <Check size={12} strokeWidth={2.5} color="var(--success)" />}
           </motion.div>
@@ -2064,7 +2064,7 @@ function BeforeAfterCard() {
 
 function BeforeContent() {
   const files = [
-    { label: "BrokerStar.xlsx", sub: "Primes T1.csv",      Icon: FileSpreadsheet, rot: -3 },
+    { label: "Helvebroker SA.xlsx", sub: "Primes T1.csv",      Icon: FileSpreadsheet, rot: -3 },
     { label: "Odoo · Factures", sub: "export-mars.pdf",    Icon: FileText,        rot: 2 },
     { label: "Sinistres",       sub: "rapport_sin.pdf",    Icon: ShieldAlert,     rot: -1 },
     { label: "Renouvellements", sub: "Modèle email v3",    Icon: Mail,            rot: 3 },
@@ -2107,7 +2107,7 @@ function AfterContent() {
     <>
       <h3 className="ba-headline">Un cockpit. Trois actions. Six tuiles.</h3>
       <p className="ba-body">
-        BrokerStar et Odoo réconciliés. Les priorités du jour au premier plan.
+        Helvebroker SA et Odoo réconciliés. Les priorités du jour au premier plan.
       </p>
       <div className="ba-cockpit">
         <div className="ba-cockpit-head">
