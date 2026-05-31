@@ -110,8 +110,9 @@ export default function LandingPage() {
       <TopNav />
       <main style={{ flex: 1 }}>
         <Hero period={period} onPeriodChange={setPeriod} onCta={goLogin} />
-        <AISection />
+        <PillarsSection />
         <CalmChaosSection />
+        <AISection />
       </main>
       <Footer />
 
@@ -185,6 +186,12 @@ export default function LandingPage() {
 
         .ai-grid { display: grid; grid-template-columns: 1fr; gap: 1.25rem; align-items: stretch; }
         @media (min-width: 960px) { .ai-grid { grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr); gap: clamp(1.5rem, 3vw, 3rem); align-items: center; } }
+
+        /* ── Three pillars grid — 1 col phone, 3 cols tablet+ ────────── */
+        .pillars-grid { display: grid; grid-template-columns: 1fr; gap: 1rem; }
+        @media (min-width: 760px) {
+          .pillars-grid { grid-template-columns: repeat(3, 1fr); gap: clamp(1rem, 2vw, 1.5rem); }
+        }
 
         /* ── AI section copy + carousel ─────────────────────────────── */
         .ai-eyebrow {
@@ -1874,6 +1881,132 @@ function ResultChip({
   );
 }
 
+// ── Three pillars — what the cockpit promises ────────────────────────────────
+
+type Pillar = {
+  Icon: LucideIcon; color: string; bg: string;
+  title: string; body: string; meta: string;
+};
+
+const pillars: Pillar[] = [
+  {
+    Icon: Globe, color: "var(--info)", bg: "var(--info-tint)",
+    title: "Vue 360°",
+    body: "Helvebroker SA et Odoo fusionnés en un cockpit unique. Marge, cash-flow, sinistralité, rétention — toutes vos métriques sur une même surface.",
+    meta: "Synchronisation < 3 min",
+  },
+  {
+    Icon: Sparkles, color: "var(--purple)", bg: "var(--purple-tint)",
+    title: "Trois agents IA",
+    body: "Renouvellements, commissions, rapports — vos trois agents préparent les actions chaque nuit. Vous validez en quelques clics le matin.",
+    meta: "Préparation chaque nuit",
+  },
+  {
+    Icon: ShieldCheck, color: "var(--success)", bg: "var(--success-tint)",
+    title: "Souverain & conforme",
+    body: "Aucune donnée client ne quitte la Suisse.",
+    meta: "Hébergement Suisse · LPD Art.16",
+  },
+];
+
+function PillarsSection() {
+  const reduce = useReducedMotionSafe();
+  return (
+    <section id="piliers" className="landing-section">
+      <SectionHeader title="Conçu pour les cabinets BFSI suisses." />
+      <div className="pillars-grid" style={{ marginTop: "clamp(1.5rem, 3vw, 2.5rem)" }}>
+        {pillars.map((p, i) => (
+          <PillarCard key={p.title} pillar={p} index={i} reduce={reduce} />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function PillarCard({
+  pillar, index, reduce,
+}: { pillar: Pillar; index: number; reduce: boolean | null }) {
+  const { Icon } = pillar;
+  return (
+    <motion.div
+      initial={reduce ? { opacity: 1 } : { opacity: 0, y: 16 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-80px" }}
+      transition={{ delay: reduce ? 0 : index * 0.08, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+      style={{ display: "flex" }}
+    >
+      {/* Inner div owns the hover lift so it never fights framer's entrance transform. */}
+      <div
+        style={{
+          flex: 1,
+          background: "var(--surface)",
+          border: "1px solid var(--border)",
+          borderRadius: 16,
+          padding: "clamp(1.15rem, 2.5vw, 1.5rem)",
+          display: "flex", flexDirection: "column", gap: "0.85rem",
+          boxShadow: "var(--tier-1)",
+          transition: "box-shadow 0.22s ease, transform 0.18s ease, border-color 0.22s",
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.transform = "translateY(-4px)";
+          e.currentTarget.style.boxShadow = "var(--tier-2)";
+          e.currentTarget.style.borderColor = "color-mix(in srgb, var(--accent) 24%, var(--border))";
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.transform = "translateY(0)";
+          e.currentTarget.style.boxShadow = "var(--tier-1)";
+          e.currentTarget.style.borderColor = "var(--border)";
+        }}
+      >
+        <span
+          aria-hidden
+          style={{
+            width: 38, height: 38, borderRadius: 10,
+            background: pillar.bg, color: pillar.color,
+            display: "inline-flex", alignItems: "center", justifyContent: "center",
+            boxShadow: "inset 0 1px 0 rgba(255,255,255,0.6)",
+          }}
+        >
+          <Icon size={18} strokeWidth={2} />
+        </span>
+
+        <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem", flex: 1 }}>
+          <h3
+            style={{
+              fontSize: "1.05rem", fontWeight: 700,
+              letterSpacing: "-0.02em", color: "var(--text)",
+              margin: 0, lineHeight: 1.2,
+            }}
+          >
+            {pillar.title}
+          </h3>
+          <p
+            style={{
+              fontSize: "0.9rem", lineHeight: 1.55,
+              color: "var(--text-3)", margin: 0,
+            }}
+          >
+            {pillar.body}
+          </p>
+        </div>
+
+        <div
+          style={{
+            paddingTop: "0.7rem",
+            borderTop: "1px solid var(--border)",
+            fontFamily: "var(--font-mono)",
+            fontSize: "0.62rem", fontWeight: 600,
+            letterSpacing: "0.1em", textTransform: "uppercase",
+            color: "var(--text-4)",
+          }}
+        >
+          {pillar.meta}
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
 // ── Calm vs Chaos ────────────────────────────────────────────────────────────
 
 function CalmChaosSection() {
@@ -2051,7 +2184,7 @@ function AfterContent() {
 
 function SectionHeader({
   eyebrow, title, sub,
-}: { eyebrow: string; title: string; sub?: string }) {
+}: { eyebrow?: string; title: string; sub?: string }) {
   const reduce = useReducedMotionSafe();
   return (
     <motion.div
@@ -2061,18 +2194,20 @@ function SectionHeader({
       transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
       style={{ textAlign: "center", maxWidth: 720, marginInline: "auto" }}
     >
-      <span
-        style={{
-          display: "inline-block",
-          fontFamily: "var(--font-mono)",
-          fontSize: "0.66rem", fontWeight: 700,
-          color: "var(--accent)",
-          letterSpacing: "0.16em", textTransform: "uppercase",
-          marginBottom: "0.65rem",
-        }}
-      >
-        {eyebrow}
-      </span>
+      {eyebrow && (
+        <span
+          style={{
+            display: "inline-block",
+            fontFamily: "var(--font-mono)",
+            fontSize: "0.66rem", fontWeight: 700,
+            color: "var(--accent)",
+            letterSpacing: "0.16em", textTransform: "uppercase",
+            marginBottom: "0.65rem",
+          }}
+        >
+          {eyebrow}
+        </span>
+      )}
       <h2
         style={{
           fontSize: "clamp(1.7rem, 3.4vw, 2.4rem)",
