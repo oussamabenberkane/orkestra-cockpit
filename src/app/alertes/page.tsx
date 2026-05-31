@@ -846,7 +846,7 @@ function EmailPreviewPanel({
           {
             label: "De",
             value: "Helvebroker",
-            sub: "system@helvebroker.ch",
+            sub: "contact@helvebroker.ch",
           },
           {
             label: "À",
