@@ -1893,19 +1893,19 @@ const pillars: Pillar[] = [
     Icon: Globe, color: "var(--info)", bg: "var(--info-tint)",
     title: "Vue 360°",
     body: "Helvebroker SA et Odoo fusionnés en un cockpit unique. Marge, cash-flow, sinistralité, rétention — toutes vos métriques sur une même surface.",
-    meta: "Sync 3 min",
+    meta: "Synchronisation < 3 min",
   },
   {
     Icon: Sparkles, color: "var(--purple)", bg: "var(--purple-tint)",
     title: "Trois agents IA",
-    body: "Renouvellements, impayés, rapports — vos trois agents préparent les actions chaque nuit. Vous validez en quelques clics le matin.",
-    meta: "Préparation nocturne",
+    body: "Renouvellements, commissions, rapports — vos trois agents préparent les actions chaque nuit. Vous validez en quelques clics le matin.",
+    meta: "Préparation chaque nuit",
   },
   {
     Icon: ShieldCheck, color: "var(--success)", bg: "var(--success-tint)",
     title: "Souverain & conforme",
-    body: "LLM Mistral hébergé chez Infomaniak en Suisse. LPD Art.16 conforme. Aucune donnée client ne quitte Zürich.",
-    meta: "CH · LPD Art.16",
+    body: "Aucune donnée client ne quitte la Suisse.",
+    meta: "Hébergement Suisse · LPD Art.16",
   },
 ];
 
