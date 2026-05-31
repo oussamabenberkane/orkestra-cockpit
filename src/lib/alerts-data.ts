@@ -37,13 +37,12 @@ export const INITIAL_ALERTS: AlertItem[] = [
     read: false,
     emailSent: false,
     email: {
-      subject: "Urgent : expiration de votre contrat d'assurance CHX-0187",
+      subject: "Votre contrat d'assurance professionnel CHX-0187 est arrivé à échéance",
       body: `<p>Madame, Monsieur,</p>
-<p>Nous vous contactons en urgence pour vous informer que votre contrat d'assurance professionnelle référence <strong>CHX-0187</strong> a expiré le <strong>16 mai 2026</strong>.</p>
-<p>À ce jour, <strong>votre couverture n'est plus active</strong>. Afin de régulariser votre situation dans les meilleurs délais et d'éviter toute exposition au risque, nous vous demandons de nous contacter impérativement aujourd'hui.</p>
-<p>Notre équipe est disponible pour traiter votre dossier en priorité et procéder à la remise en vigueur de votre contrat.</p>
-<p>Veuillez agréer, Madame, Monsieur, l'expression de nos salutations distinguées.</p>
-<p><strong>Helvebroker</strong><br>Département Gestion des Contrats<br>+41 22 000 00 00 · contact@helvebroker.ch</p>`,
+<p>Nous vous informons que votre contrat d'assurance professionnel, référence <strong>CHX-0187</strong>, a expiré le <strong>16 mai 2026</strong>.</p>
+<p>À ce jour, <strong>votre couverture n'est plus active</strong>. Afin de régulariser votre situation dans les meilleurs délais et d'éviter toute interruption de protection, nous vous invitons à nous contacter dès aujourd'hui.</p>
+<p>Notre équipe reste à votre disposition pour traiter votre dossier en priorité et procéder à la remise en vigueur de votre contrat.</p>
+<p><strong>Équipe Helvebroker</strong><br>+41 22 345 99 0 · contact@helvebroker.ch</p>`,
     },
   },
   {

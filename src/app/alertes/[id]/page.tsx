@@ -241,7 +241,7 @@ export default function AlertEmailEditorPage() {
     email_client:  alert.client.email,
     date_echeance: "2 juin 2026",
     courtier:      "Helvebroker",
-    email_courtier:"system@helvebroker.ch",
+    email_courtier:"contact@helvebroker.ch",
   };
 
   return (
@@ -513,7 +513,7 @@ export default function AlertEmailEditorPage() {
               <div className="alert-email-meta-value">
                 <span style={{ fontSize: "0.82rem", color: "var(--text-3)" }}>Helvebroker</span>
                 <span style={{ marginLeft: "0.4rem", color: "var(--text-4)", fontFamily: "var(--font-mono)", fontSize: "0.75rem" }}>
-                  &lt;system@helvebroker.ch&gt;
+                  &lt;contact@helvebroker.ch&gt;
                 </span>
               </div>
             </div>
