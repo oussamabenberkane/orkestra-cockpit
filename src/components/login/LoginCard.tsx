@@ -104,7 +104,7 @@ export default function LoginCard() {
           </div>
         </div>
 
-        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "0.4rem" }}>
+        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "1.75rem" }}>
           <h1
             style={{
               fontSize: "1.7rem",
@@ -138,18 +138,6 @@ export default function LoginCard() {
             Démo
           </button>
         </div>
-        <p
-          style={{
-            fontSize: "0.92rem",
-            color: "var(--text-3)",
-            margin: 0,
-            marginBottom: "1.75rem",
-            lineHeight: 1.55,
-          }}
-        >
-          Connectez-vous à votre cockpit BFSI.
-        </p>
-
         <form onSubmit={handleSubmit}>
           <Field
             id="email"
