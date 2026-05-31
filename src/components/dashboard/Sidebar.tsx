@@ -820,7 +820,7 @@ export function Sidebar({
                   color: "var(--rail-text)",
                   letterSpacing: "-0.01em",
                   whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
-                }}>Mirko Ferretti</div>
+                }}>Mirko Righele</div>
                 <div style={{
                   fontSize: "0.6rem",
                   color: "var(--rail-text-soft)",
@@ -941,7 +941,7 @@ export function Sidebar({
               onMouseEnter={(e) => {
                 const wrap = e.currentTarget.querySelector("[data-icon-wrap]") as HTMLElement | null;
                 if (wrap) wrap.style.background = "var(--surface-3)";
-                showTip("Mirko Ferretti", e.currentTarget);
+                showTip("Mirko Righele", e.currentTarget);
               }}
               onMouseLeave={(e) => {
                 const wrap = e.currentTarget.querySelector("[data-icon-wrap]") as HTMLElement | null;

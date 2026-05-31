@@ -295,7 +295,7 @@ function SaveButton({ saved }: { saved: boolean }) {
 
 function ProfilSection({ onSave, saved }: { onSave: () => void; saved: boolean }) {
   const [prenom, setPrenom] = useState("Mirko");
-  const [nom, setNom] = useState("Ferretti");
+  const [nom, setNom] = useState("Righele");
   const [email, setEmail] = useState("m.ferretti@helvebroker.ch");
   const [phone, setPhone] = useState("+41 79 123 45 67");
   const [langue, setLangue] = useState("fr");
@@ -354,7 +354,7 @@ function ProfilSection({ onSave, saved }: { onSave: () => void; saved: boolean }
           </div>
           <div className="settings-avatar-meta">
             <p style={{ fontWeight: 600, color: "var(--text)", marginBottom: "0.15rem", fontSize: "0.95rem" }}>
-              Mirko Ferretti
+              Mirko Righele
             </p>
             <p style={{ fontSize: "0.78rem", color: "var(--text-3)" }}>
               Courtier senior · Helvebroker
