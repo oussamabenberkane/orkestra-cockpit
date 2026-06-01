@@ -209,7 +209,7 @@ function NavItem({
     >
       <Icon
         size={19}
-        strokeWidth={active ? 2.25 : 2}
+        strokeWidth={active ? 2.5 : 2.25}
         color={item.iconColor}
         style={{ opacity: active ? 1 : 0.95, transition: "opacity 0.18s" }}
       />
@@ -235,7 +235,7 @@ function NavItem({
           transition: "opacity 0.18s, transform 0.18s",
         }}
       >
-        <Icon size={15} strokeWidth={active ? 2.25 : 2} color={item.iconColor} />
+        <Icon size={15} strokeWidth={active ? 2.5 : 2.25} color={item.iconColor} />
       </span>
       <span style={{ flex: 1, whiteSpace: "nowrap", overflow: "hidden" }}>
         {item.label}

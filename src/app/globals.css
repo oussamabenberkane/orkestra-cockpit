@@ -123,19 +123,21 @@
   --purple:       #7C3AED;
   --purple-tint:  rgba(124,58,237,0.12);
 
-  /* Nav category icon colors — LIGHT variants (Tailwind -200 family) so
-   * they pop on the new Aurora indigo-500 rail. Each picks a clearly
-   * different hue so the rail's icon row still reads as a multi-section
-   * map. All values verified ≥3:1 contrast on the rail surface. */
-  --nav-prospection:    #A7F3D0;   /* emerald-200 — Prospection */
-  --nav-portefeuille:   #BAE6FD;   /* sky-200      — Portefeuille */
-  --nav-sinistres:      #FECACA;   /* red-200      — Sinistres */
-  --nav-finance:        #FDE68A;   /* amber-200    — Finance */
+  /* Nav category icon colors — BOLDER -300 Tailwind variants where
+   * contrast on the indigo-500 rail allows, falling back to -200 for
+   * hues whose -300 step would drop below 3:1 (red, violet). Each
+   * still picks a clearly different hue so the rail's icon row reads
+   * as a multi-section map, but with much more saturation than the
+   * earlier pastel -200 family. */
+  --nav-prospection:    #6EE7B7;   /* emerald-300 — bolder mint */
+  --nav-portefeuille:   #7DD3FC;   /* sky-300     — bolder blue */
+  --nav-sinistres:      #FCA5A5;   /* red-300     — bolder rose (icons, label cues label) */
+  --nav-finance:        #FCD34D;   /* amber-300   — bolder amber */
   --nav-vue-ensemble:   var(--rail-accent);
-  --nav-chat:           #E9D5FF;   /* violet-200   — Chat IA */
-  --nav-alertes:        #FECACA;   /* red-200      — Alertes */
+  --nav-chat:           #C4B5FD;   /* violet-300  — bolder violet */
+  --nav-alertes:        #FCA5A5;   /* red-300 */
   --nav-agents:         var(--rail-accent);
-  --nav-neutral:        rgba(255,255,255,0.66);
+  --nav-neutral:        rgba(255,255,255,0.82);
 
   /* Rail tokens — white text on the Aurora indigo-500 rail surface
    * (see scoped rule below). rail-accent uses indigo-100 (very light)

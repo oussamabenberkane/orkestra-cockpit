@@ -4,12 +4,13 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import {
-  Home, BarChart3, MessageSquare, AlertTriangle,
-  Target, FolderArchive, Flame, Wallet, Globe, Sparkles,
-  Mail, AlertCircle, FileText, Settings, HelpCircle, LogOut,
-  Search, CornerDownLeft, X,
+  LogOut, Search, CornerDownLeft, X,
+  type LucideIcon,
 } from "lucide-react";
 import type { ModalKey } from "@/lib/types";
+import { useWorkspace } from "@/lib/workspaces";
+import type { NavItem, WorkspaceShape } from "@/lib/workspaces/types";
+import { useAlerts } from "@/components/dashboard/AlertsProvider";
 
 type Action =
   | { type: "modal"; key: ModalKey }
@@ -17,153 +18,144 @@ type Action =
   | { type: "callback"; cb: () => void };
 
 type Command = {
-  group: "Navigation" | "Domaines" | "Agents" | "Système";
+  group: string;
   label: string;
   desc?: string;
-  Icon: typeof Target;
+  badge?: string;
+  badgeTone?: "danger" | "warn" | "neutral";
+  Icon: LucideIcon;
   iconColor: string;
   iconBg: string;
   action: Action;
 };
 
-function buildCommands(opts: { onLogout: () => void }): Command[] {
-  return [
-    {
-      group: "Navigation",
-      label: "Vue 360",
-      desc: "Accueil cockpit — KPI consolidés",
-      Icon: Home,
-      iconColor: "var(--accent)",
-      iconBg: "var(--accent-tint)",
-      action: { type: "navigate", href: "/dashboard" },
-    },
-    {
-      group: "Navigation",
-      label: "Tous les rapports",
-      desc: "Index des rapports Helvebroker SA + Odoo",
-      Icon: BarChart3,
-      iconColor: "var(--accent)",
-      iconBg: "var(--accent-tint)",
-      action: { type: "navigate", href: "/rapports" },
-    },
-    {
-      group: "Navigation",
-      label: "Chat IA",
-      desc: "Assistant Orkestra plein écran",
-      Icon: MessageSquare,
-      iconColor: "var(--accent)",
-      iconBg: "var(--accent-tint)",
-      action: { type: "navigate", href: "/chat" },
-    },
-    {
-      group: "Navigation",
-      label: "Alertes",
-      desc: "Centre d'alertes opérationnelles",
-      Icon: AlertTriangle,
-      iconColor: "var(--danger)",
-      iconBg: "var(--danger-tint)",
-      action: { type: "navigate", href: "/alertes" },
-    },
-    {
-      group: "Domaines",
-      label: "Prospection",
-      desc: "Pipeline · 12 prospects · 3 relances dues",
-      Icon: Target,
-      iconColor: "var(--accent)",
-      iconBg: "var(--accent-tint)",
-      action: { type: "modal", key: "prospection" },
-    },
-    {
-      group: "Domaines",
-      label: "Portefeuille",
-      desc: "189 contrats · 4 renouvellements J-30",
-      Icon: FolderArchive,
-      iconColor: "var(--info)",
-      iconBg: "var(--info-tint)",
-      action: { type: "modal", key: "portefeuille" },
-    },
-    {
-      group: "Domaines",
-      label: "Sinistres",
-      desc: "3 ouverts · SIN-0047 urgent",
-      Icon: Flame,
-      iconColor: "var(--danger)",
-      iconBg: "var(--danger-tint)",
-      action: { type: "modal", key: "sinistres" },
-    },
-    {
-      group: "Domaines",
-      label: "Finance",
-      desc: "+18K cash-flow · 2 impayés",
-      Icon: Wallet,
-      iconColor: "var(--warn)",
-      iconBg: "var(--warn-tint)",
-      action: { type: "modal", key: "finance" },
-    },
-    {
-      group: "Domaines",
-      label: "Vue d'ensemble",
-      desc: "68% marge consolidée",
-      Icon: Globe,
-      iconColor: "var(--accent)",
-      iconBg: "var(--accent-tint)",
-      action: { type: "modal", key: "vue360" },
-    },
-    {
-      group: "Agents",
-      label: "Agent · Renouvellement",
-      desc: "4 courriers prêts — échéances J-28",
-      Icon: Mail,
-      iconColor: "var(--info)",
-      iconBg: "var(--info-tint)",
-      action: { type: "modal", key: "agents" },
-    },
-    {
-      group: "Agents",
-      label: "Agent · Impayé Rossi SA",
-      desc: "Relance 1 800 CHF — 67 jours",
-      Icon: AlertCircle,
-      iconColor: "var(--warn)",
-      iconBg: "var(--warn-tint)",
-      action: { type: "modal", key: "finance" },
-    },
-    {
-      group: "Agents",
-      label: "Agent · Rapport direction",
-      desc: "Synthèse mensuelle BS + Odoo",
-      Icon: FileText,
-      iconColor: "var(--accent)",
-      iconBg: "var(--accent-tint)",
-      action: { type: "modal", key: "rapport" },
-    },
-    {
-      group: "Système",
-      label: "Paramètres",
-      desc: "Workspace, sources, agents",
-      Icon: Settings,
-      iconColor: "var(--text-3)",
-      iconBg: "var(--surface-2)",
-      action: { type: "navigate", href: "/parametres" },
-    },
-    {
-      group: "Système",
-      label: "Aide & support",
-      desc: "Documentation, contact",
-      Icon: HelpCircle,
-      iconColor: "var(--text-3)",
-      iconBg: "var(--surface-2)",
-      action: { type: "navigate", href: "/support" },
-    },
-    {
-      group: "Système",
-      label: "Déconnexion",
-      desc: "Quitter le cockpit",
-      Icon: LogOut,
-      iconColor: "var(--danger)",
-      iconBg: "var(--danger-tint)",
-      action: { type: "callback", cb: opts.onLogout },
-    },
-  ];
+/* Per-label icon styling for the white modal card. Intentionally uses
+ * deep semantic tokens (var(--accent)/var(--info)/…) — NOT the rail's
+ * bright --nav-* variants — because the palette renders outside the
+ * .app-sidebar scope on a white surface, where the rail-bright variants
+ * would be unreadable. */
+const ICON_STYLE: Record<string, { color: string; bg: string }> = {
+  "Vue 360":           { color: "var(--accent)",  bg: "var(--accent-tint)"  },
+  "Tous les rapports": { color: "var(--accent)",  bg: "var(--accent-tint)"  },
+  /* Broker — Métier */
+  "Prospection":       { color: "var(--accent)",  bg: "var(--accent-tint)"  },
+  "Portefeuille":      { color: "var(--info)",    bg: "var(--info-tint)"    },
+  "Sinistres":         { color: "var(--danger)",  bg: "var(--danger-tint)"  },
+  "Finance":           { color: "var(--warn)",    bg: "var(--warn-tint)"    },
+  /* Commodity — Trading */
+  "Positions":         { color: "var(--accent)",  bg: "var(--accent-tint)"  },
+  "Couvertures":       { color: "var(--info)",    bg: "var(--info-tint)"    },
+  "Contreparties":     { color: "var(--warn)",    bg: "var(--warn-tint)"    },
+  "P&L":               { color: "var(--success)", bg: "var(--success-tint)" },
+  "Risque":            { color: "var(--danger)",  bg: "var(--danger-tint)"  },
+  /* Intelligence */
+  "Chat IA":           { color: "var(--purple)",  bg: "var(--purple-tint)"  },
+  "Alertes":           { color: "var(--danger)",  bg: "var(--danger-tint)"  },
+  /* Administration */
+  "Paramètres":        { color: "var(--text-3)",  bg: "var(--surface-2)"    },
+  "Support":           { color: "var(--text-3)",  bg: "var(--surface-2)"    },
+};
+
+const FALLBACK_ICON_STYLE = { color: "var(--accent)", bg: "var(--accent-tint)" };
+
+function descFor(
+  label: string,
+  live: { alertsUnread: number; sinistreUnread: number; financeUnread: number },
+): string | undefined {
+  const plural = (n: number, s: string, p: string) => (n > 1 ? p : s);
+  switch (label) {
+    case "Vue 360":           return "KPI consolidés + trois actions du jour";
+    case "Tous les rapports": return "Index Helvebroker SA + Odoo";
+    case "Prospection":       return "Pipeline · 18 % conv. · 3 relances dues";
+    case "Portefeuille":      return "189 contrats actifs · 4 renouvellements J-30";
+    case "Sinistres":
+      return live.sinistreUnread > 0
+        ? `3 dossiers ouverts · ${live.sinistreUnread} alerte${plural(live.sinistreUnread, "", "s")} non lue${plural(live.sinistreUnread, "", "s")}`
+        : "3 dossiers ouverts · SIN-0047 urgent";
+    case "Finance":
+      return live.financeUnread > 0
+        ? `+18K cash-flow · ${live.financeUnread} alerte${plural(live.financeUnread, "", "s")} non lue${plural(live.financeUnread, "", "s")}`
+        : "+18K cash-flow · 2 impayés";
+    /* Commodity descriptions */
+    case "Positions":         return "12 positions · Énergie · Métaux · Agri";
+    case "Couvertures":       return "Stratégies de hedge en cours";
+    case "Contreparties":     return "1 limite atteinte — surveillance requise";
+    case "P&L":               return "Profit & Loss par desk";
+    case "Risque":            return "VaR 1j 184 K · limite 250 K";
+    /* Intelligence */
+    case "Chat IA":           return "Assistant Orkestra plein écran";
+    case "Alertes":
+      return live.alertsUnread > 0
+        ? `${live.alertsUnread} alerte${plural(live.alertsUnread, "", "s")} non lue${plural(live.alertsUnread, "", "s")} · action requise`
+        : "Centre d'alertes opérationnelles";
+    case "Paramètres":        return "Workspace, sources, agents IA";
+    case "Support":           return "Documentation et contact";
+    default:                  return undefined;
+  }
+}
+
+function badgeFor(
+  label: string,
+  live: { alertsUnread: number; sinistreUnread: number; financeUnread: number },
+): { value: string; tone: "danger" | "warn" } | undefined {
+  if (label === "Alertes" && live.alertsUnread > 0) {
+    return { value: String(live.alertsUnread), tone: "danger" };
+  }
+  if (label === "Sinistres" && live.sinistreUnread > 0) {
+    return { value: String(live.sinistreUnread), tone: "danger" };
+  }
+  if (label === "Finance" && live.financeUnread > 0) {
+    return { value: String(live.financeUnread), tone: "warn" };
+  }
+  return undefined;
+}
+
+function buildCommands(opts: {
+  shape: WorkspaceShape;
+  live: { alertsUnread: number; sinistreUnread: number; financeUnread: number };
+  onLogout: () => void;
+}): Command[] {
+  const out: Command[] = [];
+
+  /* Source-of-truth: the workspace's own nav. The palette stays in lock
+   * step with the sidebar — switch workspace tab, palette switches with
+   * it, including the Métier↔Trading section title. */
+  for (const section of opts.shape.nav) {
+    for (const item of section.items as NavItem[]) {
+      const action: Action | null =
+        item.href ? { type: "navigate", href: item.href }
+        : item.modalKey ? { type: "modal", key: item.modalKey }
+        : null;
+      if (!action) continue;
+
+      const style = ICON_STYLE[item.label] ?? FALLBACK_ICON_STYLE;
+      const badge = badgeFor(item.label, opts.live);
+      out.push({
+        group: section.title,
+        label: item.label,
+        desc: descFor(item.label, opts.live),
+        badge: badge?.value,
+        badgeTone: badge?.tone,
+        Icon: item.Icon,
+        iconColor: style.color,
+        iconBg: style.bg,
+        action,
+      });
+    }
+  }
+
+  /* Compte — logout pinned to the bottom regardless of workspace. */
+  out.push({
+    group: "Compte",
+    label: "Déconnexion",
+    desc: "Quitter le cockpit",
+    Icon: LogOut,
+    iconColor: "var(--danger)",
+    iconBg: "var(--danger-tint)",
+    action: { type: "callback", cb: opts.onLogout },
+  });
+
+  return out;
 }
 
 interface CommandPaletteProps {
@@ -184,7 +176,21 @@ export function CommandPalette({
   const inputRef = useRef<HTMLInputElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
 
-  const commands = useMemo(() => buildCommands({ onLogout }), [onLogout]);
+  /* Live data sources — same shape + alerts provider the sidebar uses,
+   * so badge counts and descriptions stay in sync when the user marks
+   * an alert read elsewhere in the app. */
+  const { shape } = useWorkspace();
+  const { alerts, unreadCount: alertsUnread } = useAlerts();
+  const live = useMemo(() => ({
+    alertsUnread,
+    sinistreUnread: alerts.filter((a) => !a.read && a.category === "sinistre").length,
+    financeUnread:  alerts.filter((a) => !a.read && a.category === "finance").length,
+  }), [alerts, alertsUnread]);
+
+  const commands = useMemo(
+    () => buildCommands({ shape, live, onLogout }),
+    [shape, live, onLogout],
+  );
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -193,17 +199,18 @@ export function CommandPalette({
       (c) =>
         c.label.toLowerCase().includes(q) ||
         (c.desc?.toLowerCase().includes(q) ?? false) ||
-        c.group.toLowerCase().includes(q)
+        c.group.toLowerCase().includes(q),
     );
   }, [query, commands]);
 
+  /* Preserve group ordering as encountered in the workspace nav. */
   const groups = useMemo(() => {
-    const out: Record<string, Command[]> = {};
+    const map = new Map<string, Command[]>();
     for (const c of filtered) {
-      if (!out[c.group]) out[c.group] = [];
-      out[c.group].push(c);
+      if (!map.has(c.group)) map.set(c.group, []);
+      map.get(c.group)!.push(c);
     }
-    return out;
+    return Array.from(map.entries());
   }, [filtered]);
 
   useEffect(() => {
@@ -246,7 +253,7 @@ export function CommandPalette({
           style={{
             position: "fixed",
             inset: 0,
-            background: "rgba(15,23,42,0.32)",
+            background: "rgba(30,27,75,0.36)",
             backdropFilter: "blur(4px)",
             display: "flex",
             justifyContent: "center",
@@ -265,8 +272,7 @@ export function CommandPalette({
               background: "var(--surface)",
               border: "1px solid var(--border)",
               borderRadius: "14px",
-              boxShadow:
-                "0 32px 80px -20px rgba(15,23,42,0.32), 0 12px 32px -12px rgba(15,23,42,0.18)",
+              boxShadow: "var(--tier-2)",
               overflow: "hidden",
               fontFamily: "var(--font-sans), system-ui, sans-serif",
             }}
@@ -280,12 +286,12 @@ export function CommandPalette({
                 borderBottom: "1px solid var(--border)",
               }}
             >
-              <Search size={15} strokeWidth={2} color="var(--text-3)" />
+              <Search size={15} strokeWidth={2.25} color="var(--text-3)" />
               <input
                 ref={inputRef}
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Rechercher dans le cockpit…"
+                placeholder={`Rechercher dans ${shape.label}…`}
                 style={{
                   flex: 1,
                   border: "none",
@@ -317,7 +323,7 @@ export function CommandPalette({
             </div>
 
             <div style={{ maxHeight: "60vh", overflowY: "auto", padding: "0.5rem 0" }}>
-              {Object.keys(groups).length === 0 ? (
+              {groups.length === 0 ? (
                 <div
                   style={{
                     padding: "2rem 1rem",
@@ -329,22 +335,30 @@ export function CommandPalette({
                   Aucun résultat pour « {query} »
                 </div>
               ) : (
-                Object.entries(groups).map(([group, cmds]) => (
+                groups.map(([group, cmds]) => (
                   <div key={group}>
                     <div
                       style={{
                         padding: "0.5rem 1.1rem 0.3rem",
-                        fontSize: "0.64rem",
+                        fontSize: "0.62rem",
                         fontWeight: 700,
                         color: "var(--text-4)",
                         textTransform: "uppercase",
-                        letterSpacing: "0.1em",
+                        letterSpacing: "0.12em",
                       }}
                     >
                       {group}
                     </div>
                     {cmds.map((cmd) => {
                       const I = cmd.Icon;
+                      const badgeColor =
+                        cmd.badgeTone === "danger" ? "var(--danger)"
+                        : cmd.badgeTone === "warn" ? "var(--warn)"
+                        : "var(--text-3)";
+                      const badgeBg =
+                        cmd.badgeTone === "danger" ? "var(--danger-tint)"
+                        : cmd.badgeTone === "warn" ? "var(--warn-tint)"
+                        : "var(--surface-2)";
                       return (
                         <button
                           key={cmd.label}
@@ -367,24 +381,25 @@ export function CommandPalette({
                         >
                           <span
                             style={{
-                              width: 28,
-                              height: 28,
+                              width: 30,
+                              height: 30,
                               background: cmd.iconBg,
                               color: cmd.iconColor,
-                              borderRadius: "7px",
+                              borderRadius: "8px",
                               display: "flex",
                               alignItems: "center",
                               justifyContent: "center",
                               flexShrink: 0,
+                              boxShadow: "inset 0 1px 0 rgba(255,255,255,0.6)",
                             }}
                           >
-                            <I size={13} strokeWidth={2} />
+                            <I size={14} strokeWidth={2.25} />
                           </span>
                           <div style={{ minWidth: 0, lineHeight: 1.3 }}>
                             <div
                               style={{
                                 fontSize: "0.86rem",
-                                fontWeight: 500,
+                                fontWeight: 600,
                                 color: "var(--text)",
                                 letterSpacing: "-0.005em",
                               }}
@@ -397,6 +412,9 @@ export function CommandPalette({
                                   fontSize: "0.72rem",
                                   color: "var(--text-3)",
                                   marginTop: "0.1rem",
+                                  whiteSpace: "nowrap",
+                                  overflow: "hidden",
+                                  textOverflow: "ellipsis",
                                 }}
                               >
                                 {cmd.desc}
@@ -404,15 +422,42 @@ export function CommandPalette({
                             )}
                           </div>
                           <span
-                            className="cmdp-arrow"
                             style={{
-                              color: "var(--text-4)",
-                              opacity: 0,
-                              transform: "translateX(-4px)",
-                              transition: "opacity 0.15s, transform 0.15s",
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: "0.4rem",
+                              flexShrink: 0,
                             }}
                           >
-                            <CornerDownLeft size={12} strokeWidth={2.25} />
+                            {cmd.badge && (
+                              <span
+                                style={{
+                                  fontFamily: "var(--font-mono)",
+                                  fontSize: "0.66rem",
+                                  fontWeight: 700,
+                                  color: badgeColor,
+                                  background: badgeBg,
+                                  border: `1px solid color-mix(in srgb, ${badgeColor} 24%, transparent)`,
+                                  borderRadius: "100px",
+                                  padding: "0.1rem 0.45rem",
+                                  lineHeight: 1.3,
+                                }}
+                              >
+                                {cmd.badge}
+                              </span>
+                            )}
+                            <span
+                              className="cmdp-arrow"
+                              style={{
+                                color: "var(--text-4)",
+                                opacity: 0,
+                                transform: "translateX(-4px)",
+                                transition: "opacity 0.15s, transform 0.15s",
+                                display: "inline-flex",
+                              }}
+                            >
+                              <CornerDownLeft size={12} strokeWidth={2.25} />
+                            </span>
                           </span>
                         </button>
                       );
@@ -434,9 +479,32 @@ export function CommandPalette({
                 color: "var(--text-3)",
               }}
             >
-              <span>{filtered.length} résultats</span>
+              <span>
+                {filtered.length} résultat{filtered.length > 1 ? "s" : ""}
+                {live.alertsUnread > 0 && (
+                  <>
+                    {" · "}
+                    <span style={{ color: "var(--danger)", fontWeight: 600 }}>
+                      {live.alertsUnread} alerte{live.alertsUnread > 1 ? "s" : ""} non lue{live.alertsUnread > 1 ? "s" : ""}
+                    </span>
+                  </>
+                )}
+              </span>
               <span style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
-                Cliquez pour ouvrir
+                <kbd
+                  style={{
+                    fontFamily: "var(--font-mono)",
+                    fontSize: "0.62rem",
+                    background: "var(--surface)",
+                    border: "1px solid var(--border)",
+                    borderRadius: "4px",
+                    padding: "0.05rem 0.35rem",
+                    color: "var(--text-3)",
+                  }}
+                >
+                  ↵
+                </kbd>
+                ouvrir
               </span>
             </div>
           </motion.div>
