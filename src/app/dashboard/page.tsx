@@ -2,7 +2,6 @@ import {
   fetchHeroData,
   fetchSatelliteValues,
   fetchAgentTaskRows,
-  fetchTileMetrics,
   fetchModalValues,
   fetchUnreadAlertesCount,
 } from "@/lib/dashboard-data";
@@ -11,14 +10,13 @@ import { getModalData } from "@/lib/modal-data";
 import DashboardClient from "./DashboardClient";
 
 export default async function DashboardPage() {
-  const [heroM, heroT, heroA, satelliteValues, agentTaskRows, tileMetrics, modalValues, unreadCount] =
+  const [heroM, heroT, heroA, satelliteValues, agentTaskRows, modalValues, unreadCount] =
     await Promise.all([
       fetchHeroData("M"),
       fetchHeroData("T"),
       fetchHeroData("A"),
       fetchSatelliteValues(),
       fetchAgentTaskRows(),
-      fetchTileMetrics(),
       fetchModalValues(),
       fetchUnreadAlertesCount(),
     ]);
@@ -37,7 +35,6 @@ export default async function DashboardPage() {
       initialHero={initialHero}
       satelliteValues={satelliteValues}
       agentTaskRows={agentTaskRows}
-      tileMetrics={tileMetrics}
       modalData={liveModalData}
       unreadCount={unreadCount}
     />

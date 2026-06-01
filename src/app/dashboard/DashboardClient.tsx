@@ -1,11 +1,10 @@
 "use client";
 
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { AnimatePresence, motion } from "framer-motion";
 import {
-  ArrowDown, ArrowUp, ArrowRight, Circle, Minus, Mail, AlertCircle, FileText,
-  ShieldAlert, RefreshCw, Sparkles,
+  ArrowDown, ArrowUp, Circle, Minus, Mail, AlertCircle, FileText,
+  Sparkles,
   type LucideIcon,
 } from "lucide-react";
 import type { ModalKey, ModalData } from "@/lib/types";
@@ -16,15 +15,13 @@ import { CommandPalette } from "@/components/shared/CommandPalette";
 import { HeroPanel } from "@/components/dashboard/HeroPanel";
 import { SatelliteKPI, type Satellite } from "@/components/dashboard/SatelliteKPI";
 import { TroisChoses, type TroisItem } from "@/components/dashboard/TroisChoses";
-import { TileCard, type TileEntry } from "@/components/dashboard/TileCard";
 import {
   satellites as mockSatellites,
   troisItems as mockTroisItems,
-  tiles,
   type Period,
   type HeroDataset,
 } from "@/lib/dashboard-mock";
-import type { SatelliteValues, AgentTaskRow, TileMetrics } from "@/lib/dashboard-data";
+import type { SatelliteValues, AgentTaskRow } from "@/lib/dashboard-data";
 import { Percent, Wallet, Users } from "lucide-react";
 import { useWorkspace } from "@/lib/workspaces";
 import { WorkspaceTabs } from "@/components/dashboard/WorkspaceTabs";
@@ -126,63 +123,12 @@ function mergeSatellites(vals: SatelliteValues | null): Satellite[] {
   ];
 }
 
-// ── Live tile builder ─────────────────────────────────────────────────────────
-
-function buildLiveTiles(metrics: TileMetrics): TileEntry[] {
-  const live = [...tiles];
-  const { prospection: p, portefeuille: po, sinistres: s, finance: f } = metrics;
-
-  if (p) {
-    live[0] = {
-      ...tiles[0],
-      metric: String(Math.round(p.taux_conversion_pct)),
-      unit: "%",
-      caption: "",
-      alert: p.relances_dues > 0 ? `${p.relances_dues} relances dues` : "",
-      alertTone: p.relances_dues > 0 ? "warn" : "neutral",
-    };
-  }
-  if (po) {
-    live[1] = {
-      ...tiles[1],
-      metric: String(po.contrats_actifs),
-      unit: "",
-      caption: "",
-      alert: `${po.renouvellements_j30} renouv. J-30`,
-      alertTone: "neutral",
-    };
-  }
-  if (s) {
-    live[2] = {
-      ...tiles[2],
-      metric: String(s.dossiers_ouverts),
-      unit: "",
-      caption: "",
-      alert: s.sinistre_urgent_ref ? `${s.sinistre_urgent_ref} · ${s.plus_ancien_jours} j` : "",
-      alertTone: "danger",
-    };
-  }
-  if (f) {
-    const encaisseK = Math.round(f.encaisse_mois / 1000);
-    live[3] = {
-      ...tiles[3],
-      metric: encaisseK >= 0 ? `+${encaisseK}` : String(encaisseK),
-      unit: "K",
-      caption: "",
-      alert: f.nb_impayes > 0 ? `${f.nb_impayes} impayés` : "",
-      alertTone: f.nb_impayes > 0 ? "warn" : "neutral",
-    };
-  }
-  return live;
-}
-
 // ── Props ─────────────────────────────────────────────────────────────────────
 
 export interface DashboardClientProps {
   initialHero: Record<Period, HeroDataset>;
   satelliteValues: SatelliteValues | null;
   agentTaskRows: AgentTaskRow[];
-  tileMetrics: TileMetrics | null;
   modalData: Record<ModalKey, ModalData>;
   unreadCount: number;
 }
@@ -193,7 +139,6 @@ export default function DashboardClient({
   initialHero,
   satelliteValues,
   agentTaskRows,
-  tileMetrics,
   modalData,
   unreadCount,
 }: DashboardClientProps) {
@@ -249,13 +194,6 @@ export default function DashboardClient({
       return agentTaskRows.length > 0 ? agentTaskRows.map(taskRowToTroisItem) : mockTroisItems;
     },
     [isCommodity, workspaceShape, agentTaskRows],
-  );
-  const liveTiles = useMemo(
-    () => {
-      if (isCommodity) return workspaceShape.tiles;
-      return tileMetrics ? buildLiveTiles(tileMetrics) : tiles;
-    },
-    [isCommodity, workspaceShape, tileMetrics],
   );
   const sourceBadges = workspaceShape.sourceBadges;
 
@@ -364,62 +302,6 @@ export default function DashboardClient({
           </div>
         </header>
 
-        <div className="dashboard-action-banner" style={{
-          position: "relative",
-          background: "var(--accent)",
-          borderRadius: 14,
-          padding: "clamp(0.95rem, 2.5vw, 1.35rem) clamp(1rem, 3vw, 1.5rem)",
-          color: "#FFFFFF",
-          marginBottom: "clamp(0.6rem, 1.5vw, 0.85rem)",
-          boxShadow: "0 12px 30px -14px rgba(0,122,255,0.55)",
-          overflow: "hidden",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: "clamp(0.75rem, 2vw, 1.25rem)",
-          flexWrap: "wrap",
-          rowGap: "0.85rem",
-        }}>
-          <div className="dashboard-action-banner__text" style={{
-            minWidth: 0,
-            flex: "1 1 16rem",
-          }}>
-            <div className="dashboard-action-banner__eyebrow" style={{
-              fontFamily: "var(--font-mono)",
-              fontSize: "clamp(0.6rem, 1.7vw, 0.66rem)",
-              fontWeight: 700,
-              letterSpacing: "0.18em",
-              textTransform: "uppercase",
-              opacity: 0.85,
-              marginBottom: "0.4rem",
-            }}>3 actions · aujourd&apos;hui</div>
-            <h2 className="dashboard-action-banner__title" style={{
-              fontSize: "clamp(1.05rem, 3vw, 1.4rem)",
-              fontWeight: 700,
-              letterSpacing: "-0.02em",
-              margin: 0,
-              lineHeight: 1.25,
-            }}>{isCommodity ? "Roll. Couvrez. Validez." : "Validez. Relancez. Signez."}</h2>
-          </div>
-          <ActionCarousel
-            actions={isCommodity ? [
-              { label: "Roll des futures Brent",  Icon: RefreshCw,   run: () => onOpen("commodity:positions") },
-              { label: "Ajuster la couverture",   Icon: ShieldAlert, run: () => onOpen("commodity:risk") },
-              { label: "Approuver hedge WTI Q3",  Icon: FileText,    run: () => onOpen("commodity:agents") },
-              { label: "Revoir Trafigura",        Icon: AlertCircle, run: () => onOpen("commodity:counterparties") },
-            ] : [
-              { label: "Signer le rapport direction", Icon: FileText,      run: () => router.push("/rapports") },
-              { label: "Valider les renouvellements", Icon: RefreshCw,     run: () => onOpen("portefeuille") },
-              { label: "Relancer les impayés",        Icon: AlertCircle,   run: () => onOpen("finance") },
-              { label: "Traiter SIN-0047",            Icon: ShieldAlert,   run: () => onOpen("sinistres") },
-            ]}
-          />
-        </div>
-
-        <div className="dash-section" style={{ marginBottom: "clamp(1.5rem, 3.5vw, 2.25rem)" }}>
-          <TroisChoses items={troisItems} onOpen={onOpen} />
-        </div>
-
         <h2
           className="dash-section-heading"
           style={{
@@ -464,15 +346,8 @@ export default function DashboardClient({
           </div>
         </div>
 
-        <div className="dashboard-tiles dashboard-tiles-desktop">
-          {liveTiles.map((t) => (
-            <TileCard key={t.title} tile={t} onOpen={onOpen} />
-          ))}
-        </div>
-        <div className="dashboard-tiles-mobile" aria-hidden={false}>
-          {liveTiles.map((t) => (
-            <CubeTile key={t.title} tile={t} onOpen={onOpen} />
-          ))}
+        <div className="dash-section" style={{ marginBottom: "clamp(1.5rem, 3.5vw, 2.25rem)" }}>
+          <TroisChoses items={troisItems} onOpen={onOpen} />
         </div>
 
         <Footer
@@ -593,71 +468,6 @@ function CompactStat({ kpi, onOpen }: { kpi: Satellite; onOpen: (k: ModalKey) =>
   );
 }
 
-function CubeTile({ tile, onOpen }: { tile: TileEntry; onOpen: (k: ModalKey) => void }) {
-  const Icon = tile.Icon;
-  return (
-    <button
-      onClick={() => onOpen(tile.modalKey)}
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "flex-start",
-        gap: "0.4rem",
-        padding: "0.7rem 0.8rem 0.75rem",
-        background: "var(--surface)",
-        border: "1px solid var(--border)",
-        borderRadius: 10,
-        boxShadow: "var(--tier-1)",
-        cursor: "pointer",
-        fontFamily: "inherit",
-        color: "inherit",
-        textAlign: "left",
-        minHeight: 96,
-        width: "100%",
-      }}
-    >
-      <span style={{
-        width: 26, height: 26,
-        background: tile.iconBg,
-        color: tile.iconColor,
-        borderRadius: 7,
-        display: "flex", alignItems: "center", justifyContent: "center",
-        flexShrink: 0,
-      }}>
-        <Icon size={13} strokeWidth={2} />
-      </span>
-      <span style={{
-        fontSize: "0.72rem",
-        color: "var(--text-3)",
-        fontWeight: 500,
-        overflow: "hidden",
-        textOverflow: "ellipsis",
-        whiteSpace: "nowrap",
-        width: "100%",
-      }}>{tile.title}</span>
-      <span style={{
-        fontFamily: "var(--font-mono)",
-        fontSize: "1.2rem",
-        fontWeight: 700,
-        color: "var(--text)",
-        fontVariantNumeric: "tabular-nums",
-        letterSpacing: "-0.02em",
-        lineHeight: 1,
-      }}>
-        {tile.metric}
-        {tile.unit && (
-          <span style={{
-            fontSize: "0.55em",
-            color: "var(--text-3)",
-            marginLeft: 2,
-            fontWeight: 500,
-          }}>{tile.unit}</span>
-        )}
-      </span>
-    </button>
-  );
-}
-
 /** Per-KPI seed prompts. Matches the original "ask-chat" copy so the
  *  agent answers the same focused question for each metric. */
 function kpiSeed(label: string): string {
@@ -732,290 +542,6 @@ function KpiWithAsk({ label, children }: { label: string; children: React.ReactN
       >
         <Sparkles size={13} strokeWidth={2.25} aria-hidden="true" />
       </button>
-    </div>
-  );
-}
-
-/** Auto-cycling action button on the action-first banner.
- *  - Cycles through quick actions every 4.2s while idle.
- *  - Pauses while pointer is over the carousel or focus is inside.
- *  - Tapping the active button runs the current action.
- *  - Dots beneath the button show position and allow manual jumping. */
-type CarouselAction = {
-  label: string;
-  Icon: LucideIcon;
-  run: () => void;
-};
-
-const CAROUSEL_INTERVAL_MS = 4200;
-
-function ActionCarousel({ actions }: { actions: CarouselAction[] }) {
-  const [index, setIndex] = useState(0);
-  const [paused, setPaused] = useState(false);
-  const [swipeDir, setSwipeDir] = useState<1 | -1>(1);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const prefersReducedMotion = useRef(false);
-
-  // Gesture state — held in refs so we don't re-render on every move.
-  const touchRef = useRef<{ x: number; t: number } | null>(null);
-  const wheelAccumRef = useRef(0);
-  const wheelCooldownRef = useRef(false);
-
-  const advance = (dir: 1 | -1) => {
-    setSwipeDir(dir);
-    setIndex((i) => (i + dir + actions.length) % actions.length);
-  };
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    prefersReducedMotion.current = window.matchMedia(
-      "(prefers-reduced-motion: reduce)",
-    ).matches;
-  }, []);
-
-  useEffect(() => {
-    if (paused || actions.length <= 1) return;
-    const id = window.setInterval(() => {
-      setSwipeDir(1);
-      setIndex((i) => (i + 1) % actions.length);
-    }, CAROUSEL_INTERVAL_MS);
-    return () => window.clearInterval(id);
-  }, [paused, actions.length]);
-
-  /* Trackpad / mouse-wheel horizontal scroll. Attached via native
-   * addEventListener so we can use passive:false and preventDefault on
-   * horizontal gestures only — vertical scroll keeps bubbling to the page. */
-  useEffect(() => {
-    const el = containerRef.current;
-    if (!el) return;
-    const onWheel = (e: WheelEvent) => {
-      if (Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return; // vertical → pass through
-      e.preventDefault();
-      if (wheelCooldownRef.current) return;
-      wheelAccumRef.current += e.deltaX;
-      if (Math.abs(wheelAccumRef.current) < 30) return;
-      advance(wheelAccumRef.current > 0 ? 1 : -1);
-      wheelAccumRef.current = 0;
-      wheelCooldownRef.current = true;
-      window.setTimeout(() => { wheelCooldownRef.current = false; }, 280);
-    };
-    el.addEventListener("wheel", onWheel, { passive: false });
-    return () => el.removeEventListener("wheel", onWheel);
-    // advance is stable enough — actions.length is captured via closure
-    // each render; cooldown ref keeps single-fire behavior.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [actions.length]);
-
-  /* Touch swipe — distinguishes tap (≤8px movement) from swipe (≥40px). */
-  const onTouchStart = (e: React.TouchEvent) => {
-    if (e.touches.length !== 1) return;
-    touchRef.current = { x: e.touches[0].clientX, t: Date.now() };
-  };
-  const onTouchEnd = (e: React.TouchEvent) => {
-    const start = touchRef.current;
-    touchRef.current = null;
-    if (!start) return;
-    const end = e.changedTouches[0];
-    if (!end) return;
-    const dx = end.clientX - start.x;
-    const dt = Date.now() - start.t;
-    if (dt > 600 || Math.abs(dx) < 40) return;
-    advance(dx < 0 ? 1 : -1);
-  };
-
-  const current = actions[index];
-  const Icon = current.Icon;
-  const useMotion = !prefersReducedMotion.current;
-  /* Slide in from the swipe direction so the label motion reads as
-   * "the next card slid in from the right" / "previous slid in from left". */
-  const enterX = useMotion ? swipeDir * 14 : 0;
-  const exitX  = useMotion ? -swipeDir * 14 : 0;
-
-  return (
-    <div
-      ref={containerRef}
-      className="action-carousel"
-      onMouseEnter={() => setPaused(true)}
-      onMouseLeave={() => setPaused(false)}
-      onFocusCapture={() => setPaused(true)}
-      onBlurCapture={(e) => {
-        const next = e.relatedTarget as Node | null;
-        if (!containerRef.current?.contains(next)) setPaused(false);
-      }}
-      onTouchStart={onTouchStart}
-      onTouchEnd={onTouchEnd}
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "stretch",
-        gap: "0.55rem",
-        flexShrink: 0,
-        minWidth: 0,
-        touchAction: "pan-y",
-      }}
-    >
-      <button
-        type="button"
-        onClick={() => current.run()}
-        aria-label={current.label}
-        className="action-carousel__btn"
-        style={{
-          position: "relative",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: "0.5rem",
-          padding: "0 1.05rem",
-          /* Fixed responsive size — width scales with viewport but stays
-           * constant across action changes, so the button never reflows
-           * its surroundings when the cycling label has a different length. */
-          width: "clamp(240px, 26vw, 280px)",
-          height: 44,
-          background: "#FFFFFF",
-          color: "var(--accent)",
-          border: "none",
-          borderRadius: 999,
-          fontFamily: "inherit",
-          fontSize: "0.86rem",
-          fontWeight: 600,
-          letterSpacing: "-0.005em",
-          cursor: "pointer",
-          /* Stronger, more deliberate elevation: subtle inset highlight,
-           * 1px ring for separation against the blue field, soft ambient
-           * shadow and a deeper key shadow for floatiness. */
-          boxShadow:
-            "inset 0 1px 0 rgba(255,255,255,0.9), inset 0 0 0 1px rgba(0,0,0,0.04), 0 2px 4px rgba(0,40,90,0.18), 0 12px 24px -10px rgba(0,40,90,0.38)",
-          transition: "transform 0.22s ease, box-shadow 0.22s ease",
-          overflow: "hidden",
-          flexShrink: 0,
-          userSelect: "none",
-          WebkitTapHighlightColor: "transparent",
-        }}
-        onMouseDown={(e) => {
-          e.currentTarget.style.transform = "translateY(0) scale(0.98)";
-        }}
-        onMouseUp={(e) => {
-          e.currentTarget.style.transform = "translateY(-1px) scale(1)";
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.transform = "translateY(-1px)";
-          e.currentTarget.style.boxShadow =
-            "inset 0 1px 0 rgba(255,255,255,1), inset 0 0 0 1px rgba(0,0,0,0.05), 0 4px 6px rgba(0,40,90,0.20), 0 18px 36px -14px rgba(0,40,90,0.50)";
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.transform = "translateY(0) scale(1)";
-          e.currentTarget.style.boxShadow =
-            "inset 0 1px 0 rgba(255,255,255,0.9), inset 0 0 0 1px rgba(0,0,0,0.04), 0 2px 4px rgba(0,40,90,0.18), 0 12px 24px -10px rgba(0,40,90,0.38)";
-        }}
-      >
-        <AnimatePresence mode="wait" initial={false}>
-          <motion.span
-            key={index}
-            initial={useMotion ? { opacity: 0, x: enterX } : false}
-            animate={useMotion ? { opacity: 1, x: 0 } : { opacity: 1 }}
-            exit={useMotion ? { opacity: 0, x: exitX } : { opacity: 0 }}
-            transition={{ duration: 0.26, ease: [0.22, 1, 0.36, 1] }}
-            style={{
-              /* 3-column grid: icon left, label centered in the middle
-               * track, arrow right. Each column has a stable position so
-               * the structure doesn't drift as the label changes length. */
-              display: "grid",
-              gridTemplateColumns: "auto minmax(0, 1fr) auto",
-              alignItems: "center",
-              gap: "0.6rem",
-              width: "100%",
-              minWidth: 0,
-            }}
-          >
-            <span style={{
-              display: "inline-flex",
-              alignItems: "center",
-              justifyContent: "center",
-              width: 24,
-              height: 24,
-              borderRadius: 7,
-              background: "var(--accent-tint)",
-              color: "var(--accent)",
-              flexShrink: 0,
-            }}>
-              <Icon size={13} strokeWidth={2.25} aria-hidden="true" />
-            </span>
-            <span style={{
-              textAlign: "center",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
-              minWidth: 0,
-              letterSpacing: "-0.005em",
-            }}>{current.label}</span>
-            <ArrowRight
-              size={14}
-              strokeWidth={2.5}
-              aria-hidden="true"
-              style={{ flexShrink: 0, opacity: 0.55 }}
-            />
-          </motion.span>
-        </AnimatePresence>
-      </button>
-
-      <div
-        className="action-carousel__dots"
-        role="tablist"
-        aria-label="Sélection de l'action rapide"
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: "0.4rem",
-          minHeight: 14,
-        }}
-      >
-        {actions.map((a, i) => {
-          const isActive = i === index;
-          return (
-            <button
-              key={i}
-              type="button"
-              role="tab"
-              aria-selected={isActive}
-              aria-label={`Action ${i + 1} sur ${actions.length} : ${a.label}`}
-              onClick={() => setIndex(i)}
-              className={`action-carousel__dot${isActive ? " is-active" : ""}`}
-              style={{
-                position: "relative",
-                width: isActive ? 22 : 6,
-                height: 6,
-                padding: 0,
-                background:
-                  isActive ? "rgba(255,255,255,0.32)" : "rgba(255,255,255,0.42)",
-                border: "none",
-                borderRadius: 999,
-                cursor: "pointer",
-                transition: "width 0.28s cubic-bezier(0.22, 1, 0.36, 1), background 0.2s ease",
-                overflow: "hidden",
-              }}
-            >
-              {isActive && (
-                <span
-                  aria-hidden="true"
-                  key={`progress-${index}-${paused ? "p" : "r"}`}
-                  className="action-carousel__progress"
-                  style={{
-                    position: "absolute",
-                    inset: 0,
-                    background: "#FFFFFF",
-                    transformOrigin: "left center",
-                    transform: "scaleX(0)",
-                    animation: paused
-                      ? "none"
-                      : `action-carousel-fill ${CAROUSEL_INTERVAL_MS}ms linear forwards`,
-                  }}
-                />
-              )}
-            </button>
-          );
-        })}
-      </div>
     </div>
   );
 }
