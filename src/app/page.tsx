@@ -546,11 +546,6 @@ export default function LandingPage() {
           letter-spacing: 0.06em;
         }
 
-        /* Decorative hero wave — purely visual flourish below the source
-         * pills. Hidden on very small phones where the hero already feels
-         * dense, shown from ~420px upward. */
-        .hero-wave { display: none; }
-        @media (min-width: 420px) { .hero-wave { display: block; } }
       `}</style>
     </div>
   );
@@ -904,50 +899,6 @@ function Hero({ onCta }: { onCta: () => void }) {
             </span>
           </motion.div>
 
-          {/* Decorative accent wave — purely visual flourish, suggests the
-           * "data trajectory" the cockpit promises without showing any actual
-           * chart or numbers. */}
-          <motion.div
-            {...fadeIn(0.42)}
-            aria-hidden
-            className="hero-wave"
-            style={{
-              marginTop: "clamp(2rem, 5vw, 3.25rem)",
-              width: "min(620px, 100%)",
-              marginInline: "auto",
-            }}
-          >
-            <svg viewBox="0 0 620 70" preserveAspectRatio="none" style={{ width: "100%", height: "auto", display: "block" }}>
-              <defs>
-                <linearGradient id="hero-wave-stroke" x1="0" y1="0" x2="1" y2="0">
-                  <stop offset="0%"   stopColor="var(--accent)" stopOpacity="0" />
-                  <stop offset="18%"  stopColor="var(--accent)" stopOpacity="0.55" />
-                  <stop offset="82%"  stopColor="var(--accent-2)" stopOpacity="0.55" />
-                  <stop offset="100%" stopColor="var(--accent-2)" stopOpacity="0" />
-                </linearGradient>
-                <linearGradient id="hero-wave-fill" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%"  stopColor="var(--accent)" stopOpacity="0.18" />
-                  <stop offset="100%" stopColor="var(--accent)" stopOpacity="0" />
-                </linearGradient>
-              </defs>
-              <path
-                d="M 0 52 C 80 50, 130 40, 200 32 S 320 18, 400 22 S 540 38, 620 28 L 620 70 L 0 70 Z"
-                fill="url(#hero-wave-fill)"
-              />
-              <path
-                d="M 0 52 C 80 50, 130 40, 200 32 S 320 18, 400 22 S 540 38, 620 28"
-                fill="none"
-                stroke="url(#hero-wave-stroke)"
-                strokeWidth="1.6"
-                strokeLinecap="round"
-                vectorEffect="non-scaling-stroke"
-              />
-              {/* Three subtle waypoint dots tracking the curve */}
-              <circle cx="200" cy="32" r="2.4" fill="var(--accent)" opacity="0.7" />
-              <circle cx="400" cy="22" r="2.4" fill="var(--accent)" opacity="0.85" />
-              <circle cx="620" cy="28" r="3"   fill="var(--accent-2)" />
-            </svg>
-          </motion.div>
         </div>
       </div>
     </section>
@@ -1824,13 +1775,13 @@ function Footer() {
       <div className="footer-inner">
         <div className="footer-brand">
           <svg viewBox="0 0 60 70" fill="none" style={{ width: 22, height: 22 }} aria-hidden>
-            <polygon points="30,2 58,17.5 58,52.5 30,68 2,52.5 2,17.5" fill="none" stroke="#5856D6" strokeWidth="4" />
-            <polygon points="30,12 48,22.5 48,47.5 30,58 12,47.5 12,22.5" fill="#5856D6" opacity="0.4" />
-            <polygon points="30,22 38,27 38,43 30,48 22,43 22,27" fill="#5856D6" />
+            <polygon points="30,2 58,17.5 58,52.5 30,68 2,52.5 2,17.5" fill="none" stroke="#A5B4FC" strokeWidth="4" />
+            <polygon points="30,12 48,22.5 48,47.5 30,58 12,47.5 12,22.5" fill="#A5B4FC" opacity="0.4" />
+            <polygon points="30,22 38,27 38,43 30,48 22,43 22,27" fill="#A5B4FC" />
           </svg>
           <span className="footer-malyz">Malyz</span>
           <span className="footer-dot" aria-hidden>·</span>
-          <span className="footer-ork">Ork<span style={{ color: "#9CA0FF" }}>estra</span></span>
+          <span className="footer-ork">Ork<span style={{ color: "#A5B4FC" }}>estra</span></span>
         </div>
 
         <nav className="footer-links" aria-label="Liens secondaires">

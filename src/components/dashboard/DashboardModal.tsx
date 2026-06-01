@@ -418,7 +418,7 @@ function SectionFrame({ children }: { children: React.ReactNode }) {
       border: "1px solid var(--border)",
       borderRadius: "12px",
       overflow: "hidden",
-      boxShadow: "0 1px 2px rgba(0,0,0,0.04)",
+      boxShadow: "var(--tier-1)",
     }}>
       {children}
     </div>

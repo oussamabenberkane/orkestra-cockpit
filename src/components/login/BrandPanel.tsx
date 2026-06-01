@@ -65,17 +65,17 @@ export default function BrandPanel() {
             <polygon
               points="30,2 58,17.5 58,52.5 30,68 2,52.5 2,17.5"
               fill="none"
-              stroke="#5856D6"
+              stroke="#A5B4FC"
               strokeWidth="3"
             />
             <polygon
               points="30,12 48,22.5 48,47.5 30,58 12,47.5 12,22.5"
-              fill="#5856D6"
+              fill="#A5B4FC"
               opacity="0.5"
             />
             <polygon
               points="30,22 38,27 38,43 30,48 22,43 22,27"
-              fill="#5856D6"
+              fill="#A5B4FC"
             />
           </svg>
           <div>

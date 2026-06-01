@@ -107,7 +107,7 @@ function PeriodToggle({ value, onChange }: { value: Period; onChange: (p: Period
         width: "calc((100% - 4px) / 3)",
         background: "var(--surface)",
         borderRadius: "5px",
-        boxShadow: "0 1px 2px rgba(0,0,0,0.08)",
+        boxShadow: "0 1px 2px rgba(49,46,129,0.12)",
         transition: "left 0.22s cubic-bezier(0.22, 1, 0.36, 1)",
       }} />
       {options.map((o) => (

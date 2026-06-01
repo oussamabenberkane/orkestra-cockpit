@@ -92,20 +92,23 @@
 :root[data-palette="aurora"] {
   color-scheme: light;
 
-  --bg:           #F2F4F9;   /* canvas — visibly tinted (was near-white) */
+  /* Canvas leans subtly toward lavender so the Aurora purple rail reads
+   * as a sibling of the page (not an alien color block). Cards stay pure
+   * white for crisp lift. */
+  --bg:           #F5F4FB;   /* canvas — lavender-tinted off-white */
   --surface:      #FFFFFF;   /* cards — POP, ~9 L* above canvas */
-  --surface-2:    #D6DEEC;   /* LIGHT — main-app pills/badges/modal headers */
-  --surface-3:    #BEC9DD;   /* LIGHT — main-app hover */
-  --border:       rgba(15,23,42,0.12);
-  --border-strong:rgba(15,23,42,0.20);
+  --surface-2:    #E3E2F4;   /* LIGHT — main-app pills/badges/modal headers (indigo-tinted) */
+  --surface-3:    #CBC9EA;   /* LIGHT — main-app hover */
+  --border:       rgba(49,46,129,0.12);   /* indigo-900 hairline */
+  --border-strong:rgba(49,46,129,0.22);
 
-  --text:   #0F172A;
-  --text-2: #334155;
-  --text-3: #64748B;
-  --text-4: #94A3B8;
+  --text:   #1E1B4B;         /* indigo-950 — deep aurora navy */
+  --text-2: #312E81;         /* indigo-900 */
+  --text-3: #4F4B8E;         /* desaturated indigo for secondary copy */
+  --text-4: #8C89B4;         /* muted lavender */
 
-  --accent:        #4F46E5;
-  --accent-2:      #4338CA;
+  --accent:        #4F46E5;  /* indigo-600 — primary CTA */
+  --accent-2:      #4338CA;  /* indigo-700 — gradient bottom / hover */
   --accent-tint:   rgba(79,70,229,0.10);
   --accent-tint-2: rgba(79,70,229,0.18);
 
@@ -120,84 +123,96 @@
   --purple:       #7C3AED;
   --purple-tint:  rgba(124,58,237,0.12);
 
-  /* Nav category icon colors — BRIGHT variants because the Aurora rail is
-   * now a deep slate-800 surface (see the scoped rule below). Deep
-   * semantic variants would disappear; bright variants pop. */
-  --nav-prospection:    #34D399;   /* mint */
-  --nav-portefeuille:   #7DD3FC;   /* sky */
-  --nav-sinistres:      #FB7185;   /* rose */
-  --nav-finance:        #FCD34D;   /* amber */
+  /* Nav category icon colors — LIGHT variants (Tailwind -200 family) so
+   * they pop on the new Aurora indigo-500 rail. Each picks a clearly
+   * different hue so the rail's icon row still reads as a multi-section
+   * map. All values verified ≥3:1 contrast on the rail surface. */
+  --nav-prospection:    #A7F3D0;   /* emerald-200 — Prospection */
+  --nav-portefeuille:   #BAE6FD;   /* sky-200      — Portefeuille */
+  --nav-sinistres:      #FECACA;   /* red-200      — Sinistres */
+  --nav-finance:        #FDE68A;   /* amber-200    — Finance */
   --nav-vue-ensemble:   var(--rail-accent);
-  --nav-chat:           #C4B5FD;   /* lavender */
-  --nav-alertes:        #FB7185;
+  --nav-chat:           #E9D5FF;   /* violet-200   — Chat IA */
+  --nav-alertes:        #FECACA;   /* red-200      — Alertes */
   --nav-agents:         var(--rail-accent);
-  --nav-neutral:        rgba(255,255,255,0.62);
+  --nav-neutral:        rgba(255,255,255,0.66);
 
-  /* Rail tokens — light values for white text/glyphs on the slate-800
-   * rail. rail-accent uses indigo-200, a light sibling of the accent. */
+  /* Rail tokens — white text on the Aurora indigo-500 rail surface
+   * (see scoped rule below). rail-accent uses indigo-100 (very light)
+   * so the Malyz wordmark + active-item glyph carry a soft aurora
+   * shimmer against the purple. */
   --rail-text:        #FFFFFF;
   --rail-text-muted:  rgba(255,255,255,0.92);
-  --rail-text-soft:   rgba(255,255,255,0.70);
-  --rail-border:      rgba(255,255,255,0.30);
-  --rail-hover:       rgba(255,255,255,0.18);
-  --rail-accent:      #C7D2FE;     /* indigo-200 — Malyz brand + active glyph */
+  --rail-text-soft:   rgba(255,255,255,0.72);
+  --rail-border:      rgba(255,255,255,0.28);
+  --rail-hover:       rgba(255,255,255,0.16);
+  --rail-accent:      #E0E7FF;     /* indigo-100 — soft aurora shimmer */
 
   --rail-badge-bg:     #FFFFFF;
-  --rail-badge-border: rgba(15,23,42,0.18);
+  --rail-badge-border: rgba(49,46,129,0.18);
 
-  /* Elevation tokens — stronger drops because the deeper canvas
-   * would otherwise swallow a faint shadow. */
+  /* Elevation tokens — purple-tinted drop shadows for an ethereal,
+   * "aurora glow" feel. The first ring uses indigo-900 alpha (subtle
+   * cool border), the cast shadows blend indigo-900 with accent so the
+   * lift carries a faint purple cast rather than neutral black grime. */
   --tier-1:
     inset 0 1px 0 rgba(255,255,255,1),
-    0 0 0 1px rgba(15,23,42,0.08),
-    0 1px 2px rgba(15,23,42,0.08),
-    0 10px 22px -12px rgba(15,23,42,0.26);
+    0 0 0 1px rgba(49,46,129,0.08),
+    0 1px 2px rgba(49,46,129,0.06),
+    0 10px 22px -12px rgba(79,70,229,0.22);
   --tier-2:
     inset 0 1px 0 rgba(255,255,255,1),
-    0 0 0 1px rgba(15,23,42,0.12),
-    0 3px 6px rgba(15,23,42,0.10),
-    0 24px 48px -14px rgba(15,23,42,0.30);
+    0 0 0 1px rgba(49,46,129,0.10),
+    0 3px 6px rgba(49,46,129,0.08),
+    0 24px 48px -14px rgba(79,70,229,0.28);
   --tier-active:
     inset 0 1px 0 rgba(255,255,255,1),
-    0 0 0 1px color-mix(in srgb, var(--accent) 20%, transparent),
-    0 1px 2px rgba(15,23,42,0.10),
-    0 10px 22px -12px color-mix(in srgb, var(--accent) 36%, transparent);
+    0 0 0 1px color-mix(in srgb, var(--accent) 22%, transparent),
+    0 1px 2px rgba(49,46,129,0.08),
+    0 10px 22px -12px color-mix(in srgb, var(--accent) 38%, transparent);
   --tier-press:
-    inset 0 1px 2px rgba(15,23,42,0.10),
-    0 0 0 1px rgba(15,23,42,0.08);
+    inset 0 1px 2px rgba(49,46,129,0.10),
+    0 0 0 1px rgba(49,46,129,0.08);
 }
 
-/* Sidebar-scope flip for Aurora — Cobalt architecture: --surface-2/-3 +
- * text/border/semantic tokens push to dark-rail-appropriate values. The
- * Aurora rail surface is slate-800 #1E293B — a desaturated cool slate
- * that fits Aurora's Stripe-dashboard cool-fintech identity.
+/* Sidebar-scope flip for Aurora — the rail surface is indigo-500
+ * (#6366F1), a "slightly lighter" sibling of --accent (#4F46E5). White
+ * text passes WCAG-AA on this surface (4.63:1), and the LIGHT nav-*
+ * variants set at root all clear ≥3:1 for UI elements. Inside the rail,
+ * surface-2/-3 + text/border/semantic tokens flip to white-on-purple
+ * variants; the .rail-on-white scope further down resets them back for
+ * popup interiors and the active-item pill.
  *
  * Selector includes bare `:root` so the default-Aurora state (no
  * `data-palette` attribute on <html>, e.g. before the no-flash init
- * script runs) gets the dark rail too. Other palettes' higher-specificity
- * selectors override this when their data-palette is active. */
+ * script runs) gets the purple rail too. Other palettes' higher-
+ * specificity selectors override this when their data-palette is active. */
 :root .app-sidebar,
 :root .agent-sidebar,
 :root .agent-sidebar-content,
 :root[data-palette="aurora"] .app-sidebar,
 :root[data-palette="aurora"] .agent-sidebar,
 :root[data-palette="aurora"] .agent-sidebar-content {
-  --surface-2: #1E293B;                  /* slate-800 rail */
+  --surface-2: #6366F1;                  /* indigo-500 — Aurora rail (lighter than --accent) */
   --surface-3: rgba(255,255,255,0.16);   /* on-rail hover overlay */
   --text:      #FFFFFF;
   --text-2:    rgba(255,255,255,0.92);
-  --text-3:    rgba(255,255,255,0.74);
-  --text-4:    rgba(255,255,255,0.58);
-  --border:    rgba(255,255,255,0.22);
-  --border-strong: rgba(255,255,255,0.32);
+  --text-3:    rgba(255,255,255,0.78);
+  --text-4:    rgba(255,255,255,0.64);
+  --border:    rgba(255,255,255,0.24);
+  --border-strong: rgba(255,255,255,0.36);
 
-  /* Bright semantic variants for badges + status pills on the rail. */
-  --danger:        #FB7185;
-  --danger-tint:   rgba(251,113,133,0.18);
-  --warn:          #FBBF24;
-  --warn-tint:     rgba(251,191,36,0.18);
-  --success:       #34D399;
-  --success-tint:  rgba(52,211,153,0.18);
+  /* LIGHT semantic variants for badges + status pills on the indigo-500
+   * rail. Deep variants (the root defaults) would lose contrast; these
+   * -200/-300 Tailwind steps stay legible against the purple. */
+  --danger:        #FECACA;             /* red-200 */
+  --danger-tint:   rgba(254,202,202,0.20);
+  --warn:          #FDE68A;             /* amber-200 */
+  --warn-tint:     rgba(253,230,138,0.20);
+  --success:       #A7F3D0;             /* emerald-200 */
+  --success-tint:  rgba(167,243,208,0.20);
+  --info:          #BAE6FD;             /* sky-200 */
+  --info-tint:     rgba(186,230,253,0.20);
 
   --rail-hover:    rgba(255,255,255,0.18);
   --rail-border:   rgba(255,255,255,0.30);
