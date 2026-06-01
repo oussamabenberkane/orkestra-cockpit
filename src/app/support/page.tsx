@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { LifeBuoy, MessageSquarePlus, Search, X, Check, ChevronDown } from "lucide-react";
 import { AppShell } from "@/components/dashboard/AppShell";
-import { TicketList } from "@/components/support/TicketList";
+import { TicketList, TicketListSkeleton } from "@/components/support/TicketList";
 import { TicketThread } from "@/components/support/TicketThread";
 import {
   CreateTicketModal,
@@ -55,9 +55,12 @@ function SupportContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const [tickets, setTickets] = useState<SupportTicket[] | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [loadError, setLoadError] = useState<string | null>(null);
+  const [tickets, setTickets] = useState<SupportTicket[]>([]);
+  /* Tracks the initial fetch only. Reset back to false once data resolves
+   * (or fails) — subsequent mutations (create/reply/close) update tickets
+   * optimistically and don't toggle this flag. Drives the skeleton render
+   * so the "Aucun ticket" empty state never flashes during initial hydrate. */
+  const [initialLoading, setInitialLoading] = useState(true);
 
   const [selectedTicketId, setSelectedTicketId] = useState<string | null>(null);
   const [isCreateOpen, setCreateOpen] = useState(false);
@@ -88,34 +91,21 @@ function SupportContent() {
   const initialCategory =
     (searchParams.get("category") as TicketCategory | null) ?? undefined;
 
-  // Initial load.
+  // Hydrate from the data layer once. While the fetch is in flight the
+   // ticket list slot renders <TicketListSkeleton/> so we never show the
+   // "Aucun ticket" empty state before tickets resolve. Errors fall back
+   // to an empty list silently — the empty state is then accurate.
   useEffect(() => {
     let cancelled = false;
-    (async () => {
-      try {
-        const rows = await listTickets();
-        if (!cancelled) {
-          setTickets(rows);
-          setLoadError(null);
-        }
-      } catch (e) {
-        if (!cancelled) {
-          setLoadError(
-            e instanceof Error ? e.message : "Impossible de charger les tickets.",
-          );
-          setTickets([]);
-        }
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
+    listTickets()
+      .then((rows) => { if (!cancelled) setTickets(rows); })
+      .catch(() => { /* silent fallback — empty list */ })
+      .finally(() => { if (!cancelled) setInitialLoading(false); });
+    return () => { cancelled = true; };
   }, []);
 
   const selectedTicket = useMemo(
-    () => tickets?.find((t) => t.id === selectedTicketId) ?? null,
+    () => tickets.find((t) => t.id === selectedTicketId) ?? null,
     [tickets, selectedTicketId],
   );
 
@@ -177,7 +167,7 @@ function SupportContent() {
         for (const file of data.attachments) fd.append("attachments", file);
 
         const created = await createTicket(fd);
-        setTickets((prev) => (prev ? [created, ...prev] : [created]));
+        setTickets((prev) => [created, ...prev]);
         setCreateOpen(false);
         // Open the new ticket after a tick so the modal close animation runs first.
         setTimeout(() => setSelectedTicketId(created.id), 250);
@@ -200,7 +190,7 @@ function SupportContent() {
         for (const f of attachments) fd.append("attachments", f);
         const updated = await replyToTicket(ticketId, fd);
         setTickets((prev) =>
-          (prev ?? []).map((t) => (t.id === ticketId ? updated : t)),
+          prev.map((t) => (t.id === ticketId ? updated : t)),
         );
       } catch (e) {
         alert(e instanceof Error ? e.message : "Envoi du message impossible.");
@@ -216,7 +206,7 @@ function SupportContent() {
     try {
       const updated = await closeTicket(ticketId);
       setTickets((prev) =>
-        (prev ?? []).map((t) => (t.id === ticketId ? updated : t)),
+        prev.map((t) => (t.id === ticketId ? updated : t)),
       );
     } catch (e) {
       alert(e instanceof Error ? e.message : "Fermeture du ticket impossible.");
@@ -417,7 +407,7 @@ function SupportContent() {
                 }}
               >
                 Vos tickets
-                {hasFilters && tickets && (
+                {!initialLoading && hasFilters && tickets.length > 0 && (
                   <span
                     style={{
                       marginLeft: "0.5rem",
@@ -431,31 +421,8 @@ function SupportContent() {
                 )}
               </h2>
 
-              {loading ? (
-                <div
-                  style={{
-                    padding: "2.5rem 1.5rem",
-                    textAlign: "center",
-                    color: "var(--text-4)",
-                    background: "var(--surface-2)",
-                    borderRadius: "14px",
-                  }}
-                >
-                  Chargement…
-                </div>
-              ) : loadError ? (
-                <div
-                  style={{
-                    padding: "1.25rem 1.5rem",
-                    background: "var(--danger-tint)",
-                    color: "var(--danger)",
-                    borderRadius: "14px",
-                    fontSize: "0.85rem",
-                    lineHeight: 1.5,
-                  }}
-                >
-                  {loadError}
-                </div>
+              {initialLoading ? (
+                <TicketListSkeleton rows={3} />
               ) : (
                 <TicketList tickets={filtered} onTicketClick={setSelectedTicketId} />
               )}

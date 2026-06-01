@@ -254,6 +254,145 @@ function TicketRow({
   );
 }
 
+// ── Skeleton ──────────────────────────────────────────────────────────────
+//
+// Mirrors the TicketRow chrome so the data swap is a content-only change
+// once tickets resolve — no layout shift, no flash of "Aucun ticket".
+// Three rows is enough to fill the typical viewport above the fold.
+
+export function TicketListSkeleton({ rows = 3 }: { rows?: number }) {
+  return (
+    <div
+      aria-busy="true"
+      aria-live="polite"
+      style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}
+    >
+      {Array.from({ length: rows }).map((_, i) => (
+        <TicketRowSkeleton key={i} index={i} />
+      ))}
+      <style>{`
+        @keyframes ticket-skeleton-shimmer {
+          0%   { background-position: 200% 0; }
+          100% { background-position: -200% 0; }
+        }
+        .ticket-skeleton-bar {
+          background: linear-gradient(
+            90deg,
+            var(--surface-2) 0%,
+            color-mix(in srgb, var(--surface-3) 65%, var(--surface)) 50%,
+            var(--surface-2) 100%
+          );
+          background-size: 200% 100%;
+          animation: ticket-skeleton-shimmer 1.6s ease-in-out infinite;
+          border-radius: 6px;
+          display: block;
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .ticket-skeleton-bar { animation: none; }
+        }
+      `}</style>
+    </div>
+  );
+}
+
+function TicketRowSkeleton({ index }: { index: number }) {
+  /* Stagger each row's shimmer phase by a small delay so the row group
+   * doesn't pulse in lock-step — feels more like ambient loading and less
+   * like a single repeating glitch. */
+  const delay = `-${index * 0.18}s`;
+  return (
+    <div
+      style={{
+        background: "var(--surface)",
+        border: "1px solid var(--border)",
+        borderRadius: "16px",
+        boxShadow: "var(--tier-1)",
+        padding: "1rem 1.1rem",
+      }}
+    >
+      {/* Header: id pill + category, badges right */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "flex-start",
+          justifyContent: "space-between",
+          gap: "0.75rem",
+          marginBottom: "0.55rem",
+          minWidth: 0,
+        }}
+      >
+        <div style={{ minWidth: 0, flex: "1 1 60%" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.45rem", marginBottom: "0.5rem" }}>
+            <span
+              className="ticket-skeleton-bar"
+              style={{ width: 64, height: 18, borderRadius: 6, animationDelay: delay }}
+            />
+            <span
+              className="ticket-skeleton-bar"
+              style={{ width: 110, height: 10, animationDelay: delay }}
+            />
+          </div>
+          {/* Title — 2 stacked bars, second is shorter to mimic a wrapped line */}
+          <span
+            className="ticket-skeleton-bar"
+            style={{ width: "78%", height: 14, marginBottom: 6, animationDelay: delay }}
+          />
+          <span
+            className="ticket-skeleton-bar"
+            style={{ width: "46%", height: 14, animationDelay: delay }}
+          />
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", flexShrink: 0 }}>
+          <span
+            className="ticket-skeleton-bar"
+            style={{ width: 56, height: 22, borderRadius: 999, animationDelay: delay }}
+          />
+          <span
+            className="ticket-skeleton-bar"
+            style={{ width: 64, height: 22, borderRadius: 999, animationDelay: delay }}
+          />
+        </div>
+      </div>
+
+      {/* Preview block — mimics the inset message card */}
+      <div
+        style={{
+          background: "var(--surface-2)",
+          border: "1px solid var(--border)",
+          borderRadius: "11px",
+          padding: "0.6rem 0.75rem",
+          marginBottom: "0.6rem",
+        }}
+      >
+        <span
+          className="ticket-skeleton-bar"
+          style={{ width: 90, height: 8, marginBottom: 8, animationDelay: delay }}
+        />
+        <span
+          className="ticket-skeleton-bar"
+          style={{ width: "92%", height: 11, marginBottom: 4, animationDelay: delay }}
+        />
+        <span
+          className="ticket-skeleton-bar"
+          style={{ width: "64%", height: 11, animationDelay: delay }}
+        />
+      </div>
+
+      {/* Footer — counts + updated */}
+      <div style={{ display: "flex", gap: "1rem" }}>
+        <span
+          className="ticket-skeleton-bar"
+          style={{ width: 84, height: 10, animationDelay: delay }}
+        />
+        <span
+          className="ticket-skeleton-bar"
+          style={{ width: 112, height: 10, animationDelay: delay }}
+        />
+      </div>
+    </div>
+  );
+}
+
 // ── Helpers ───────────────────────────────────────────────────────────────
 
 function formatRelative(date: Date): string {

@@ -92,41 +92,28 @@ export default function LoginCard() {
           </div>
         </div>
 
-        {/* Greeting — the only marketing text on this panel. Balanced for a
-         * 2–3 line wrap on common viewports. */}
-        <header style={{ display: "flex", flexDirection: "column", gap: "0.6rem" }}>
-          <span
-            aria-hidden
-            style={{
-              alignSelf: "flex-start",
-              display: "inline-flex", alignItems: "center", gap: "0.4rem",
-              padding: "0.24rem 0.6rem",
-              borderRadius: 100,
-              background: "var(--accent-tint)",
-              color: "var(--accent)",
-              border: "1px solid var(--accent-tint-2)",
-              fontFamily: "var(--font-mono)",
-              fontSize: "0.6rem", fontWeight: 700,
-              letterSpacing: "0.14em", textTransform: "uppercase",
-            }}
-          >
-            <span style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--accent)" }} />
-            Cockpit · Helvebroker
-          </span>
-          <h1
-            style={{
-              fontSize: "clamp(1.55rem, 3.4vw, 1.95rem)",
-              fontWeight: 700,
-              letterSpacing: "-0.028em",
-              color: "var(--text)",
-              margin: 0,
-              lineHeight: 1.18,
-              textWrap: "balance",
-            }}
-          >
-            Bonjour Mirko, Votre cockpit Helvebroker est prêt.
-          </h1>
-        </header>
+        {/* Eyebrow chip is the only marker on this side — the personalised
+         * greeting lives on the BrandPanel (left), the form labels carry the
+         * rest. On mobile, where the BrandPanel is hidden, the mobile brand
+         * mark above plus this eyebrow anchor the card identity. */}
+        <span
+          aria-hidden
+          style={{
+            alignSelf: "flex-start",
+            display: "inline-flex", alignItems: "center", gap: "0.4rem",
+            padding: "0.24rem 0.6rem",
+            borderRadius: 100,
+            background: "var(--accent-tint)",
+            color: "var(--accent)",
+            border: "1px solid var(--accent-tint-2)",
+            fontFamily: "var(--font-mono)",
+            fontSize: "0.6rem", fontWeight: 700,
+            letterSpacing: "0.14em", textTransform: "uppercase",
+          }}
+        >
+          <span style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--accent)" }} />
+          Cockpit · Helvebroker
+        </span>
 
         <form
           onSubmit={handleSubmit}
