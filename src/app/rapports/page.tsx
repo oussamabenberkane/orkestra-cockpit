@@ -302,7 +302,7 @@ function ReportCard({ report, index }: { report: Report; index: number }) {
       exit={{ opacity: 0, scale: 0.97 }}
       transition={{ duration: 0.38, delay: index * 0.04, ease: [0.22, 1, 0.36, 1] }}
       layout
-      style={{ minWidth: 0 }}
+      style={{ minWidth: 0, height: "100%", display: "flex" }}
     >
       <Link
         href={`/rapports/${report.id}`}
@@ -321,6 +321,8 @@ function ReportCard({ report, index }: { report: Report; index: number }) {
           position: "relative",
           overflow: "hidden",
           minWidth: 0,
+          width: "100%",
+          height: "100%",
         }}
         onMouseEnter={(e) => {
           (e.currentTarget as HTMLElement).style.transform = "translateY(-2px)";
@@ -407,6 +409,7 @@ function ReportCard({ report, index }: { report: Report; index: number }) {
           fontSize: "0.78rem", color: "var(--text-3)", lineHeight: 1.5,
           margin: 0, display: "-webkit-box", WebkitLineClamp: 2,
           WebkitBoxOrient: "vertical", overflow: "hidden",
+          flex: 1,
         }}>
           {report.description}
         </p>
