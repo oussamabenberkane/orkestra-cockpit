@@ -1354,7 +1354,7 @@ function TroisChosesMock({ onAny }: { onAny: () => void }) {
           marginBottom: "0.55rem",
         }}
       >
-        Trois choses aujourd’hui
+        Trois actions aujourd’hui
         <span
           style={{
             fontSize: "0.6rem", fontWeight: 700,
@@ -1716,7 +1716,7 @@ function ChatMockup() {
                   {/* Desktop: full prose response */}
                   <span className="chat-reply-desktop">
                     Quatre renouvellements approchent : Dubois SA (J-7), Rossi SA (J-12),
-                    Audemars (J-21), Béatrice Müller (J-28). Rossi SA présente un risque
+                    Audemars (J-21), Béatrice Favre (J-28). Rossi SA présente un risque
                     — impayé de 1 800 CHF à 67 jours.
                   </span>
                 </>

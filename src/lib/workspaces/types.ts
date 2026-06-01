@@ -36,7 +36,7 @@ export interface WorkspaceShape {
   heroByPeriod: Record<Period, HeroDataset>;
   /** Three satellite KPI cards under the hero. */
   satellites: Satellite[];
-  /** Morning checklist items ("Trois choses aujourd'hui"). */
+  /** Morning checklist items ("Trois actions aujourd'hui"). */
   troisItems: TroisItem[];
   /** Six domain tiles. */
   tiles: TileEntry[];

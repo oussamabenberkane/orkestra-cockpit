@@ -114,7 +114,7 @@ export default function BrandPanel() {
             maxWidth: "16ch",
           }}
         >
-          Bonjour Mirko, votre cockpit Helvebroker est prêt.
+          Bonjour Mirko, Votre cockpit Helvebroker est prêt.
         </h1>
         <p
           style={{

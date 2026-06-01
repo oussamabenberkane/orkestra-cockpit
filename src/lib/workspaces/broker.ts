@@ -11,7 +11,7 @@ import {
 } from "@/lib/dashboard-mock";
 import type { WorkspaceShape } from "./types";
 
-/** Broker workspace — Cabinet Müller & Associés insurance brokerage cockpit.
+/** Broker workspace — Helvebroker SA insurance brokerage cockpit.
  *  Data lives in dashboard-mock.ts (and is overlaid with live Supabase values
  *  inside DashboardClient when available). The nav structure below replaces
  *  the const that previously lived inline in Sidebar.tsx. */

@@ -78,7 +78,7 @@ export function UserMenuContent({ onLogout, bare = false, onClose }: UserMenuCon
                 textOverflow: "ellipsis",
               }}
             >
-              Mirko Ferretti
+              Mirko Righele
             </div>
             <div
               style={{
@@ -291,7 +291,7 @@ export function UserMenuContent({ onLogout, bare = false, onClose }: UserMenuCon
               letterSpacing: "-0.005em",
             }}
           >
-            Mirko Ferretti
+            Mirko Righele
           </div>
           <div
             style={{
@@ -302,7 +302,7 @@ export function UserMenuContent({ onLogout, bare = false, onClose }: UserMenuCon
               textOverflow: "ellipsis",
             }}
           >
-            thomas@muller.ch · Associé
+            mirko@helvebroker.ch · Associé
           </div>
         </div>
       </div>

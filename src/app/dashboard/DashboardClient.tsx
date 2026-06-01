@@ -137,18 +137,17 @@ function buildLiveTiles(metrics: TileMetrics): TileEntry[] {
       ...tiles[0],
       metric: String(Math.round(p.taux_conversion_pct)),
       unit: "%",
-      caption: `${p.total_prospects} prospects actifs`,
+      caption: "",
       alert: p.relances_dues > 0 ? `${p.relances_dues} relances dues` : "",
       alertTone: p.relances_dues > 0 ? "warn" : "neutral",
     };
   }
   if (po) {
-    const primesK = Math.round(po.primes_totales / 1000);
     live[1] = {
       ...tiles[1],
       metric: String(po.contrats_actifs),
       unit: "",
-      caption: `${primesK} K CHF de primes`,
+      caption: "",
       alert: `${po.renouvellements_j30} renouv. J-30`,
       alertTone: "neutral",
     };
@@ -158,19 +157,18 @@ function buildLiveTiles(metrics: TileMetrics): TileEntry[] {
       ...tiles[2],
       metric: String(s.dossiers_ouverts),
       unit: "",
-      caption: `ratio ${Math.round(s.ratio_sinistralite_pct)}% CA`,
+      caption: "",
       alert: s.sinistre_urgent_ref ? `${s.sinistre_urgent_ref} · ${s.plus_ancien_jours} j` : "",
       alertTone: "danger",
     };
   }
   if (f) {
     const encaisseK = Math.round(f.encaisse_mois / 1000);
-    const commissionsK = Math.round(f.commissions_actives / 1000);
     live[3] = {
       ...tiles[3],
       metric: encaisseK >= 0 ? `+${encaisseK}` : String(encaisseK),
       unit: "K",
-      caption: `commissions ${commissionsK} K`,
+      caption: "",
       alert: f.nb_impayes > 0 ? `${f.nb_impayes} impayés` : "",
       alertTone: f.nb_impayes > 0 ? "warn" : "neutral",
     };
@@ -394,7 +392,7 @@ export default function DashboardClient({
               textTransform: "uppercase",
               opacity: 0.85,
               marginBottom: "0.4rem",
-            }}>3 choses · aujourd&apos;hui</div>
+            }}>3 actions · aujourd&apos;hui</div>
             <h2 className="dashboard-action-banner__title" style={{
               fontSize: "clamp(1.05rem, 3vw, 1.4rem)",
               fontWeight: 700,
@@ -421,6 +419,21 @@ export default function DashboardClient({
         <div className="dash-section" style={{ marginBottom: "clamp(1.5rem, 3.5vw, 2.25rem)" }}>
           <TroisChoses items={troisItems} onOpen={onOpen} />
         </div>
+
+        <h2
+          className="dash-section-heading"
+          style={{
+            fontSize: "clamp(1.05rem, 3vw, 1.4rem)",
+            fontWeight: 700,
+            letterSpacing: "-0.02em",
+            color: "var(--text)",
+            margin: "0 0 clamp(0.85rem, 2vw, 1.1rem) 0",
+            lineHeight: 1.2,
+            textAlign: "left",
+          }}
+        >
+          Tous vos indicateurs clés sur un seul écran
+        </h2>
 
         <div className="dashboard-hero dash-section" style={{ marginBottom: "clamp(1.5rem, 3.5vw, 2.25rem)" }}>
           <HeroPanel
