@@ -103,7 +103,6 @@ export default function BrandPanel() {
           </div>
         </div>
 
-        {/* Tagline */}
         <h1
           style={{
             fontSize: "1.85rem",
@@ -112,21 +111,11 @@ export default function BrandPanel() {
             lineHeight: 1.15,
             letterSpacing: "-0.025em",
             maxWidth: "16ch",
+            margin: 0,
           }}
         >
           Bonjour Mirko, Votre cockpit Helvebroker est prêt.
         </h1>
-        <p
-          style={{
-            marginTop: "1rem",
-            fontSize: "0.92rem",
-            color: "rgba(255,255,255,0.6)",
-            lineHeight: 1.6,
-            maxWidth: "36ch",
-          }}
-        >
-          Cockpit unifié Helvebroker SA + Odoo pour les cabinets BFSI suisses.
-        </p>
       </div>
 
       {/* Bottom: Pills + compliance */}

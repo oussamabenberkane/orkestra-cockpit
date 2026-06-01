@@ -6,13 +6,11 @@ import Link from "next/link";
 import { motion, useReducedMotion, AnimatePresence } from "framer-motion";
 import {
   ArrowRight, Sparkles, Globe, ShieldCheck, ShieldAlert,
-  Percent, Wallet, Users, Circle, Target, FolderArchive,
-  Flame, MessageSquare, Mic, FileText, AlertCircle, Mail,
-  Bot, Check, ChevronRight, Cpu, Database, FileSpreadsheet,
-  Layers, Send, TrendingUp,
+  Circle, MessageSquare, Mic, FileText, Mail,
+  Bot, Check, Cpu, Database, FileSpreadsheet,
+  Layers, Send,
   type LucideIcon,
 } from "lucide-react";
-import { SatelliteKPI, type Satellite } from "@/components/dashboard/SatelliteKPI";
 
 // useReducedMotion reads a media query unavailable during SSR, so it returns
 // false on the server and the real value on the client — a hydration mismatch
@@ -25,76 +23,10 @@ function useReducedMotionSafe() {
   return mounted ? reduce : false;
 }
 
-// ── Preview data (mirrors the cockpit so the landing FEELS like the product) ──
-
-const previewData = [62, 64, 70, 68, 72, 78, 80, 82, 86, 88, 92, 92];
-
-const previewSatellites: Satellite[] = [
-  {
-    label: "Marge nette", value: "68", unit: "%", trend: "+4 pt",
-    spark: [55, 58, 60, 62, 63, 64, 64, 66, 67, 67, 68, 68],
-    combined: true,
-    breakdown: [
-      { src: "Primes BS",    val: "85.0 K" },
-      { src: "Charges Odoo", val: "27.2 K" },
-      { src: "⊕ Marge",      val: "68 %" },
-    ],
-    Icon: Percent, target: "Obj. 70 %", sparkTarget: 70, modalKey: "finance",
-    tone: "success",
-  },
-  {
-    label: "Cash-flow", value: "+18", unit: "K", trend: "stable",
-    spark: [4, 6, 8, 7, 10, 12, 11, 14, 15, 16, 17, 18],
-    combined: true,
-    breakdown: [
-      { src: "Encaissé", val: "+45.6 K" },
-      { src: "Sortant",  val: "−27.2 K" },
-      { src: "⊕ Net",    val: "+18.4 K" },
-    ],
-    Icon: Wallet, target: "Obj. +20 K", sparkTarget: 20, modalKey: "finance",
-    tone: "accent",
-  },
-  {
-    label: "Rétention", value: "87", unit: "%", trend: "+3 pt",
-    spark: [81, 82, 83, 83, 84, 85, 85, 86, 86, 87, 87, 87],
-    combined: false,
-    breakdown: [
-      { src: "Renouvelés", val: "12" },
-      { src: "Pertes 12m", val: "−4" },
-      { src: "Solde",      val: "+8" },
-    ],
-    Icon: Users, target: "Obj. 90 %", sparkTarget: 90, modalKey: "portefeuille",
-    tone: "info",
-  },
-];
-
-// Trois choses preview rows
-const troisPreview = [
-  { Icon: Mail,        color: "var(--info)",   bg: "var(--info-tint)",   text: "Valider 4 renouvellements préparés par l’agent Helvebroker SA.", cta: "Valider" },
-  { Icon: AlertCircle, color: "var(--warn)",   bg: "var(--warn-tint)",   text: "Relancer Rossi SA pour son impayé de 1 800 CHF (67 jours).",   cta: "Ouvrir"  },
-  { Icon: FileText,    color: "var(--accent)", bg: "var(--accent-tint)", text: "Signer le rapport mensuel combiné Helvebroker SA + Odoo.",         cta: "Signer"  },
-];
-
-// Mini-tile data for the mockup (6 cockpit domains)
-type MiniTile = {
-  Icon: LucideIcon; color: string; bg: string;
-  title: string; metric: string; unit: string; caption: string;
-  alert: string; alertTone: "warn" | "good" | "neutral" | "danger";
-};
-const miniTiles: MiniTile[] = [
-  { Icon: Target,        color: "var(--accent)", bg: "var(--accent-tint)", title: "Prospection",   metric: "18",  unit: "%", caption: "Taux conv.",         alert: "3 relances",     alertTone: "warn" },
-  { Icon: FolderArchive, color: "var(--info)",   bg: "var(--info-tint)",   title: "Portefeuille",  metric: "189", unit: "",  caption: "Contrats actifs",    alert: "4 renouv. J-30", alertTone: "neutral" },
-  { Icon: Flame,         color: "var(--danger)", bg: "var(--danger-tint)", title: "Sinistres",     metric: "3",   unit: "",  caption: "Dossiers ouverts",   alert: "SIN-0047 · 68 j", alertTone: "danger" },
-  { Icon: Wallet,        color: "var(--warn)",   bg: "var(--warn-tint)",   title: "Finance",       metric: "+18", unit: "K", caption: "Cash-flow net",      alert: "2 impayés",      alertTone: "warn" },
-  { Icon: Globe,         color: "var(--accent)", bg: "var(--accent-tint)", title: "Vue 360°",      metric: "68",  unit: "%", caption: "Marge consolidée",   alert: "+4 pt vs marché",alertTone: "good" },
-  { Icon: Sparkles,      color: "var(--purple)", bg: "var(--purple-tint)", title: "Agents IA",     metric: "3",   unit: "",  caption: "Actions préparées",  alert: "Prêtes à valider", alertTone: "neutral" },
-];
-
 // ─────────────────────────────────────────────────────────────────────────────
 
 export default function LandingPage() {
   const router = useRouter();
-  const [period, setPeriod] = useState<"M" | "T" | "A">("M");
   const goLogin = () => router.push("/login");
 
   return (
@@ -109,7 +41,7 @@ export default function LandingPage() {
     >
       <TopNav />
       <main style={{ flex: 1 }}>
-        <Hero period={period} onPeriodChange={setPeriod} onCta={goLogin} />
+        <Hero onCta={goLogin} />
         <PillarsSection />
         <CalmChaosSection />
         <AISection />
@@ -614,134 +546,11 @@ export default function LandingPage() {
           letter-spacing: 0.06em;
         }
 
-        /* ── CockpitMockup — phone first ─────────────────────────────── */
-        .mock {
-          position: relative;
-          background: var(--surface);
-          border-radius: 16px;
-          border: 1px solid var(--border);
-          box-shadow: var(--tier-1);
-          overflow: hidden;
-        }
-        @media (min-width: 640px) {
-          .mock {
-            border-radius: 20px;
-            box-shadow:
-              var(--tier-2),
-              0 50px 100px -40px color-mix(in srgb, var(--accent) 30%, transparent);
-          }
-        }
-
-        .mock-body {
-          padding: 0.6rem;
-          background: var(--bg);
-          display: flex; flex-direction: column;
-          gap: 0.5rem;
-        }
-        @media (min-width: 640px) { .mock-body { padding: 0.85rem; gap: 0.75rem; } }
-        @media (min-width: 980px) { .mock-body { padding: 1rem; } }
-
-        /* Satellites strip: hidden on phone, 3-col row on tablet+ */
-        .mock-satellite-row { display: none; gap: 0.55rem; }
-        @media (min-width: 640px) {
-          .mock-satellite-row { display: grid; grid-template-columns: repeat(3, 1fr); }
-        }
-
-        /* Mini-tiles: desktop only */
-        .mock-tile-grid { display: none; gap: 0.55rem; }
-        @media (min-width: 980px) {
-          .mock-tile-grid { display: grid; grid-template-columns: repeat(3, 1fr); }
-        }
-
-        /* ── MiniHeroCard — ultra-compact KPI card replaces full HeroPanel ── */
-        .mini-hero {
-          background: var(--surface);
-          border: 1px solid var(--border);
-          border-radius: 12px;
-          padding: 0.7rem 0.8rem 0.55rem;
-          display: flex; flex-direction: column;
-          gap: 0.5rem;
-          box-shadow: var(--tier-1);
-        }
-        .mini-hero-head {
-          display: flex; align-items: center; justify-content: space-between;
-          gap: 0.4rem;
-        }
-        .mini-hero-label {
-          display: inline-flex; align-items: center; gap: 0.4rem;
-          font-size: 0.72rem; font-weight: 500;
-          color: var(--text-3);
-          letter-spacing: -0.005em;
-          min-width: 0;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-        .mini-hero-combined {
-          font-size: 0.55rem; font-weight: 700;
-          color: var(--accent);
-          background: var(--accent-tint);
-          padding: 0.1rem 0.32rem;
-          border-radius: 4px;
-          letter-spacing: 0.06em;
-          flex-shrink: 0;
-        }
-        .mini-hero-toggle {
-          display: inline-flex;
-          background: var(--surface-2);
-          border: 1px solid var(--border);
-          border-radius: 7px;
-          padding: 2px;
-          gap: 0;
-          flex-shrink: 0;
-        }
-        .mini-hero-toggle-btn {
-          appearance: none;
-          background: transparent;
-          border: none;
-          padding: 0.25rem 0.45rem;
-          font-family: inherit;
-          font-size: 0.66rem; font-weight: 600;
-          color: var(--text-3);
-          border-radius: 5px;
-          cursor: pointer;
-          transition: background 0.18s, color 0.18s;
-          min-width: 22px;
-        }
-        .mini-hero-toggle-btn.is-on {
-          background: var(--surface);
-          color: var(--text);
-          box-shadow: 0 1px 2px rgba(0,0,0,0.08);
-        }
-        .mini-hero-value {
-          display: flex; align-items: baseline;
-          gap: 0.45rem; flex-wrap: wrap;
-        }
-        .mini-hero-num {
-          font-family: var(--font-mono);
-          font-size: clamp(1.5rem, 5vw, 1.9rem);
-          font-weight: 600;
-          letter-spacing: -0.035em;
-          color: var(--text);
-          line-height: 1;
-          font-variant-numeric: tabular-nums;
-        }
-        .mini-hero-unit {
-          font-size: 0.78rem; font-weight: 500;
-          color: var(--text-3);
-        }
-        .mini-hero-yoy {
-          display: inline-flex; align-items: center; gap: 0.22rem;
-          font-size: 0.66rem; font-weight: 700;
-          color: var(--success);
-          background: var(--success-tint);
-          padding: 0.16rem 0.4rem;
-          border-radius: 5px;
-          margin-left: auto;
-        }
-
-        .scroll-hidden::-webkit-scrollbar { display: none; }
-        .scroll-hidden { -ms-overflow-style: none; scrollbar-width: none; }
+        /* Decorative hero wave — purely visual flourish below the source
+         * pills. Hidden on very small phones where the hero already feels
+         * dense, shown from ~420px upward. */
+        .hero-wave { display: none; }
+        @media (min-width: 420px) { .hero-wave { display: block; } }
       `}</style>
     </div>
   );
@@ -894,13 +703,7 @@ function HexGridBg({
 
 // ── Hero ─────────────────────────────────────────────────────────────────────
 
-function Hero({
-  period, onPeriodChange, onCta,
-}: {
-  period: "M" | "T" | "A";
-  onPeriodChange: (p: "M" | "T" | "A") => void;
-  onCta: () => void;
-}) {
+function Hero({ onCta }: { onCta: () => void }) {
   const reduceMotion = useReducedMotionSafe();
   const fadeIn = (delay = 0) =>
     reduceMotion
@@ -912,20 +715,32 @@ function Hero({
         };
 
   return (
-    <section style={{ position: "relative", overflow: "hidden" }}>
+    <section className="landing-hero" style={{ position: "relative", overflow: "hidden" }}>
       {/* Animated hex grid — hero only */}
-      <HexGridBg density={7} opacity={0.06} />
+      <HexGridBg density={8} opacity={0.07} />
 
-      {/* Soft indigo bloom anchoring the mockup */}
+      {/* Twin indigo blooms — one anchoring the upper third, one for depth at the bottom */}
       <div
         aria-hidden
         style={{
-          position: "absolute", top: 80, left: "50%",
-          width: "min(1100px, 95%)", height: 600,
+          position: "absolute", top: -120, left: "50%",
+          width: "min(1200px, 100%)", height: 720,
           transform: "translateX(-50%)",
           background:
-            "radial-gradient(60% 60% at 50% 40%, color-mix(in srgb, var(--accent) 18%, transparent), transparent 70%)",
-          filter: "blur(40px)",
+            "radial-gradient(60% 60% at 50% 40%, color-mix(in srgb, var(--accent) 22%, transparent), transparent 70%)",
+          filter: "blur(46px)",
+          pointerEvents: "none",
+        }}
+      />
+      <div
+        aria-hidden
+        style={{
+          position: "absolute", bottom: -200, left: "50%",
+          width: "min(900px, 95%)", height: 420,
+          transform: "translateX(-50%)",
+          background:
+            "radial-gradient(50% 55% at 50% 50%, color-mix(in srgb, var(--purple) 14%, transparent), transparent 72%)",
+          filter: "blur(60px)",
           pointerEvents: "none",
         }}
       />
@@ -935,13 +750,13 @@ function Hero({
         style={{
           position: "relative",
           maxWidth: 1240, margin: "0 auto",
-          padding: "clamp(1.75rem, 5vw, 5rem) clamp(1rem, 3vw, 2.5rem) clamp(1.5rem, 4vw, 3rem)",
+          padding: "clamp(2.5rem, 8vw, 7rem) clamp(1rem, 3vw, 2.5rem) clamp(3rem, 8vw, 6.5rem)",
           display: "grid", gridTemplateColumns: "1fr",
           gap: "clamp(1.5rem, 4vw, 3rem)",
         }}
       >
-        {/* Copy column */}
-        <div style={{ maxWidth: 760, margin: "0 auto", textAlign: "center" }}>
+        {/* Copy column — centered narrative */}
+        <div style={{ maxWidth: 820, margin: "0 auto", textAlign: "center" }}>
           <motion.span
             {...fadeIn(0)}
             style={{
@@ -964,16 +779,16 @@ function Hero({
           <motion.h1
             {...fadeIn(0.08)}
             style={{
-              /* Mobile-first: 1.95rem floor stays readable on a 320px phone
-               * without forcing a 4-line headline; 6vw lets it grow to ~3.8rem
-               * on a desktop window. */
-              fontSize: "clamp(1.95rem, 6vw, 3.6rem)",
+              /* Now that the mockup column is gone, the headline carries more
+               * of the hero's visual weight — push the desktop max up a notch
+               * and tighten letter-spacing so the gradient word lands cleanly. */
+              fontSize: "clamp(2.1rem, 7vw, 4.25rem)",
               fontWeight: 800,
-              lineHeight: 1.06,
-              letterSpacing: "-0.034em",
+              lineHeight: 1.04,
+              letterSpacing: "-0.036em",
               color: "var(--text)",
               margin: 0,
-              maxWidth: "16ch",
+              maxWidth: "18ch",
               marginInline: "auto",
             }}
           >
@@ -1088,342 +903,54 @@ function Hero({
               <span className="hero-compliance-full"> CH · LPD Art.16 · Mistral · Infomaniak</span>
             </span>
           </motion.div>
-        </div>
 
-        {/* Mockup column — the cockpit, faithful */}
-        <motion.div
-          initial={reduceMotion ? { opacity: 1 } : { opacity: 0, y: 26 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.36, duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-          style={{ position: "relative", maxWidth: 1180, marginInline: "auto", width: "100%" }}
-        >
-          <CockpitMockup
-            period={period}
-            onPeriodChange={onPeriodChange}
-            onAny={onCta}
-          />
-        </motion.div>
+          {/* Decorative accent wave — purely visual flourish, suggests the
+           * "data trajectory" the cockpit promises without showing any actual
+           * chart or numbers. */}
+          <motion.div
+            {...fadeIn(0.42)}
+            aria-hidden
+            className="hero-wave"
+            style={{
+              marginTop: "clamp(2rem, 5vw, 3.25rem)",
+              width: "min(620px, 100%)",
+              marginInline: "auto",
+            }}
+          >
+            <svg viewBox="0 0 620 70" preserveAspectRatio="none" style={{ width: "100%", height: "auto", display: "block" }}>
+              <defs>
+                <linearGradient id="hero-wave-stroke" x1="0" y1="0" x2="1" y2="0">
+                  <stop offset="0%"   stopColor="var(--accent)" stopOpacity="0" />
+                  <stop offset="18%"  stopColor="var(--accent)" stopOpacity="0.55" />
+                  <stop offset="82%"  stopColor="var(--accent-2)" stopOpacity="0.55" />
+                  <stop offset="100%" stopColor="var(--accent-2)" stopOpacity="0" />
+                </linearGradient>
+                <linearGradient id="hero-wave-fill" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%"  stopColor="var(--accent)" stopOpacity="0.18" />
+                  <stop offset="100%" stopColor="var(--accent)" stopOpacity="0" />
+                </linearGradient>
+              </defs>
+              <path
+                d="M 0 52 C 80 50, 130 40, 200 32 S 320 18, 400 22 S 540 38, 620 28 L 620 70 L 0 70 Z"
+                fill="url(#hero-wave-fill)"
+              />
+              <path
+                d="M 0 52 C 80 50, 130 40, 200 32 S 320 18, 400 22 S 540 38, 620 28"
+                fill="none"
+                stroke="url(#hero-wave-stroke)"
+                strokeWidth="1.6"
+                strokeLinecap="round"
+                vectorEffect="non-scaling-stroke"
+              />
+              {/* Three subtle waypoint dots tracking the curve */}
+              <circle cx="200" cy="32" r="2.4" fill="var(--accent)" opacity="0.7" />
+              <circle cx="400" cy="22" r="2.4" fill="var(--accent)" opacity="0.85" />
+              <circle cx="620" cy="28" r="3"   fill="var(--accent-2)" />
+            </svg>
+          </motion.div>
+        </div>
       </div>
     </section>
-  );
-}
-
-// ── Cockpit mockup — compact, fits a single mobile viewport ──────────────────
-//
-// Mobile content (~440px tall, fits 600px+ viewport):
-//   chip + 1-line header
-//   + MiniHeroCard (compact KPI: title + value + sparkline)
-//   + TroisChosesMock (3 priority rows)
-//
-// Tablet ≥640 adds: SatelliteKPI strip (3 KPIs row), source pills in header
-// Desktop ≥980 adds: 6 MiniTile grid
-
-function CockpitMockup({
-  period, onPeriodChange, onAny,
-}: {
-  period: "M" | "T" | "A";
-  onPeriodChange: (p: "M" | "T" | "A") => void;
-  onAny: () => void;
-}) {
-  return (
-    <div
-      role="img"
-      aria-label="Aperçu du cockpit Orkestra : chiffre d'affaires, indicateurs et priorités du jour."
-      className="mock"
-    >
-      <div className="mock-body">
-        {/* Compact KPI card — always visible. Tells the cockpit's headline story. */}
-        <MiniHeroCard period={period} onPeriodChange={onPeriodChange} />
-
-        {/* Priorities — always visible. The cockpit's strongest signal. */}
-        <TroisChosesMock onAny={onAny} />
-
-        {/* Tablet+: 3 SatelliteKPI in a horizontal strip */}
-        <div className="mock-satellite-row">
-          {previewSatellites.map((s) => (
-            <SatelliteKPI key={s.label} kpi={s} onOpen={onAny} />
-          ))}
-        </div>
-
-        {/* Desktop+: 6 mini-tiles grid */}
-        <div className="mock-tile-grid">
-          {miniTiles.map((t) => (
-            <MiniTile key={t.title} tile={t} onClick={onAny} />
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// Compact KPI card — replaces HeroPanel inside the preview so the whole
-// mockup fits in one mobile viewport.
-function MiniHeroCard({
-  period, onPeriodChange,
-}: {
-  period: "M" | "T" | "A";
-  onPeriodChange: (p: "M" | "T" | "A") => void;
-}) {
-  const options: { v: "M" | "T" | "A"; label: string }[] = [
-    { v: "M", label: "Mois" },
-    { v: "T", label: "Trim." },
-    { v: "A", label: "Année" },
-  ];
-  return (
-    <div className="mini-hero">
-      <div className="mini-hero-head">
-        <div className="mini-hero-label">
-          <span>Chiffre d&apos;affaires</span>
-          <span className="mini-hero-combined">⊕ COMBINÉ</span>
-        </div>
-        <div className="mini-hero-toggle" role="tablist" aria-label="Période">
-          {options.map((o) => (
-            <button
-              key={o.v}
-              type="button"
-              role="tab"
-              aria-selected={o.v === period}
-              onClick={() => onPeriodChange(o.v)}
-              className={"mini-hero-toggle-btn" + (o.v === period ? " is-on" : "")}
-            >
-              {o.v}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div className="mini-hero-value">
-        <span className="mini-hero-num">92 400</span>
-        <span className="mini-hero-unit">CHF</span>
-        <span className="mini-hero-yoy">
-          <TrendingUp size={11} strokeWidth={2.5} />
-          +12.0% YoY
-        </span>
-      </div>
-
-      <MiniSpark data={previewData} />
-    </div>
-  );
-}
-
-function MiniSpark({ data }: { data: number[] }) {
-  const w = 200;
-  const h = 44;
-  const padX = 4;
-  const padY = 4;
-  const stepX = (w - padX * 2) / Math.max(1, data.length - 1);
-  const max = Math.max(...data);
-  const min = Math.min(...data);
-  const range = max - min || 1;
-  const pts = data.map((v, i) => {
-    const x = padX + i * stepX;
-    const y = padY + (1 - (v - min) / range) * (h - padY * 2);
-    return [x, y] as const;
-  });
-  const path = pts
-    .map((p, i) => `${i === 0 ? "M" : "L"} ${p[0].toFixed(1)} ${p[1].toFixed(1)}`)
-    .join(" ");
-  const [lastX] = pts[pts.length - 1];
-  const [firstX] = pts[0];
-  const area = `${path} L ${lastX.toFixed(1)} ${h} L ${firstX.toFixed(1)} ${h} Z`;
-  return (
-    <svg
-      viewBox={`0 0 ${w} ${h}`}
-      preserveAspectRatio="none"
-      aria-hidden
-      style={{ width: "100%", height: 44, display: "block" }}
-    >
-      <defs>
-        <linearGradient id="mini-spark-grad" x1="0" x2="0" y1="0" y2="1">
-          <stop offset="0%" stopColor="var(--accent)" stopOpacity="0.32" />
-          <stop offset="100%" stopColor="var(--accent)" stopOpacity="0" />
-        </linearGradient>
-      </defs>
-      <path d={area} fill="url(#mini-spark-grad)" />
-      <path
-        d={path}
-        fill="none"
-        stroke="var(--accent)"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        vectorEffect="non-scaling-stroke"
-      />
-    </svg>
-  );
-}
-
-function MiniTile({ tile, onClick }: { tile: MiniTile; onClick: () => void }) {
-  const alertColor =
-    tile.alertTone === "warn"   ? "var(--warn)"
-    : tile.alertTone === "good"   ? "var(--success)"
-    : tile.alertTone === "danger" ? "var(--danger)"
-    : "var(--text-3)";
-  const { Icon } = tile;
-  return (
-    <button
-      onClick={onClick}
-      style={{
-        textAlign: "left",
-        background: "var(--surface)",
-        border: "1px solid var(--border)",
-        borderRadius: 12,
-        padding: "0.7rem 0.8rem 0.65rem",
-        cursor: "pointer",
-        fontFamily: "inherit", color: "inherit",
-        display: "flex", flexDirection: "column", gap: "0.5rem",
-        transition: "box-shadow 0.22s ease, transform 0.18s ease, border-color 0.22s",
-        minHeight: 102,
-      }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.boxShadow = "var(--tier-1)";
-        e.currentTarget.style.transform = "translateY(-1px)";
-        e.currentTarget.style.borderColor = "color-mix(in srgb, var(--accent) 26%, var(--border))";
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.boxShadow = "none";
-        e.currentTarget.style.transform = "translateY(0)";
-        e.currentTarget.style.borderColor = "var(--border)";
-      }}
-    >
-      <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-        <span
-          style={{
-            width: 24, height: 24, borderRadius: 7,
-            background: tile.bg, color: tile.color,
-            display: "inline-flex", alignItems: "center", justifyContent: "center",
-            boxShadow: "inset 0 1px 0 rgba(255,255,255,0.6)",
-          }}
-          aria-hidden
-        >
-          <Icon size={12} strokeWidth={2} />
-        </span>
-        <span style={{ fontSize: "0.78rem", fontWeight: 600, letterSpacing: "-0.01em" }}>
-          {tile.title}
-        </span>
-      </div>
-      <div
-        style={{
-          fontFamily: "var(--font-mono)",
-          fontSize: "1.4rem", fontWeight: 600,
-          letterSpacing: "-0.03em",
-          fontVariantNumeric: "tabular-nums",
-          color: "var(--text)",
-          lineHeight: 1,
-        }}
-      >
-        {tile.metric}
-        {tile.unit && (
-          <span style={{ fontSize: "0.55em", marginLeft: "0.12rem", color: "var(--text-3)" }}>{tile.unit}</span>
-        )}
-      </div>
-      <div
-        style={{
-          display: "flex", alignItems: "center", justifyContent: "space-between",
-          fontSize: "0.66rem", color: "var(--text-4)",
-          paddingTop: "0.4rem",
-          borderTop: "1px solid var(--border)",
-        }}
-      >
-        <span style={{ display: "inline-flex", alignItems: "center", gap: "0.25rem", color: alertColor, fontWeight: 600 }}>
-          <Circle size={5} strokeWidth={0} fill="currentColor" />
-          {tile.alert}
-        </span>
-        <span style={{ fontFamily: "var(--font-mono)", fontSize: "0.6rem" }}>{tile.caption}</span>
-      </div>
-    </button>
-  );
-}
-
-function TroisChosesMock({ onAny }: { onAny: () => void }) {
-  return (
-    <div
-      style={{
-        background: "var(--surface)",
-        border: "1px solid var(--border)",
-        borderRadius: 14,
-        padding: "0.9rem 1rem",
-      }}
-    >
-      <div
-        style={{
-          display: "flex", alignItems: "center", gap: "0.45rem",
-          fontSize: "0.68rem", fontWeight: 700,
-          letterSpacing: "0.16em", textTransform: "uppercase",
-          color: "var(--accent)",
-          marginBottom: "0.55rem",
-        }}
-      >
-        Trois actions aujourd’hui
-        <span
-          style={{
-            fontSize: "0.6rem", fontWeight: 700,
-            color: "var(--text-3)",
-            background: "var(--surface-2)",
-            padding: "0.08rem 0.4rem",
-            borderRadius: 100,
-            letterSpacing: "0.04em",
-          }}
-        >
-          0/3
-        </span>
-      </div>
-      <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem" }}>
-        {troisPreview.map((it) => {
-          const { Icon } = it;
-          return (
-            <button
-              key={it.text}
-              onClick={onAny}
-              style={{
-                display: "flex", alignItems: "center", gap: "0.65rem",
-                padding: "0.55rem 0.65rem",
-                background: "transparent",
-                border: "1px solid var(--border)",
-                borderRadius: 10,
-                fontFamily: "inherit", color: "inherit",
-                textAlign: "left", cursor: "pointer",
-                transition: "background 0.18s, border-color 0.18s",
-              }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = "var(--surface-2)"; e.currentTarget.style.borderColor = "var(--border-strong)"; }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = "var(--border)"; }}
-            >
-              <span
-                style={{
-                  width: 26, height: 26, borderRadius: 7,
-                  background: it.bg, color: it.color,
-                  display: "inline-flex", alignItems: "center", justifyContent: "center",
-                  flexShrink: 0,
-                }}
-                aria-hidden
-              >
-                <Icon size={13} strokeWidth={2} />
-              </span>
-              <span
-                style={{
-                  flex: 1, minWidth: 0,
-                  fontSize: "0.83rem", color: "var(--text)",
-                  letterSpacing: "-0.005em",
-                }}
-              >
-                {it.text}
-              </span>
-              <span
-                style={{
-                  display: "inline-flex", alignItems: "center", gap: "0.25rem",
-                  fontSize: "0.7rem", fontWeight: 600,
-                  color: "var(--accent)",
-                  flexShrink: 0,
-                }}
-              >
-                {it.cta}
-                <ChevronRight size={12} strokeWidth={2.25} />
-              </span>
-            </button>
-          );
-        })}
-      </div>
-    </div>
   );
 }
 
@@ -1886,6 +1413,7 @@ function ResultChip({
 type Pillar = {
   Icon: LucideIcon; color: string; bg: string;
   title: string; body: string; meta: string;
+  bullets?: string[];
 };
 
 const pillars: Pillar[] = [
@@ -1905,6 +1433,11 @@ const pillars: Pillar[] = [
     Icon: ShieldCheck, color: "var(--success)", bg: "var(--success-tint)",
     title: "Souverain & conforme",
     body: "Aucune donnée client ne quitte la Suisse.",
+    bullets: [
+      "Synchronisation < 3 min",
+      "Préparation chaque nuit",
+      "Hébergement Suisse · LPD Art.16",
+    ],
     meta: "Hébergement Suisse · LPD Art.16",
   },
 ];
@@ -1988,6 +1521,52 @@ function PillarCard({
           >
             {pillar.body}
           </p>
+          {pillar.bullets && (
+            <ul
+              style={{
+                listStyle: "none",
+                padding: 0,
+                margin: "0.5rem 0 0",
+                display: "flex",
+                flexDirection: "column",
+                gap: "0.4rem",
+              }}
+            >
+              {pillar.bullets.map((b) => (
+                <li
+                  key={b}
+                  style={{
+                    display: "flex",
+                    alignItems: "flex-start",
+                    gap: "0.5rem",
+                    fontSize: "0.84rem",
+                    lineHeight: 1.45,
+                    color: "var(--text-2)",
+                    letterSpacing: "-0.005em",
+                  }}
+                >
+                  <span
+                    aria-hidden
+                    style={{
+                      width: 16,
+                      height: 16,
+                      borderRadius: 4,
+                      background: pillar.bg,
+                      color: pillar.color,
+                      display: "inline-flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      flexShrink: 0,
+                      marginTop: 2,
+                    }}
+                  >
+                    <Check size={10} strokeWidth={3} />
+                  </span>
+                  <span>{b}</span>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
 
         <div

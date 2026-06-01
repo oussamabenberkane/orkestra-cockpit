@@ -3,13 +3,16 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Eye, EyeOff } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
 export default function LoginCard() {
   const router = useRouter();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  // Demo session: prefill the form so a one-click login is possible. The
+  // placeholders below mirror the same values so the intent stays clear if
+  // the user clears the fields.
+  const [email, setEmail] = useState("mirko@helvebroker.ch");
+  const [password, setPassword] = useState("Cockpit2026");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -40,40 +43,25 @@ export default function LoginCard() {
         overflowY: "auto",
       }}
     >
-      {/* Top-right wordmark — desktop only */}
-      <motion.div
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3, duration: 0.4 }}
-        className="hidden md:block"
-        style={{
-          position: "absolute",
-          top: "2rem",
-          right: "2.25rem",
-          fontSize: "1rem",
-          fontWeight: 700,
-          color: "var(--text)",
-          letterSpacing: "-0.015em",
-        }}
-      >
-        Ork<span style={{ color: "var(--accent)" }}>estra</span>
-      </motion.div>
-
       <motion.div
         initial={{ opacity: 0, y: 14 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
         style={{
           width: "100%",
-          maxWidth: "420px",
+          maxWidth: "440px",
           background: "var(--surface)",
-          borderRadius: "18px",
-          padding: "clamp(1.85rem, 3vw, 2.5rem)",
+          borderRadius: "20px",
+          padding: "clamp(2rem, 3.5vw, 2.75rem)",
           boxShadow: "var(--tier-2)",
+          display: "flex",
+          flexDirection: "column",
+          gap: "1.65rem",
         }}
       >
-        {/* Mobile-only brand mark above heading */}
-        <div className="flex md:hidden items-center gap-2 mb-6">
+        {/* Mobile-only brand mark — BrandPanel is hidden below md, so this is
+         * the only brand surface visitors see on phones. */}
+        <div className="flex md:hidden items-center gap-2">
           <svg viewBox="0 0 60 70" fill="none" style={{ width: 32, height: 32 }}>
             <polygon
               points="30,2 58,17.5 58,52.5 30,68 2,52.5 2,17.5"
@@ -104,41 +92,46 @@ export default function LoginCard() {
           </div>
         </div>
 
-        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "1.75rem" }}>
+        {/* Greeting — the only marketing text on this panel. Balanced for a
+         * 2–3 line wrap on common viewports. */}
+        <header style={{ display: "flex", flexDirection: "column", gap: "0.6rem" }}>
+          <span
+            aria-hidden
+            style={{
+              alignSelf: "flex-start",
+              display: "inline-flex", alignItems: "center", gap: "0.4rem",
+              padding: "0.24rem 0.6rem",
+              borderRadius: 100,
+              background: "var(--accent-tint)",
+              color: "var(--accent)",
+              border: "1px solid var(--accent-tint-2)",
+              fontFamily: "var(--font-mono)",
+              fontSize: "0.6rem", fontWeight: 700,
+              letterSpacing: "0.14em", textTransform: "uppercase",
+            }}
+          >
+            <span style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--accent)" }} />
+            Cockpit · Helvebroker
+          </span>
           <h1
             style={{
-              fontSize: "1.7rem",
+              fontSize: "clamp(1.55rem, 3.4vw, 1.95rem)",
               fontWeight: 700,
-              letterSpacing: "-0.025em",
+              letterSpacing: "-0.028em",
               color: "var(--text)",
               margin: 0,
-              lineHeight: 1.1,
+              lineHeight: 1.18,
+              textWrap: "balance",
             }}
           >
-            Bonjour, Mirko.
+            Bonjour Mirko, Votre cockpit Helvebroker est prêt.
           </h1>
-          <button
-            type="button"
-            onClick={() => { setEmail("mirko@helvebroker.ch"); setPassword("Cockpit2026"); }}
-            style={{
-              marginTop: "0.25rem",
-              background: "var(--accent-tint)",
-              border: "1px solid var(--accent-tint-2)",
-              borderRadius: "7px",
-              padding: "0.25rem 0.6rem",
-              fontSize: "0.7rem",
-              fontWeight: 600,
-              color: "var(--accent)",
-              fontFamily: "inherit",
-              cursor: "pointer",
-              whiteSpace: "nowrap",
-              letterSpacing: "-0.005em",
-            }}
-          >
-            Démo
-          </button>
-        </div>
-        <form onSubmit={handleSubmit}>
+        </header>
+
+        <form
+          onSubmit={handleSubmit}
+          style={{ display: "flex", flexDirection: "column", gap: "1rem" }}
+        >
           <Field
             id="email"
             label="Adresse e-mail"
@@ -148,20 +141,16 @@ export default function LoginCard() {
             placeholder="mirko@helvebroker.ch"
             autoComplete="email"
           />
-          <Field
-            id="password"
-            label="Mot de passe"
-            type="password"
+          <PasswordField
             value={password}
             onChange={setPassword}
-            placeholder="••••••••"
-            autoComplete="current-password"
+            placeholder="Cockpit2026"
           />
 
           {error && (
             <div
+              role="alert"
               style={{
-                marginBottom: "1rem",
                 padding: "0.65rem 0.9rem",
                 background: "var(--danger-tint)",
                 border: "1px solid var(--danger)",
@@ -175,65 +164,27 @@ export default function LoginCard() {
             </div>
           )}
 
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              marginTop: "-0.25rem",
-              marginBottom: "1.25rem",
-            }}
-          >
-            <label
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "0.4rem",
-                fontSize: "0.78rem",
-                color: "var(--text-2)",
-                cursor: "pointer",
-              }}
-            >
-              <input type="checkbox" defaultChecked style={{ accentColor: "var(--accent)" }} />
-              Rester connecté
-            </label>
-            <button
-              type="button"
-              style={{
-                background: "transparent",
-                border: "none",
-                color: "var(--accent)",
-                fontFamily: "inherit",
-                fontSize: "0.78rem",
-                fontWeight: 600,
-                cursor: "pointer",
-                padding: 0,
-              }}
-            >
-              Oublié ?
-            </button>
-          </div>
-
           <button
             type="submit"
             disabled={loading}
             style={{
               width: "100%",
-              padding: "0.8rem",
+              padding: "0.85rem",
+              marginTop: "0.25rem",
               background: loading
                 ? "var(--surface-3)"
                 : "linear-gradient(to bottom, var(--accent), var(--accent-2))",
               color: loading ? "var(--text-3)" : "#FFFFFF",
               border: "none",
-              borderRadius: "11px",
+              borderRadius: "12px",
               fontFamily: "inherit",
-              fontSize: "0.92rem",
+              fontSize: "0.94rem",
               fontWeight: 600,
               cursor: loading ? "not-allowed" : "pointer",
               display: "inline-flex",
               justifyContent: "center",
               alignItems: "center",
-              gap: "0.45rem",
+              gap: "0.5rem",
               letterSpacing: "-0.005em",
               transition: "transform 0.22s ease, box-shadow 0.22s ease, filter 0.18s ease",
               boxShadow: loading
@@ -259,36 +210,7 @@ export default function LoginCard() {
             {!loading && <ArrowRight size={15} strokeWidth={2.25} />}
           </button>
         </form>
-
-        <div
-          style={{
-            marginTop: "1.75rem",
-            paddingTop: "1.25rem",
-            borderTop: "1px solid var(--border)",
-            fontSize: "0.74rem",
-            color: "var(--text-3)",
-            textAlign: "center",
-          }}
-        >
-          Pas de compte ?{" "}
-          <span style={{ color: "var(--accent)", fontWeight: 600 }}>
-            Contactez votre administrateur
-          </span>
-        </div>
       </motion.div>
-
-      <footer
-        style={{
-          position: "absolute",
-          bottom: "1.25rem",
-          left: 0, right: 0,
-          textAlign: "center",
-          fontSize: "0.7rem",
-          color: "var(--text-4)",
-        }}
-      >
-        © 2026 Helvebroker · Zürich
-      </footer>
     </main>
   );
 }
@@ -305,7 +227,7 @@ function Field({
   autoComplete?: string;
 }) {
   return (
-    <div style={{ marginBottom: "1rem" }}>
+    <div>
       <label
         htmlFor={id}
         style={{
@@ -350,6 +272,104 @@ function Field({
           e.target.style.background = "var(--surface-2)";
         }}
       />
+    </div>
+  );
+}
+
+function PasswordField({
+  value, onChange, placeholder,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  placeholder: string;
+}) {
+  const [visible, setVisible] = useState(false);
+  return (
+    <div>
+      <label
+        htmlFor="password"
+        style={{
+          display: "block",
+          fontSize: "0.8rem",
+          fontWeight: 600,
+          color: "var(--text-2)",
+          marginBottom: "0.4rem",
+          letterSpacing: "-0.005em",
+        }}
+      >
+        Mot de passe
+      </label>
+      <div style={{ position: "relative" }}>
+        <input
+          id="password"
+          type={visible ? "text" : "password"}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={placeholder}
+          autoComplete="current-password"
+          style={{
+            width: "100%",
+            padding: "0.75rem 2.65rem 0.75rem 0.9rem",
+            background: "var(--surface-2)",
+            border: "none",
+            borderRadius: "11px",
+            fontFamily: "inherit",
+            fontSize: "0.92rem",
+            color: "var(--text)",
+            outline: "none",
+            boxShadow: "inset 0 1px 2px rgba(0,0,0,0.04), inset 0 0 0 1px rgba(0,0,0,0.06)",
+            transition: "box-shadow 0.22s ease, background 0.22s ease",
+          }}
+          onFocus={(e) => {
+            e.target.style.boxShadow =
+              "inset 0 1px 2px rgba(0,0,0,0.04), inset 0 0 0 1px var(--accent), 0 0 0 4px var(--accent-tint)";
+            e.target.style.background = "var(--surface)";
+          }}
+          onBlur={(e) => {
+            e.target.style.boxShadow =
+              "inset 0 1px 2px rgba(0,0,0,0.04), inset 0 0 0 1px rgba(0,0,0,0.06)";
+            e.target.style.background = "var(--surface-2)";
+          }}
+        />
+        <button
+          type="button"
+          onClick={() => setVisible((v) => !v)}
+          aria-label={visible ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+          aria-pressed={visible}
+          tabIndex={-1}
+          style={{
+            position: "absolute",
+            top: "50%",
+            right: "0.35rem",
+            transform: "translateY(-50%)",
+            width: 32,
+            height: 32,
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            background: "transparent",
+            border: "none",
+            borderRadius: 8,
+            color: "var(--text-3)",
+            cursor: "pointer",
+            transition: "background 0.15s ease, color 0.15s ease",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = "var(--surface-3)";
+            e.currentTarget.style.color = "var(--text)";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = "transparent";
+            e.currentTarget.style.color = "var(--text-3)";
+          }}
+        >
+          {visible ? (
+            <EyeOff size={16} strokeWidth={2} />
+          ) : (
+            <Eye size={16} strokeWidth={2} />
+          )}
+        </button>
+      </div>
     </div>
   );
 }

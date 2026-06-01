@@ -1,17 +1,40 @@
-what is left to do: 
-- global color palette redesign: 
+MAIN PAGE:
+Organisation : done
+- Global KPIs : Title -> Tous vos indicateurs clés sur un seul écran (no dot required at the end)
+- Alertes
+- How to handle the alerts / detailed view
+- How to handle the alerts / detailed view
 
-- responsiveness: 
- - repports: done
- - alerte's single view (from email, variables dropdown): done
- - support page: done 
+Exemple of KPIs : done
+evolution (already there) - histogram of values - Indicateur (Red Amber Green) (ask her)
 
-redesign: 
- - support page: done
+top right corner (alertes section) : done
+counter of closed alerts (0 out of total number of alertes)
 
-implementing the complete admin app: 
+rapports page: done
+- make the KPIs the same height
 
- deadline: genre le 2/3 juin
- 
+Chat page: done
+- remove scroll on desktop on page load
 
- - tabs on the header: broker/commoditif 
+
+landing page: 
+- Remove black box with "Aperçu interactif"
+- Souverain & conforme:
+ Synchronisation < 3 min
+ Préparation chaque nuit
+ Hébergement Suisse · LPD Art.16
+
+Login page: 
+- only leave : "Bonjour Mirko, Votre cockpit Helvebroker est prêt."
+- add correct placeholder and remove the demo button
+
+PALETTE:
+- Landing page : Aurora theme
+- Main page : Aurora violet / blue, for side bar lighter purple color  
+
+sidebar count badges: 
+
+
+ask her again: done
+- about the one repport's demo with dummy data

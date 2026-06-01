@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -13,7 +13,9 @@ import type { ModalKey } from "@/lib/types";
 import { NotificationsContent } from "@/components/shared/NotificationsContent";
 import { UserMenuContent } from "@/components/shared/UserMenuContent";
 import { useNotifications } from "@/components/dashboard/NotificationsProvider";
+import { useAlerts } from "@/components/dashboard/AlertsProvider";
 import { useWorkspace } from "@/lib/workspaces";
+import type { NavItem, NavSection } from "@/lib/workspaces/types";
 
 interface SidebarProps {
   collapsed: boolean;
@@ -314,7 +316,36 @@ export function Sidebar({
   /* Nav items are workspace-scoped — switching the top-of-page tab swaps
    * the Métier/Trading section in place without remounting the rail. */
   const { shape } = useWorkspace();
-  const sections = shape.nav;
+  /* Live counts for the nav badges. Alerts live in the same provider that
+   * powers /alertes, so the rail's "Alertes" count, the "Sinistres" and
+   * "Finance" badges, and the alerts page itself all stay in sync — mark a
+   * row as read on /alertes and the rail badge drops immediately. Badges
+   * collapse (return undefined) when their corresponding count hits zero so
+   * the rail doesn't display empty "0" chips. */
+  const { alerts, unreadCount: alertsUnread } = useAlerts();
+  const sections = useMemo<NavSection[]>(() => {
+    const sinistreUnread = alerts.filter((a) => !a.read && a.category === "sinistre").length;
+    const financeUnread  = alerts.filter((a) => !a.read && a.category === "finance").length;
+    const liveBadge = (item: NavItem): NavItem => {
+      if (item.label === "Alertes") {
+        return alertsUnread > 0
+          ? { ...item, badge: String(alertsUnread), badgeTone: "danger" }
+          : { ...item, badge: undefined, badgeTone: undefined };
+      }
+      if (item.label === "Sinistres") {
+        return sinistreUnread > 0
+          ? { ...item, badge: String(sinistreUnread), badgeTone: "danger" }
+          : { ...item, badge: undefined, badgeTone: undefined };
+      }
+      if (item.label === "Finance") {
+        return financeUnread > 0
+          ? { ...item, badge: String(financeUnread), badgeTone: "warn" }
+          : { ...item, badge: undefined, badgeTone: undefined };
+      }
+      return item;
+    };
+    return shape.nav.map((s) => ({ ...s, items: s.items.map(liveBadge) }));
+  }, [shape.nav, alerts, alertsUnread]);
   const [tooltip, setTooltip] = useState<TooltipState | null>(null);
   const [mounted, setMounted] = useState(false);
 
