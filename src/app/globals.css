@@ -1312,11 +1312,32 @@ html.scroll-locked body {
     min-height: 44px;
     min-width: 44px;
   }
-  /* Period toggle and similar small buttons: bump to 40px on touch */
+  /* Hero header toggles intentionally stay compact (< 44px) at this width
+   * — they're inside a dense control row next to the title, not standalone
+   * primary actions, so we trade the standard touch target for an inline
+   * layout that doesn't push the group below the title. */
   .hero-period-btn {
-    min-height: 40px;
-    padding-left: 0.95rem;
-    padding-right: 0.95rem;
+    min-height: 26px;
+    min-width: 22px;
+  }
+  .hero-view-btn {
+    min-height: 26px;
+  }
+}
+
+/* Hero ViewToggle on mobile: drop the textual label and keep the icon only,
+   so the primary chart-mode switch stays inline next to the period chips
+   instead of pushing the whole group below the title. aria-label on each
+   button preserves the meaning for assistive tech. */
+@media (max-width: 640px) {
+  .hero-view-btn .hero-view-btn__label {
+    display: none;
+  }
+  .hero-view-btn {
+    padding-left: 0.35rem;
+    padding-right: 0.35rem;
+    min-width: 28px;
+    gap: 0;
   }
 }
 
@@ -1325,6 +1346,19 @@ html.scroll-locked body {
 @media (max-width: 480px) {
   .hero-month-labels span:nth-child(2n) {
     display: none;
+  }
+}
+
+/* Hero header row: when the title + toggle group together exceed the
+   panel width, the toggle group as a whole wraps below the title.
+   The two toggles themselves never stack vertically — flex-wrap is
+   forced off inside .hero-toggles so M/T/A stays next to Tendance /
+   Répartition at every breakpoint. */
+@media (max-width: 380px) {
+  .hero-toggles {
+    margin-left: 0 !important;
+    width: 100%;
+    justify-content: space-between !important;
   }
 }
 

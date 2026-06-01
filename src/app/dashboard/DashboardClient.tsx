@@ -329,6 +329,7 @@ export default function DashboardClient({
             events={hero.events}
             period={period}
             onPeriodChange={setPeriod}
+            distribution={hero.distribution}
           />
           <div className="dashboard-kpis-stack chart-desktop-only">
             {satellites.map((s) => (

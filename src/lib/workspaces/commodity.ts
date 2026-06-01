@@ -24,6 +24,13 @@ const commodityHeroByPeriod: Record<Period, HeroDataset> = {
       { i: 5, label: "+450 K CHF", sub: "Couverture WTI Q4 · novembre" },
       { i: 9, label: "−180 K CHF", sub: "Roll Brent expirant · mars" },
     ],
+    distribution: [
+      { label: "Brent",     value: 1.3 },
+      { label: "WTI",       value: 1.1 },
+      { label: "Gaz nat.",  value: 0.8 },
+      { label: "Cuivre",    value: 0.6 },
+      { label: "Or",        value: 0.4 },
+    ],
   },
   T: {
     title: "Exposition nette",
@@ -37,6 +44,13 @@ const commodityHeroByPeriod: Record<Period, HeroDataset> = {
       { i: 2, label: "T4 record", sub: "Volume notionnel +18%" },
       { i: 3, label: "Hedge +6 pt", sub: "Ratio remonté à 82%" },
     ],
+    distribution: [
+      { label: "Brent",     value: 3.6 },
+      { label: "WTI",       value: 3.2 },
+      { label: "Gaz nat.",  value: 2.4 },
+      { label: "Cuivre",    value: 1.6 },
+      { label: "Or",        value: 1.0 },
+    ],
   },
   A: {
     title: "Exposition nette",
@@ -48,6 +62,13 @@ const commodityHeroByPeriod: Record<Period, HeroDataset> = {
     months:  ["2024", "2025", "2026 (en cours)"],
     events: [
       { i: 1, label: "Désk énergie", sub: "Lancement bureau Genève · 2025" },
+    ],
+    distribution: [
+      { label: "Brent",     value: 13.2 },
+      { label: "WTI",       value: 11.4 },
+      { label: "Gaz nat.",  value: 8.6 },
+      { label: "Cuivre",    value: 5.5 },
+      { label: "Or",        value: 3.4 },
     ],
   },
 };

@@ -36,6 +36,14 @@ export interface HeroDataset {
   data: number[];
   months: string[];
   events: HeroEvent[];
+  /** Composition behind the headline figure, sorted desc by caller.
+   *  Drives the "Répartition" view in HeroPanel (5–6 segments works best). */
+  distribution?: HeroDistributionItem[];
+}
+
+export interface HeroDistributionItem {
+  label: string;
+  value: number;
 }
 
 /**
@@ -46,6 +54,33 @@ export interface HeroDataset {
  *
  * Numbers are illustrative — the demo's narrative is "CA growing +12% YoY".
  */
+/** Distribution of CA by partner insurer for each period. Values in K CHF
+ *  to match the chart's `data` array; the headline string keeps its own
+ *  free-form formatting. Sorted desc — top 2 carry the majority (Pareto). */
+const brokerDistributionByPeriod: Record<Period, HeroDistributionItem[]> = {
+  M: [
+    { label: "Helvetia", value: 24.0 },
+    { label: "AXA",      value: 22.0 },
+    { label: "Allianz",  value: 19.0 },
+    { label: "Zurich",   value: 16.0 },
+    { label: "Bâloise",  value: 11.4 },
+  ],
+  T: [
+    { label: "Helvetia", value: 72 },
+    { label: "AXA",      value: 64 },
+    { label: "Allianz",  value: 56 },
+    { label: "Zurich",   value: 46 },
+    { label: "Bâloise",  value: 34 },
+  ],
+  A: [
+    { label: "Helvetia", value: 285 },
+    { label: "AXA",      value: 252 },
+    { label: "Allianz",  value: 220 },
+    { label: "Zurich",   value: 182 },
+    { label: "Bâloise",  value: 141 },
+  ],
+};
+
 export const heroByPeriod: Record<Period, HeroDataset> = {
   M: {
     title: "Chiffre d'affaires",
@@ -59,6 +94,7 @@ export const heroByPeriod: Record<Period, HeroDataset> = {
       { i: 6, label: "+9 200 CHF", sub: "Commission Dubois SA · décembre" },
       { i: 9, label: "−1 800 CHF", sub: "Impayé Rossi SA détecté · mars"  },
     ],
+    distribution: brokerDistributionByPeriod.M,
   },
   T: {
     title: "Chiffre d'affaires",
@@ -72,6 +108,7 @@ export const heroByPeriod: Record<Period, HeroDataset> = {
       { i: 2, label: "T4 record",      sub: "Renouvellements automne 2025"   },
       { i: 3, label: "Pipeline + 18%", sub: "12 prospects actifs en T1'26"   },
     ],
+    distribution: brokerDistributionByPeriod.T,
   },
   A: {
     title: "Chiffre d'affaires",
@@ -84,8 +121,13 @@ export const heroByPeriod: Record<Period, HeroDataset> = {
     events: [
       { i: 1, label: "Acquisition Audemars", sub: "Portefeuille +28 contrats · 2025" },
     ],
+    distribution: brokerDistributionByPeriod.A,
   },
 };
+
+/** Exported so the live-data fetcher (dashboard-data.ts) can attach the
+ *  same per-period breakdown until a Supabase view exists for it. */
+export { brokerDistributionByPeriod };
 
 /** Three satellite KPIs (Marge / Cash-flow / Rétention). Stable across periods for now.
  *

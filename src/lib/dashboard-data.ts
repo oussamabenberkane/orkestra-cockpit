@@ -1,10 +1,17 @@
 "use server";
 import { supabaseServer as supabase } from "./supabase-server";
+import { brokerDistributionByPeriod } from "./dashboard-mock";
 import type { Period, HeroDataset } from "./dashboard-mock";
 
 // ── Hero (period-aware) ──────────────────────────────────────────────────────
 
 export async function fetchHeroData(period: Period): Promise<HeroDataset> {
+  // TODO: replace with a Supabase view (v_hero_distribution_par_compagnie)
+  // once partner-level commission breakdowns land. Until then we serve the
+  // same mock distribution for live and fallback paths so the "Répartition"
+  // view stays populated.
+  const distribution = brokerDistributionByPeriod[period];
+
   if (period === "M") {
     const { data } = await supabase
       .from("v_hero_mensuel")
@@ -21,6 +28,7 @@ export async function fetchHeroData(period: Period): Promise<HeroDataset> {
       data: values,
       months,
       events: [],
+      distribution,
     };
   }
   if (period === "T") {
@@ -39,6 +47,7 @@ export async function fetchHeroData(period: Period): Promise<HeroDataset> {
       data: values,
       months,
       events: [],
+      distribution,
     };
   }
   // period === "A"
@@ -62,6 +71,7 @@ export async function fetchHeroData(period: Period): Promise<HeroDataset> {
     data: values,
     months,
     events: [],
+    distribution,
   };
 }
 
