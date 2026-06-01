@@ -176,7 +176,7 @@ function NavItem({
       e.currentTarget.style.background = "transparent";
       const iconEl = e.currentTarget.querySelector("[data-nav-icon]") as HTMLElement | null;
       if (iconEl) {
-        iconEl.style.opacity = "0.7";
+        iconEl.style.opacity = "0.92";
         iconEl.style.transform = "scale(1)";
       }
     }
@@ -211,7 +211,7 @@ function NavItem({
         size={19}
         strokeWidth={active ? 2.25 : 2}
         color={item.iconColor}
-        style={{ opacity: active ? 1 : 0.85, transition: "opacity 0.18s" }}
+        style={{ opacity: active ? 1 : 0.95, transition: "opacity 0.18s" }}
       />
       {item.badge && (
         <span aria-hidden style={{
@@ -231,7 +231,7 @@ function NavItem({
           width: 16, height: 16,
           display: "flex", alignItems: "center", justifyContent: "center",
           flexShrink: 0,
-          opacity: active ? 1 : 0.7,
+          opacity: active ? 1 : 0.92,
           transition: "opacity 0.18s, transform 0.18s",
         }}
       >

@@ -66,7 +66,11 @@ function SatelliteSparkline({
   const areaPath = `${linePath} L ${width.toFixed(2)} ${height} L 0 ${height} Z`;
   const last = pts[pts.length - 1];
   const targetY = target !== undefined ? y(target) : null;
-  const gradId = `sat-grad-${idSeed}`;
+  /* Sanitize idSeed — labels like "VaR 1j (99%)" leak `(`, `)`, `%` into
+   * the gradient ID, and `url(#...)` then fails to resolve. SVG IDs must
+   * be NMTOKENs (alphanumeric + - _), so collapse anything else to "-". */
+  const safeSeed = idSeed.replace(/[^a-zA-Z0-9_-]+/g, "-").replace(/^-+|-+$/g, "");
+  const gradId = `sat-grad-${safeSeed}`;
 
   return (
     <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`}

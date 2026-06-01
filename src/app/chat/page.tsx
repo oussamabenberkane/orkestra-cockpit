@@ -94,11 +94,15 @@ const T = {
   // Elevation system — atomic tokens from globals.css
   tier1: "var(--tier-1)",
   tier2: "var(--tier-2)",
-  gradient: "linear-gradient(to bottom, #007AFF, #0062CC)",
+  /* Aurora primary CTA — indigo-600 → indigo-700 gradient (matches the
+   * cockpit's main "Accéder au cockpit" button). Shadows use indigo-900
+   * for the inner ring and color-mixed accent for the soft halo, so the
+   * button reads as part of the Aurora palette rather than legacy iOS blue. */
+  gradient: "linear-gradient(to bottom, var(--accent), var(--accent-2))",
   gradientShadow:
-    "inset 0 1px 0 rgba(255,255,255,0.25), 0 0 0 1px rgba(0,98,204,0.30), 0 4px 14px -4px rgba(0,122,255,0.40)",
+    "inset 0 1px 0 rgba(255,255,255,0.25), 0 0 0 1px rgba(49,46,129,0.30), 0 4px 14px -4px color-mix(in srgb, var(--accent) 40%, transparent)",
   gradientShadowHover:
-    "inset 0 1px 0 rgba(255,255,255,0.25), 0 0 0 1px rgba(0,98,204,0.30), 0 8px 20px -4px rgba(0,122,255,0.50)",
+    "inset 0 1px 0 rgba(255,255,255,0.25), 0 0 0 1px rgba(49,46,129,0.30), 0 8px 20px -4px color-mix(in srgb, var(--accent) 55%, transparent)",
 };
 
 /* ─── shared per-message action button style ─── */

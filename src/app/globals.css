@@ -196,11 +196,11 @@
   --surface-2: #6366F1;                  /* indigo-500 — Aurora rail (lighter than --accent) */
   --surface-3: rgba(255,255,255,0.16);   /* on-rail hover overlay */
   --text:      #FFFFFF;
-  --text-2:    rgba(255,255,255,0.92);
-  --text-3:    rgba(255,255,255,0.78);
-  --text-4:    rgba(255,255,255,0.64);
-  --border:    rgba(255,255,255,0.24);
-  --border-strong: rgba(255,255,255,0.36);
+  --text-2:    #FFFFFF;
+  --text-3:    rgba(255,255,255,0.85);
+  --text-4:    rgba(255,255,255,0.72);
+  --border:    rgba(255,255,255,0.28);
+  --border-strong: rgba(255,255,255,0.40);
 
   /* LIGHT semantic variants for badges + status pills on the indigo-500
    * rail. Deep variants (the root defaults) would lose contrast; these
@@ -214,8 +214,19 @@
   --info:          #BAE6FD;             /* sky-200 */
   --info-tint:     rgba(186,230,253,0.20);
 
-  --rail-hover:    rgba(255,255,255,0.18);
-  --rail-border:   rgba(255,255,255,0.30);
+  /* Rail tokens — explicit light values so consumers (MALYZ wordmark,
+   * user-row text, section labels, brand logo polygons) never fall
+   * through to root defaults that resolve to var(--accent) #4F46E5
+   * (dark indigo) — which on a #6366F1 rail would be invisible. */
+  --rail-text:        #FFFFFF;
+  --rail-text-muted:  #FFFFFF;
+  --rail-text-soft:   rgba(255,255,255,0.78);
+  --rail-border:      rgba(255,255,255,0.30);
+  --rail-hover:       rgba(255,255,255,0.18);
+  --rail-accent:      #E0E7FF;          /* indigo-100 — soft aurora shimmer on the rail */
+
+  --rail-badge-bg:     #FFFFFF;
+  --rail-badge-border: rgba(49,46,129,0.18);
 }
 
 /* ════════════════════════════════════════════════════════════
