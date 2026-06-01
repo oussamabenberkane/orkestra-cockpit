@@ -210,7 +210,7 @@ function NavItem({
       <Icon
         size={19}
         strokeWidth={active ? 2.5 : 2.25}
-        color={item.iconColor}
+        color={active ? "#3C3489" : item.iconColor}
         style={{ opacity: active ? 1 : 0.95, transition: "opacity 0.18s" }}
       />
       {item.badge && (
@@ -235,7 +235,7 @@ function NavItem({
           transition: "opacity 0.18s, transform 0.18s",
         }}
       >
-        <Icon size={15} strokeWidth={active ? 2.5 : 2.25} color={item.iconColor} />
+        <Icon size={15} strokeWidth={active ? 2.5 : 2.25} color={active ? "#3C3489" : item.iconColor} />
       </span>
       <span style={{ flex: 1, whiteSpace: "nowrap", overflow: "hidden" }}>
         {item.label}
@@ -728,7 +728,7 @@ export function Sidebar({
               transition: "transform 0.22s ease, color 0.18s",
             }}
           >
-            <Search size={isOpen ? 14 : 19} strokeWidth={2} style={{ flexShrink: 0 }} />
+            <Search size={isOpen ? 14 : 19} strokeWidth={2} color="#3C3489" style={{ flexShrink: 0 }} />
             {isOpen && (
               <span style={{
                 flex: 1, textAlign: "left",

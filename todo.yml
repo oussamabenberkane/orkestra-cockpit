@@ -18,23 +18,28 @@ Chat page: done
 - remove scroll on desktop on page load
 
 
-landing page: 
+landing page: done
 - Remove black box with "Aperçu interactif"
 - Souverain & conforme:
  Synchronisation < 3 min
  Préparation chaque nuit
  Hébergement Suisse · LPD Art.16
 
-Login page: 
+Login page: done
 - only leave : "Bonjour Mirko, Votre cockpit Helvebroker est prêt."
 - add correct placeholder and remove the demo button
 
-PALETTE:
+PALETTE: done
 - Landing page : Aurora theme
 - Main page : Aurora violet / blue, for side bar lighter purple color  
 
-sidebar count badges: 
-
-
-ask her again: done
+Ask her again: done
 - about the one repport's demo with dummy data
+
+now update the search modal with the current data and tabs...etc: done
+
+sidebar count badges: done
+
+Login page: 
+
+support page loading state: 

@@ -26,7 +26,7 @@ export const brokerWorkspace: WorkspaceShape = {
     {
       title: "Espace",
       items: [
-        { Icon: Home,          label: "Vue 360",           iconColor: "var(--nav-vue-ensemble)",  href: "/dashboard" },
+        { Icon: Home,          label: "Vue 360",           iconColor: "#F1F5FF",  href: "/dashboard" },
       ],
     },
     {
@@ -36,21 +36,21 @@ export const brokerWorkspace: WorkspaceShape = {
         { Icon: FolderArchive, label: "Portefeuille",      iconColor: "var(--nav-portefeuille)", modalKey: "portefeuille" },
         { Icon: Flame,         label: "Sinistres",         iconColor: "var(--nav-sinistres)",    modalKey: "sinistres",   badge: "1", badgeTone: "danger" },
         { Icon: Wallet,        label: "Finance",           iconColor: "var(--nav-finance)",      modalKey: "finance",     badge: "1", badgeTone: "warn" },
-        { Icon: Globe,         label: "Tous les rapports", iconColor: "var(--nav-vue-ensemble)", href: "/rapports" },
+        { Icon: Globe,         label: "Tous les rapports", iconColor: "#22D3EE", href: "/rapports" },
       ],
     },
     {
       title: "Intelligence",
       items: [
-        { Icon: MessageSquare, label: "Chat IA",  iconColor: "var(--nav-chat)",    href: "/chat" },
-        { Icon: AlertTriangle, label: "Alertes",  iconColor: "var(--nav-alertes)", href: "/alertes",  badge: "4", badgeTone: "danger" },
+        { Icon: MessageSquare, label: "Chat IA",  iconColor: "#F1F5FF", href: "/chat" },
+        { Icon: AlertTriangle, label: "Alertes",  iconColor: "#FB7185", href: "/alertes",  badge: "4", badgeTone: "danger" },
       ],
     },
     {
       title: "Administration",
       items: [
-        { Icon: Settings,   label: "Paramètres", iconColor: "var(--nav-neutral)", href: "/parametres" },
-        { Icon: HelpCircle, label: "Support",    iconColor: "var(--nav-neutral)", href: "/support" },
+        { Icon: Settings,   label: "Paramètres", iconColor: "#F1F5FF", href: "/parametres" },
+        { Icon: HelpCircle, label: "Support",    iconColor: "#F1F5FF", href: "/support" },
       ],
     },
   ],

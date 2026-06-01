@@ -273,32 +273,32 @@ export const commodityWorkspace: WorkspaceShape = {
     {
       title: "Espace",
       items: [
-        { Icon: Home,          label: "Vue 360",           iconColor: "var(--nav-vue-ensemble)", href: "/dashboard" },
+        { Icon: Home,          label: "Vue 360",           iconColor: "#F1F5FF", href: "/dashboard" },
       ],
     },
     {
       title: "Trading",
       items: [
-        { Icon: ArrowLeftRight, label: "Positions",         iconColor: "var(--nav-prospection)",  modalKey: "commodity:positions",      badge: "12", badgeTone: "neutral" },
-        { Icon: Layers,         label: "Couvertures",       iconColor: "var(--nav-portefeuille)", modalKey: "commodity:hedges" },
-        { Icon: Users,          label: "Contreparties",    iconColor: "var(--nav-finance)",      modalKey: "commodity:counterparties", badge: "1",  badgeTone: "warn" },
-        { Icon: TrendingUp,     label: "P&L",               iconColor: "var(--nav-vue-ensemble)", modalKey: "commodity:pnl" },
-        { Icon: Activity,       label: "Risque",            iconColor: "var(--nav-sinistres)",    modalKey: "commodity:risk",           badge: "92%", badgeTone: "danger" },
-        { Icon: Globe,          label: "Tous les rapports", iconColor: "var(--nav-vue-ensemble)", href: "/rapports" },
+        { Icon: ArrowLeftRight, label: "Positions",         iconColor: "#34D399", modalKey: "commodity:positions",      badge: "12", badgeTone: "neutral" },
+        { Icon: Layers,         label: "Couvertures",       iconColor: "#22D3EE", modalKey: "commodity:hedges" },
+        { Icon: Users,          label: "Contreparties",    iconColor: "#FBBF24", modalKey: "commodity:counterparties", badge: "1",  badgeTone: "warn" },
+        { Icon: TrendingUp,     label: "P&L",               iconColor: "#34D399", modalKey: "commodity:pnl" },
+        { Icon: Activity,       label: "Risque",            iconColor: "#FB7185", modalKey: "commodity:risk",           badge: "92%", badgeTone: "danger" },
+        { Icon: Globe,          label: "Tous les rapports", iconColor: "#22D3EE", href: "/rapports" },
       ],
     },
     {
       title: "Intelligence",
       items: [
-        { Icon: MessageSquare, label: "Chat IA", iconColor: "var(--nav-chat)",    href: "/chat" },
-        { Icon: AlertTriangle, label: "Alertes", iconColor: "var(--nav-alertes)", href: "/alertes" },
+        { Icon: MessageSquare, label: "Chat IA", iconColor: "#F1F5FF", href: "/chat" },
+        { Icon: AlertTriangle, label: "Alertes", iconColor: "#FB7185", href: "/alertes" },
       ],
     },
     {
       title: "Administration",
       items: [
-        { Icon: Settings,   label: "Paramètres", iconColor: "var(--nav-neutral)", href: "/parametres" },
-        { Icon: HelpCircle, label: "Support",    iconColor: "var(--nav-neutral)", href: "/support" },
+        { Icon: Settings,   label: "Paramètres", iconColor: "#F1F5FF", href: "/parametres" },
+        { Icon: HelpCircle, label: "Support",    iconColor: "#F1F5FF", href: "/support" },
       ],
     },
   ],
