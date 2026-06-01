@@ -1142,6 +1142,35 @@ export default function AgentTestPage() {
             right: 0.75rem;
             z-index: 46;
           }
+          /* Paint a full-width surface bar over the portaled clearance band so
+           * the floating buttons sit on white instead of var(--bg). z:40 sits
+           * above the clearance (z:39) and below the hamburger (z:45) and
+           * actions (z:46), so the buttons remain interactive on top of the
+           * new white surface. Height is buttons (40px) + symmetric 12px
+           * padding (= top:0.75rem) = 64px = 4rem, so the white wraps tight
+           * around the button row instead of running the full clearance band. */
+          .agent-root::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4rem;
+            background: var(--surface);
+            z-index: 40;
+            pointer-events: none;
+          }
+          /* The natural-flow topbar carries a var(--surface) background and
+           * sits just below the clearance band. With the extension shrunk to
+           * 4rem, the clearance band (4.5rem, gray) is now partially visible
+           * below the extension, and a topbar with white bg would render as a
+           * second thin white strip below the gray gap — recreating the
+           * sandwich the extension was added to avoid. Dropping the topbar's
+           * bg to transparent lets the page bg (var(--bg)) flow continuously
+           * below the 4rem extension. */
+          .agent-topbar {
+            background: transparent !important;
+          }
         }
 
         /* Composer — focus ring lives on the wrapper via :focus-within so the
@@ -1508,6 +1537,36 @@ export default function AgentTestPage() {
          * heading + 6 tiles + composer all fit without scroll. */
         @media (max-width: 380px) {
           .agent-welcome > p { display: none !important; }
+        }
+
+        /* ─── Short desktop viewports (14" laptops, ~700-940px tall) ───
+         * The welcome was designed for a single suggestion row but now
+         * carries six cards in two rows (~105px extra). On 14" laptops the
+         * combined heading + grid + composer exceeds the visible area and
+         * forces a scroll on first paint. Tighten the scroll container's
+         * vertical padding (only when the welcome is mounted, via :has()) and
+         * compact the heading/paragraph rhythm. Bigger monitors fall through
+         * to the spacious defaults. */
+        @media (min-width: 721px) and (max-height: 940px) {
+          .agent-scroll:has(.agent-welcome) {
+            padding-top: clamp(0.5rem, 1vw, 0.85rem) !important;
+            padding-bottom: clamp(0.5rem, 1vw, 0.85rem) !important;
+          }
+          .agent-welcome { padding-top: 0 !important; }
+          .agent-welcome > div:first-of-type {
+            margin-bottom: 0.4rem !important;
+          }
+          .agent-welcome > h1 {
+            font-size: clamp(1.3rem, 2.8vw, 1.5rem) !important;
+            line-height: 1.15 !important;
+            margin-bottom: 0.3rem !important;
+          }
+          .agent-welcome > p {
+            margin-bottom: clamp(0.55rem, 1.2vw, 0.75rem) !important;
+          }
+          .agent-welcome > div:nth-of-type(2) {
+            margin-bottom: 0.4rem !important;
+          }
         }
 
         /* Message bubbles — give the assistant card a max width and lift the
