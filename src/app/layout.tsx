@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Manrope, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { AgentConversationProvider } from "@/components/dashboard/AgentConversationProvider";
+import { AlertsProvider } from "@/components/dashboard/AlertsProvider";
 import { AuthProvider } from "@/components/dashboard/AuthProvider";
 import { NotificationsProvider } from "@/components/dashboard/NotificationsProvider";
 import { PaletteSwitcher } from "@/components/dev/PaletteSwitcher";
@@ -50,12 +51,14 @@ export default function RootLayout({
       <head>
         <script dangerouslySetInnerHTML={{ __html: paletteInitScript }} />
       </head>
-      <body>
+      <body suppressHydrationWarning>
         <AuthProvider>
           <NotificationsProvider>
-            <WorkspaceProvider>
-              <AgentConversationProvider>{children}</AgentConversationProvider>
-            </WorkspaceProvider>
+            <AlertsProvider>
+              <WorkspaceProvider>
+                <AgentConversationProvider>{children}</AgentConversationProvider>
+              </WorkspaceProvider>
+            </AlertsProvider>
           </NotificationsProvider>
         </AuthProvider>
         <PaletteSwitcher />

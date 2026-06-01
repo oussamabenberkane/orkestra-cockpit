@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useCallback, useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import {
-  ArrowDown, ArrowUp, Circle, Minus, Mail, AlertCircle, FileText,
-  Sparkles,
+  ArrowDown, ArrowUp, Circle, Minus, FileText,
+  Sparkles, Flame, DollarSign, RefreshCw,
   type LucideIcon,
 } from "lucide-react";
 import type { ModalKey, ModalData } from "@/lib/types";
@@ -15,62 +15,63 @@ import { CommandPalette } from "@/components/shared/CommandPalette";
 import { HeroPanel } from "@/components/dashboard/HeroPanel";
 import { SatelliteKPI, type Satellite } from "@/components/dashboard/SatelliteKPI";
 import { TroisChoses, type TroisItem } from "@/components/dashboard/TroisChoses";
+import { useAlerts } from "@/components/dashboard/AlertsProvider";
+import type { AlertItem, AlertCategory, AlertSeverity } from "@/lib/alerts-data";
 import {
   satellites as mockSatellites,
-  troisItems as mockTroisItems,
   type Period,
   type HeroDataset,
 } from "@/lib/dashboard-mock";
-import type { SatelliteValues, AgentTaskRow } from "@/lib/dashboard-data";
+import type { SatelliteValues } from "@/lib/dashboard-data";
 import { Percent, Wallet, Users } from "lucide-react";
 import { useWorkspace } from "@/lib/workspaces";
 import { WorkspaceTabs } from "@/components/dashboard/WorkspaceTabs";
 
 const SIDEBAR_KEY = "orkestra.sidebar.collapsed";
 
-// ── Icon/color maps for task types ───────────────────────────────────────────
+// ── Alert → TroisItem mapping ────────────────────────────────────────────────
+//
+// The dashboard's "Alertes à traiter" card consumes the same global alerts
+// state as the /alertes route (via AlertsProvider at the root layout). Each
+// AlertItem's category drives its icon + dashboard-modal target, and its
+// severity drives the colour pair.
 
-const TASK_ICON_MAP: Record<string, LucideIcon> = {
-  renouvellement: Mail,
-  impayé:         AlertCircle,
-  rapport:        FileText,
-  prospection:    Mail,
-  sinistre:       AlertCircle,
-  alerte:         AlertCircle,
+const CATEGORY_ICON: Record<AlertCategory, LucideIcon> = {
+  contrat:        FileText,
+  sinistre:       Flame,
+  finance:        DollarSign,
+  renouvellement: RefreshCw,
 };
-const TASK_COLOR_MAP: Record<string, string> = {
-  renouvellement: "var(--info)",
-  impayé:         "var(--warn)",
-  rapport:        "var(--accent)",
-  prospection:    "var(--info)",
-  sinistre:       "var(--danger)",
-  alerte:         "var(--warn)",
+
+const CATEGORY_MODAL_KEY: Record<AlertCategory, ModalKey | undefined> = {
+  contrat:        "portefeuille",
+  sinistre:       "sinistres",
+  finance:        "finance",
+  renouvellement: "portefeuille",
 };
-const TASK_BG_MAP: Record<string, string> = {
-  renouvellement: "var(--info-tint)",
-  impayé:         "var(--warn-tint)",
-  rapport:        "var(--accent-tint)",
-  prospection:    "var(--info-tint)",
-  sinistre:       "var(--danger-tint)",
-  alerte:         "var(--warn-tint)",
-};
-const TASK_CTA_MAP: Record<string, string> = {
-  renouvellement: "Valider",
-  impayé:         "Ouvrir",
-  rapport:        "Signer",
-  prospection:    "Voir",
+
+const CATEGORY_CTA: Record<AlertCategory, string> = {
+  contrat:        "Voir",
   sinistre:       "Ouvrir",
-  alerte:         "Voir",
+  finance:        "Relancer",
+  renouvellement: "Renouveler",
 };
 
-function taskRowToTroisItem(row: AgentTaskRow): TroisItem {
+const SEVERITY_TONE: Record<AlertSeverity, { color: string; bg: string }> = {
+  danger: { color: "var(--danger)", bg: "var(--danger-tint)" },
+  warn:   { color: "var(--warn)",   bg: "var(--warn-tint)"   },
+};
+
+function alertToTroisItem(a: AlertItem): TroisItem {
+  const tone = SEVERITY_TONE[a.severity];
   return {
-    Icon:     TASK_ICON_MAP[row.type]    ?? FileText,
-    color:    TASK_COLOR_MAP[row.type]   ?? "var(--text-3)",
-    bg:       TASK_BG_MAP[row.type]      ?? "var(--surface-2)",
-    sentence: row.titre,
-    cta:      TASK_CTA_MAP[row.type]     ?? "Voir",
-    modalKey: (row.modal_key as ModalKey) ?? undefined,
+    id:       a.id,
+    Icon:     CATEGORY_ICON[a.category]      ?? FileText,
+    color:    tone.color,
+    bg:       tone.bg,
+    sentence: `${a.title} — ${a.client.name}`,
+    cta:      CATEGORY_CTA[a.category]       ?? "Voir",
+    modalKey: CATEGORY_MODAL_KEY[a.category],
   };
 }
 
@@ -128,7 +129,6 @@ function mergeSatellites(vals: SatelliteValues | null): Satellite[] {
 export interface DashboardClientProps {
   initialHero: Record<Period, HeroDataset>;
   satelliteValues: SatelliteValues | null;
-  agentTaskRows: AgentTaskRow[];
   modalData: Record<ModalKey, ModalData>;
   unreadCount: number;
 }
@@ -138,12 +138,12 @@ export interface DashboardClientProps {
 export default function DashboardClient({
   initialHero,
   satelliteValues,
-  agentTaskRows,
   modalData,
   unreadCount,
 }: DashboardClientProps) {
   const router = useRouter();
   const { workspace, shape: workspaceShape } = useWorkspace();
+  const { alerts: realAlerts, markAsRead } = useAlerts();
   const [modalKey, setModalKey] = useState<ModalKey | null>(null);
   const [collapsed, setCollapsed] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
@@ -188,13 +188,58 @@ export default function DashboardClient({
     () => isCommodity ? workspaceShape.satellites : mergeSatellites(satelliteValues),
     [isCommodity, workspaceShape, satelliteValues],
   );
-  const troisItems = useMemo(
-    () => {
-      if (isCommodity) return workspaceShape.troisItems;
-      return agentTaskRows.length > 0 ? agentTaskRows.map(taskRowToTroisItem) : mockTroisItems;
-    },
-    [isCommodity, workspaceShape, agentTaskRows],
-  );
+  /* Commodity-only local "done" tracker — the commodity workspace doesn't
+   * have real alerts yet, so we keep a Set of resolved keys in component
+   * memory. Resets when the workspace changes so switching back starts fresh. */
+  const [commodityDone, setCommodityDone] = useState<Set<string>>(() => new Set());
+  useEffect(() => { setCommodityDone(new Set()); }, [workspace]);
+  const handleResetCommodity = useCallback(() => setCommodityDone(new Set()), []);
+
+  /* TroisChoses props per workspace.
+   *
+   *  - Broker: real alerts from AlertsProvider. The visible pool is the
+   *    unread set; treating one from the dashboard calls markAsRead and the
+   *    same alert disappears from /alertes too (single source of truth).
+   *  - Commodity: static workspace.troisItems with a local Set of resolved
+   *    keys, since commodity has no real-alerts backend yet. Reset wires the
+   *    "Tout est traité" recover button. */
+  const troisProps = useMemo(() => {
+    if (isCommodity) {
+      const all = workspaceShape.troisItems;
+      const undone = all
+        .map((it, i) => ({ it, key: `commodity-${i}` }))
+        .filter((entry) => !commodityDone.has(entry.key));
+
+      return {
+        items: undone.map((entry) => ({ ...entry.it, id: entry.key })),
+        treatedCount: commodityDone.size,
+        totalCount: all.length,
+        onItemDone: (visibleIdx: number) => {
+          const key = undone[visibleIdx]?.key;
+          if (!key) return;
+          setCommodityDone((prev) => {
+            const next = new Set(prev);
+            next.add(key);
+            return next;
+          });
+        },
+        onReset: handleResetCommodity,
+      };
+    }
+
+    const unread = realAlerts.filter((a) => !a.read);
+    return {
+      items: unread.map(alertToTroisItem),
+      treatedCount: realAlerts.filter((a) => a.read).length,
+      totalCount: realAlerts.length,
+      onItemDone: (visibleIdx: number) => {
+        const target = unread[visibleIdx];
+        if (target) markAsRead(target.id);
+      },
+      onReset: undefined,
+    };
+  }, [isCommodity, workspaceShape, commodityDone, realAlerts, markAsRead, handleResetCommodity]);
+
   const sourceBadges = workspaceShape.sourceBadges;
 
   return (
@@ -348,7 +393,14 @@ export default function DashboardClient({
         </div>
 
         <div className="dash-section" style={{ marginBottom: "clamp(1.5rem, 3.5vw, 2.25rem)" }}>
-          <TroisChoses items={troisItems} onOpen={onOpen} />
+          <TroisChoses
+            items={troisProps.items}
+            treatedCount={troisProps.treatedCount}
+            totalCount={troisProps.totalCount}
+            onItemDone={troisProps.onItemDone}
+            onReset={troisProps.onReset}
+            onOpen={onOpen}
+          />
         </div>
 
         <Footer

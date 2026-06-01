@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowRight, Check, CheckCircle2,
@@ -9,6 +8,9 @@ import {
 import type { ModalKey } from "@/lib/types";
 
 export type TroisItem = {
+  /** Stable key for AnimatePresence — should remain identical across
+   *  re-renders for a given alert so the row animates rather than remounts. */
+  id?: string;
   Icon: LucideIcon;
   color: string;
   bg: string;
@@ -18,13 +20,39 @@ export type TroisItem = {
 };
 
 interface TroisChosesProps {
+  /** Outstanding items (parent has already filtered out resolved ones). The
+   *  component shows the first VISIBLE_COUNT of these; the rest sit in queue. */
   items: TroisItem[];
+  /** Numerator of the top-right counter ("X / N alertes traitées"). */
+  treatedCount: number;
+  /** Denominator of the top-right counter — total in the system. */
+  totalCount: number;
+  /** Called when the user marks the item at `visibleIndex` as done. The
+   *  index refers to the visible slice (0..VISIBLE_COUNT-1), so the parent
+   *  should look it up against the same `items` array it passed in. */
+  onItemDone: (visibleIndex: number) => void;
+  /** Optional reset hook for the "Tout est traité" empty state. If omitted,
+   *  the reset button is hidden — appropriate when the underlying state lives
+   *  outside this component and isn't trivially resettable from here. */
+  onReset?: () => void;
   onOpen?: (k: ModalKey) => void;
 }
 
-export function TroisChoses({ items, onOpen }: TroisChosesProps) {
-  const [done, setDone] = useState<boolean[]>(() => items.map(() => false));
-  const allDone = done.every(Boolean);
+/** How many alerts stay visible at once. Items past this point sit in the
+ *  queue and slide up automatically as earlier ones get resolved, so the
+ *  on-screen list keeps a stable depth until the pool runs out. */
+const VISIBLE_COUNT = 3;
+
+export function TroisChoses({
+  items,
+  treatedCount,
+  totalCount,
+  onItemDone,
+  onReset,
+  onOpen,
+}: TroisChosesProps) {
+  const allDone = totalCount > 0 && items.length === 0;
+  const visible = items.slice(0, VISIBLE_COUNT);
 
   return (
     <div
@@ -38,26 +66,43 @@ export function TroisChoses({ items, onOpen }: TroisChosesProps) {
         overflow: "hidden",
       }}>
       <div
-        className="trois-card__eyebrow"
+        className="trois-card__header"
         style={{
-          fontSize: "0.7rem", fontWeight: 700,
-          letterSpacing: "0.16em",
-          textTransform: "uppercase",
-          color: "var(--accent)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: "0.6rem",
           marginBottom: "0.4rem",
-          display: "flex", alignItems: "center", gap: "0.45rem",
         }}>
-        Trois actions aujourd&apos;hui
-        {!allDone && (
-          <span style={{
-            fontSize: "0.62rem", fontWeight: 700,
-            color: "var(--text-3)",
-            background: "var(--surface-2)",
-            padding: "0.1rem 0.4rem",
-            borderRadius: "100px",
-            letterSpacing: "0.04em",
+        <div
+          className="trois-card__eyebrow"
+          style={{
+            fontSize: "0.7rem", fontWeight: 700,
+            letterSpacing: "0.16em",
+            textTransform: "uppercase",
+            color: "var(--accent)",
+            display: "flex", alignItems: "center", gap: "0.45rem",
+            minWidth: 0,
           }}>
-            {done.filter(Boolean).length}/{items.length}
+          Alertes à traiter
+        </div>
+        {totalCount > 0 && (
+          <span
+            className="trois-card__counter"
+            aria-live="polite"
+            style={{
+              fontSize: "0.66rem", fontWeight: 700,
+              color: allDone ? "var(--success)" : "var(--text-3)",
+              background: allDone ? "var(--success-tint)" : "var(--surface-2)",
+              padding: "0.22rem 0.6rem",
+              borderRadius: "100px",
+              letterSpacing: "0.02em",
+              whiteSpace: "nowrap",
+              fontVariantNumeric: "tabular-nums",
+              border: `1px solid ${allDone ? "var(--success-tint-2, var(--success-tint))" : "var(--border)"}`,
+              flexShrink: 0,
+            }}>
+            {treatedCount}/{totalCount} alertes traitées
           </span>
         )}
       </div>
@@ -71,7 +116,7 @@ export function TroisChoses({ items, onOpen }: TroisChosesProps) {
           letterSpacing: "-0.015em",
           lineHeight: 1.35,
         }}>
-        Vos priorités du matin, mises au premier plan.
+        Vos alertes en attente, triées par priorité.
       </h2>
 
       <AnimatePresence mode="wait">
@@ -103,7 +148,7 @@ export function TroisChoses({ items, onOpen }: TroisChosesProps) {
               fontSize: "1.05rem", fontWeight: 600,
               color: "var(--text)",
               letterSpacing: "-0.015em",
-            }}>Tout est fait.</div>
+            }}>Tout est traité.</div>
             <div style={{
               fontSize: "0.86rem",
               color: "var(--text-3)",
@@ -111,23 +156,25 @@ export function TroisChoses({ items, onOpen }: TroisChosesProps) {
             }}>
               Bonne journée, Mirko. Vos agents IA continuent de surveiller en arrière-plan.
             </div>
-            <button
-              onClick={() => setDone(items.map(() => false))}
-              style={{
-                marginTop: "0.6rem",
-                padding: "0.4rem 0.85rem",
-                background: "transparent",
-                border: "1px solid var(--border)",
-                color: "var(--text-2)",
-                fontFamily: "inherit",
-                fontSize: "0.78rem", fontWeight: 500,
-                cursor: "pointer",
-                borderRadius: "8px",
-                transition: "border-color 0.15s",
-              }}
-              onMouseEnter={(e) => (e.currentTarget.style.borderColor = "var(--border-strong)")}
-              onMouseLeave={(e) => (e.currentTarget.style.borderColor = "var(--border)")}
-            >Réinitialiser</button>
+            {onReset && (
+              <button
+                onClick={onReset}
+                style={{
+                  marginTop: "0.6rem",
+                  padding: "0.4rem 0.85rem",
+                  background: "transparent",
+                  border: "1px solid var(--border)",
+                  color: "var(--text-2)",
+                  fontFamily: "inherit",
+                  fontSize: "0.78rem", fontWeight: 500,
+                  cursor: "pointer",
+                  borderRadius: "8px",
+                  transition: "border-color 0.15s",
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.borderColor = "var(--border-strong)")}
+                onMouseLeave={(e) => (e.currentTarget.style.borderColor = "var(--border)")}
+              >Réinitialiser</button>
+            )}
           </motion.div>
         ) : (
           <motion.div
@@ -137,22 +184,18 @@ export function TroisChoses({ items, onOpen }: TroisChosesProps) {
             transition={{ duration: 0.18 }}
             style={{ display: "flex", flexDirection: "column", gap: "0.1rem" }}
           >
-            {items.map((t, i) =>
-              done[i] ? null : (
+            {/* Inner AnimatePresence so removed rows fade/collapse and the
+             *  next queued item slides up into the visible slot. */}
+            <AnimatePresence initial={false}>
+              {visible.map((t, visibleIdx) => (
                 <TroisRow
-                  key={i}
+                  key={t.id ?? `${t.sentence}-${visibleIdx}`}
                   item={t}
-                  onDone={() => {
-                    setDone((prev) => {
-                      const next = [...prev];
-                      next[i] = true;
-                      return next;
-                    });
-                  }}
+                  onDone={() => onItemDone(visibleIdx)}
                   onOpen={t.modalKey && onOpen ? () => onOpen(t.modalKey!) : undefined}
                 />
-              ),
-            )}
+              ))}
+            </AnimatePresence>
           </motion.div>
         )}
       </AnimatePresence>
@@ -171,9 +214,10 @@ function TroisRow({
   return (
     <motion.div
       layout
-      initial={{ opacity: 1 }}
+      initial={{ opacity: 0, height: 0 }}
+      animate={{ opacity: 1, height: "auto" }}
       exit={{ opacity: 0, height: 0, marginTop: 0, marginBottom: 0 }}
-      transition={{ duration: 0.22 }}
+      transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
       className="trois-row"
       style={{
         display: "grid",

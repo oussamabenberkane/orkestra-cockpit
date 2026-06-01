@@ -175,7 +175,10 @@ export const satellites: Satellite[] = [
   },
 ];
 
-/** Morning checklist — three priority actions for the operator. */
+/** Prioritised alert queue for the broker workspace. The TroisChoses section
+ *  displays the first 5 unresolved items; when one is marked done the next
+ *  item slides in from this queue, so the on-screen list stays at 5 until
+ *  the pool is exhausted. Ordered roughly by priority. */
 export const troisItems: TroisItem[] = [
   {
     Icon: Mail,
@@ -196,6 +199,69 @@ export const troisItems: TroisItem[] = [
     sentence: "Signer le rapport mensuel combiné Helvebroker SA + Odoo.",
     cta: "Signer",
     modalKey: "rapport",
+  },
+  {
+    Icon: AlertCircle,
+    color: "var(--danger)", bg: "var(--danger-tint)",
+    sentence: "Sinistre SIN-0047 en attente de validation depuis 4 jours.",
+    cta: "Ouvrir",
+    modalKey: "sinistres",
+  },
+  {
+    Icon: FileText,
+    color: "var(--info)", bg: "var(--info-tint)",
+    sentence: "Confirmer l'avenant au contrat Dubois SA avant le 15 mai.",
+    cta: "Confirmer",
+    modalKey: "portefeuille",
+  },
+  {
+    Icon: Mail,
+    color: "var(--accent)", bg: "var(--accent-tint)",
+    sentence: "Relancer 3 prospects froids identifiés par l'agent prospection.",
+    cta: "Relancer",
+    modalKey: "prospection",
+  },
+  {
+    Icon: AlertCircle,
+    color: "var(--warn)", bg: "var(--warn-tint)",
+    sentence: "Écart de commission détecté sur Helvetia (T1 2026).",
+    cta: "Vérifier",
+    modalKey: "finance",
+  },
+  {
+    Icon: FileText,
+    color: "var(--info)", bg: "var(--info-tint)",
+    sentence: "Valider la nouvelle police RC professionnelle Audemars SA.",
+    cta: "Valider",
+    modalKey: "portefeuille",
+  },
+  {
+    Icon: AlertCircle,
+    color: "var(--danger)", bg: "var(--danger-tint)",
+    sentence: "Résiliation reçue de Bernoulli Holdings (effet 30 juin).",
+    cta: "Traiter",
+    modalKey: "portefeuille",
+  },
+  {
+    Icon: AlertCircle,
+    color: "var(--warn)", bg: "var(--warn-tint)",
+    sentence: "Alerte marché Zurich : hausse tarifaire 12% sur RC entreprise.",
+    cta: "Voir",
+    modalKey: "vue360",
+  },
+  {
+    Icon: Mail,
+    color: "var(--accent)", bg: "var(--accent-tint)",
+    sentence: "Préparer le courrier de relance pour 5 contrats échus.",
+    cta: "Préparer",
+    modalKey: "finance",
+  },
+  {
+    Icon: FileText,
+    color: "var(--info)", bg: "var(--info-tint)",
+    sentence: "Approuver la proposition de prime ajustée pour Müller SA.",
+    cta: "Approuver",
+    modalKey: "portefeuille",
   },
 ];
 

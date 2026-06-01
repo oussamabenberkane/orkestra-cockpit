@@ -110,7 +110,7 @@ export async function fetchAgentTaskRows(): Promise<AgentTaskRow[]> {
     .select("titre, type, priority, modal_key")
     .eq("statut", "pending")
     .order("priority")
-    .limit(3);
+    .limit(12);
   return (data ?? []) as AgentTaskRow[];
 }
 
