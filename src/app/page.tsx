@@ -1397,7 +1397,7 @@ function PillarsSection() {
   const reduce = useReducedMotionSafe();
   return (
     <section id="piliers" className="landing-section">
-      <SectionHeader title="Conçu pour les cabinets BFSI suisses." />
+      <SectionHeader title="Conçu pour les PME suisses." />
       <div className="pillars-grid" style={{ marginTop: "clamp(1.5rem, 3vw, 2.5rem)" }}>
         {pillars.map((p, i) => (
           <PillarCard key={p.title} pillar={p} index={i} reduce={reduce} />
