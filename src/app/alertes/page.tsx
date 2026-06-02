@@ -158,7 +158,7 @@ export default function AlertesPage() {
                   lineHeight: 1.2,
                 }}
               >
-                Centre d&apos;alertes
+                Alertes à traiter
               </h1>
               <p
                 style={{
