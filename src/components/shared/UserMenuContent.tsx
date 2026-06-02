@@ -89,7 +89,7 @@ export function UserMenuContent({ onLogout, bare = false, onClose }: UserMenuCon
                 textOverflow: "ellipsis",
               }}
             >
-              m.ferretti@helvebroker.ch
+              mirko@helvebroker.ch
             </div>
           </div>
         </div>

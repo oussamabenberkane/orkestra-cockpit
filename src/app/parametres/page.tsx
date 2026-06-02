@@ -296,7 +296,7 @@ function SaveButton({ saved }: { saved: boolean }) {
 function ProfilSection({ onSave, saved }: { onSave: () => void; saved: boolean }) {
   const [prenom, setPrenom] = useState("Mirko");
   const [nom, setNom] = useState("Righele");
-  const [email, setEmail] = useState("m.ferretti@helvebroker.ch");
+  const [email, setEmail] = useState("mirko@helvebroker.ch");
   const [phone, setPhone] = useState("+41 79 123 45 67");
   const [langue, setLangue] = useState("fr");
   const [showCurrent, setShowCurrent] = useState(false);

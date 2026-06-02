@@ -856,7 +856,7 @@ export function Sidebar({
                   color: "var(--rail-text-soft)",
                   whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
                   marginTop: "1px",
-                }}>m.ferretti@helvebroker.ch</div>
+                }}>mirko@helvebroker.ch</div>
               </div>
             </button>
 
