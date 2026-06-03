@@ -72,20 +72,22 @@ export function TroisChoses({
           alignItems: "center",
           justifyContent: "space-between",
           gap: "0.6rem",
-          marginBottom: "0.4rem",
+          marginBottom: "1rem",
         }}>
-        <div
-          className="trois-card__eyebrow"
+        <h2
+          className="trois-card__title"
           style={{
-            fontSize: "0.7rem", fontWeight: 700,
-            letterSpacing: "0.16em",
-            textTransform: "uppercase",
-            color: "var(--accent)",
+            fontSize: "clamp(0.92rem, 2.2vw, 1.05rem)",
+            fontWeight: 600,
+            color: "var(--text)",
+            margin: 0,
+            letterSpacing: "-0.015em",
+            lineHeight: 1.35,
             display: "flex", alignItems: "center", gap: "0.45rem",
             minWidth: 0,
           }}>
           Alertes à traiter
-        </div>
+        </h2>
         {totalCount > 0 && (
           <span
             className="trois-card__counter"
@@ -106,18 +108,6 @@ export function TroisChoses({
           </span>
         )}
       </div>
-      <h2
-        className="trois-card__subtitle"
-        style={{
-          fontSize: "clamp(0.92rem, 2.2vw, 1.05rem)",
-          fontWeight: 600,
-          color: "var(--text)",
-          margin: 0, marginBottom: "1rem",
-          letterSpacing: "-0.015em",
-          lineHeight: 1.35,
-        }}>
-        Vos alertes en attente, triées par priorité.
-      </h2>
 
       <AnimatePresence mode="wait">
         {allDone ? (

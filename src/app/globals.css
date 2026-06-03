@@ -1424,21 +1424,12 @@ html.scroll-locked body {
   }
 }
 
-/* TroisChoses card — mobile-first compaction. Trims the card padding,
-   drops the redundant subtitle (the Action-first banner above the card
-   already states intent), and tightens the eyebrow row. */
+/* TroisChoses card — mobile-first compaction. Trims the card padding
+   and row spacing so the alert list dominates the visible area. */
 @media (max-width: 640px) {
   .trois-card {
     padding: 0.7rem 0.7rem 0.45rem !important;
     border-radius: 12px !important;
-  }
-  .trois-card__eyebrow {
-    font-size: 0.6rem !important;
-    margin-bottom: 0.3rem !important;
-    letter-spacing: 0.14em !important;
-  }
-  .trois-card__subtitle {
-    display: none !important;
   }
   .trois-row {
     padding: 0.45rem 0.2rem !important;

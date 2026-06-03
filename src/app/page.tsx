@@ -798,26 +798,11 @@ function Hero({ onCta }: { onCta: () => void }) {
             </span>
           </motion.h1>
 
-          <motion.p
-            {...fadeIn(0.16)}
-            style={{
-              marginTop: "0.95rem",
-              fontSize: "clamp(0.95rem, 1.6vw, 1.1rem)",
-              color: "var(--text-2)",
-              lineHeight: 1.55,
-              maxWidth: "52ch",
-              marginInline: "auto",
-            }}
-          >
-            Un cockpit qui répond à <em style={{ fontStyle: "normal", color: "var(--text)", fontWeight: 600 }}>« que dois-je faire aujourd’hui&nbsp;? »</em> dès la connexion.
-            Helvebroker SA et Odoo enfin parlent la même langue.
-          </motion.p>
-
           <motion.div
-            {...fadeIn(0.24)}
+            {...fadeIn(0.16)}
             className="landing-hero-cta"
             style={{
-              marginTop: "1.4rem",
+              marginTop: "2rem",
               display: "flex",
               gap: "0.6rem",
             }}
@@ -873,7 +858,7 @@ function Hero({ onCta }: { onCta: () => void }) {
           </motion.div>
 
           <motion.div
-            {...fadeIn(0.32)}
+            {...fadeIn(0.24)}
             className="landing-hero-chips"
             style={{
               marginTop: "1.2rem",
