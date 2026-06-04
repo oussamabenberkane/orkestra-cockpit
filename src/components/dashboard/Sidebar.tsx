@@ -129,15 +129,18 @@ function NavItem({
     }
   };
 
+  /* Single geometry for both collapsed and expanded: the row is always
+   * ICON_BTN px tall with a fixed-size icon slot on the left, a label that
+   * fades in/out, and a badge chip that fades alongside it. Padding stays
+   * constant so the vertical layout never reshuffles during the toggle. */
   const commonStyle: React.CSSProperties = {
     position: "relative",
     width: "100%",
     display: "flex",
     alignItems: "center",
-    gap: "0.55rem",
-    padding: collapsed ? "0.25rem" : "0.45rem 0.55rem",
-    justifyContent: collapsed ? "center" : "flex-start",
-    background: active && !collapsed ? "var(--surface)" : "transparent",
+    gap: 0,
+    padding: 0,
+    background: active ? "var(--surface)" : "transparent",
     border: "none",
     borderRadius: "10px",
     fontFamily: "inherit",
@@ -150,113 +153,102 @@ function NavItem({
     cursor: "pointer",
     textAlign: "left",
     textDecoration: "none",
-    boxShadow: active && !collapsed ? "var(--tier-active)" : "none",
-    transition: "background 0.18s, color 0.18s, transform 0.18s",
+    boxShadow: active ? "var(--tier-active)" : "none",
+    overflow: "hidden",
+    transition: "background 0.18s, color 0.18s, box-shadow 0.18s",
     margin: "1px 0",
   };
 
   const handleMouseEnter = (e: React.MouseEvent<HTMLElement>) => {
-    if (!active && !collapsed) {
+    if (!active) {
       e.currentTarget.style.background = "var(--rail-hover)";
-      const iconEl = e.currentTarget.querySelector("[data-nav-icon]") as HTMLElement | null;
-      if (iconEl) {
-        iconEl.style.opacity = "1";
-        iconEl.style.transform = "scale(1.08)";
-      }
+    }
+    const iconEl = e.currentTarget.querySelector("[data-nav-icon]") as HTMLElement | null;
+    if (iconEl && !active) {
+      iconEl.style.opacity = "1";
+      iconEl.style.transform = "scale(1.08)";
     }
     if (collapsed) {
-      const wrap = e.currentTarget.querySelector("[data-nav-icon-collapsed]") as HTMLElement | null;
-      if (wrap) wrap.style.background = active ? "var(--surface)" : "var(--rail-hover)";
       showTip(item.label + (item.badge ? ` · ${item.badge}` : ""), e.currentTarget);
     }
   };
 
   const handleMouseLeave = (e: React.MouseEvent<HTMLElement>) => {
-    if (!active && !collapsed) {
+    if (!active) {
       e.currentTarget.style.background = "transparent";
-      const iconEl = e.currentTarget.querySelector("[data-nav-icon]") as HTMLElement | null;
-      if (iconEl) {
-        iconEl.style.opacity = "0.92";
-        iconEl.style.transform = "scale(1)";
-      }
     }
-    if (collapsed) {
-      const wrap = e.currentTarget.querySelector("[data-nav-icon-collapsed]") as HTMLElement | null;
-      if (wrap) wrap.style.background = active ? "var(--surface)" : "transparent";
+    const iconEl = e.currentTarget.querySelector("[data-nav-icon]") as HTMLElement | null;
+    if (iconEl && !active) {
+      iconEl.style.opacity = "0.92";
+      iconEl.style.transform = "scale(1)";
     }
     hideTip();
   };
 
-  const inner = collapsed ? (
-    <span
-      data-nav-icon-collapsed
-      /* rail-on-white when active: the wrap becomes a white card on the
-       * cobalt rail, so its text/icon tokens re-scope to dark variants. */
-      className={active ? "rail-on-white" : undefined}
-      style={{
-        width: ICON_BTN,
-        height: ICON_BTN,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        background: active ? "var(--surface)" : "transparent",
-        borderRadius: "9px",
-        boxShadow: active ? "var(--tier-active)" : "none",
-        position: "relative",
-        flexShrink: 0,
-        transition: "background 0.18s, box-shadow 0.18s",
-      }}
-    >
-      <Icon
-        size={19}
-        strokeWidth={active ? 2.5 : 2.25}
-        color={active ? "#3C3489" : item.iconColor}
-        style={{ opacity: active ? 1 : 0.95, transition: "opacity 0.18s" }}
-      />
-      {item.badge && (
-        <span aria-hidden style={{
-          position: "absolute", top: 4, right: 4,
-          width: 6, height: 6,
-          borderRadius: "50%",
-          background: badgeColor,
-          border: "1.5px solid var(--surface-2)",
-        }} />
-      )}
-    </span>
-  ) : (
+  const inner = (
     <>
       <span
         data-nav-icon
         style={{
-          width: 16, height: 16,
+          width: ICON_BTN, height: ICON_BTN,
           display: "flex", alignItems: "center", justifyContent: "center",
           flexShrink: 0,
+          position: "relative",
           opacity: active ? 1 : 0.92,
           transition: "opacity 0.18s, transform 0.18s",
         }}
       >
-        <Icon size={15} strokeWidth={active ? 2.5 : 2.25} color={active ? "#3C3489" : item.iconColor} />
+        <Icon size={17} strokeWidth={active ? 2.5 : 2.25} color={active ? "#3C3489" : item.iconColor} />
+        {/* Small badge dot — only visible while collapsed, so the chip-style
+         * badge below (which clips with the label) can take over once the
+         * label fades in. */}
+        {item.badge && (
+          <span aria-hidden style={{
+            position: "absolute", top: 4, right: 4,
+            width: 6, height: 6,
+            borderRadius: "50%",
+            background: badgeColor,
+            border: "1.5px solid var(--surface-2)",
+            opacity: collapsed ? 1 : 0,
+            transition: "opacity 0.18s ease",
+          }} />
+        )}
       </span>
-      <span style={{ flex: 1, whiteSpace: "nowrap", overflow: "hidden" }}>
+      <span
+        style={{
+          flex: "1 1 auto",
+          minWidth: 0,
+          whiteSpace: "nowrap",
+          overflow: "hidden",
+          paddingLeft: "0.4rem",
+          paddingRight: "0.4rem",
+          opacity: collapsed ? 0 : 1,
+          transition: "opacity 0.22s ease",
+        }}
+      >
         {item.label}
       </span>
       {item.badge && (
         /* Count chip — uses --rail-badge-* tokens so colored-sidebar palettes
          * (Cobalt) can flip the chip to a solid white pill with dark text.
-         * The rail-on-white class kicks in the semantic-color reset there so
-         * the badge count reads in the deep semantic variant on the white pill. */
+         * Fades alongside the label so both visual badges hand off cleanly
+         * during the rail's width transition. */
         <span
           className="rail-on-white"
+          aria-hidden={collapsed}
           style={{
             fontFamily: "var(--font-mono)",
             fontSize: "0.66rem",
             fontWeight: 600,
             color: badgeColor,
             padding: "0.05rem 0.4rem",
+            marginRight: "0.4rem",
             background: "var(--rail-badge-bg)",
             border: "1px solid var(--rail-badge-border)",
             borderRadius: "100px",
             flexShrink: 0,
+            opacity: collapsed ? 0 : 1,
+            transition: "opacity 0.22s ease",
           }}
         >
           {item.badge}
@@ -265,12 +257,11 @@ function NavItem({
     </>
   );
 
-  /* When the expanded pill is active, the surface flips to var(--surface)
-   * (white). Mark it rail-on-white so text + nav-icon tokens re-scope to
-   * dark variants on the Cobalt palette where the surrounding sidebar
-   * tokens are light. No-op in light-sidebar palettes (no scope rule
-   * matches). */
-  const activeWhiteClass = active && !collapsed ? "rail-on-white" : undefined;
+  /* When the row is active, the surface flips to var(--surface) (white).
+   * Mark it rail-on-white so text + nav-icon tokens re-scope to dark
+   * variants on the Cobalt palette where the surrounding sidebar tokens
+   * are light. No-op in light-sidebar palettes (no scope rule matches). */
+  const activeWhiteClass = active ? "rail-on-white" : undefined;
 
   if (isLink) {
     return (
@@ -508,7 +499,7 @@ export function Sidebar({
         position: "sticky",
         top: 0,
         height: "100vh",
-        transition: "width 0.36s cubic-bezier(0.22, 1, 0.36, 1)",
+        transition: "width 0.24s cubic-bezier(0.22, 1, 0.36, 1)",
         zIndex: 20,
       };
 
@@ -614,44 +605,57 @@ export function Sidebar({
           flexShrink: 0,
           justifyContent: isOpen ? "space-between" : "center",
         }}>
-          {isOpen && (
-            <>
-              <div style={{
-                width: 40, height: 40,
-                display: "flex", alignItems: "center", justifyContent: "center",
-                flexShrink: 0,
-              }}>
-                <svg viewBox="0 0 60 70" fill="none" style={{ width: 30, height: 30 }}>
-                  <polygon points="30,2 58,17.5 58,52.5 30,68 2,52.5 2,17.5"
-                    fill="none" stroke="var(--rail-accent)" strokeWidth="3.5" />
-                  <polygon points="30,12 48,22.5 48,47.5 30,58 12,47.5 12,22.5"
-                    fill="var(--rail-accent)" opacity="0.22" />
-                  <polygon points="30,20 40,26 40,44 30,50 20,44 20,26"
-                    fill="var(--rail-accent)" opacity="0.55" />
-                  <polygon points="30,28 36,31.5 36,38.5 30,42 24,38.5 24,31.5"
-                    fill="var(--rail-accent)" />
-                </svg>
-              </div>
+          {/* Brand block — always rendered so the rail width transition isn't
+           * undermined by a hard pop on the logo + label. max-width + opacity
+           * fade in sync with the aside's width transition. */}
+          <div
+            aria-hidden={!isOpen}
+            style={{
+              display: "flex", alignItems: "center", gap: "0.45rem",
+              flex: "1 1 auto", minWidth: 0,
+              overflow: "hidden",
+              maxWidth: isOpen ? "100%" : 0,
+              opacity: isOpen ? 1 : 0,
+              pointerEvents: isOpen ? "auto" : "none",
+              transition:
+                "max-width 0.24s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.22s ease",
+            }}
+          >
+            <div style={{
+              width: 40, height: 40,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              flexShrink: 0,
+            }}>
+              <svg viewBox="0 0 60 70" fill="none" style={{ width: 30, height: 30 }}>
+                <polygon points="30,2 58,17.5 58,52.5 30,68 2,52.5 2,17.5"
+                  fill="none" stroke="var(--rail-accent)" strokeWidth="3.5" />
+                <polygon points="30,12 48,22.5 48,47.5 30,58 12,47.5 12,22.5"
+                  fill="var(--rail-accent)" opacity="0.22" />
+                <polygon points="30,20 40,26 40,44 30,50 20,44 20,26"
+                  fill="var(--rail-accent)" opacity="0.55" />
+                <polygon points="30,28 36,31.5 36,38.5 30,42 24,38.5 24,31.5"
+                  fill="var(--rail-accent)" />
+              </svg>
+            </div>
 
+            <div style={{
+              flex: 1, minWidth: 0,
+              overflow: "hidden",
+              lineHeight: 1,
+              whiteSpace: "nowrap",
+            }}>
               <div style={{
-                flex: 1, minWidth: 0,
-                overflow: "hidden",
-                lineHeight: 1,
-                whiteSpace: "nowrap",
-              }}>
-                <div style={{
-                  fontSize: "0.92rem", fontWeight: 900,
-                  color: "var(--rail-accent)", letterSpacing: "2.4px",
-                  textTransform: "uppercase",
-                }}>Malyz</div>
-                <div style={{
-                  fontSize: "0.55rem", color: "var(--rail-text-soft)",
-                  letterSpacing: "0.7px", textTransform: "uppercase",
-                  marginTop: "3px", fontWeight: 500,
-                }}>Consulting Sàrl</div>
-              </div>
-            </>
-          )}
+                fontSize: "0.92rem", fontWeight: 900,
+                color: "var(--rail-accent)", letterSpacing: "2.4px",
+                textTransform: "uppercase",
+              }}>Malyz</div>
+              <div style={{
+                fontSize: "0.55rem", color: "var(--rail-text-soft)",
+                letterSpacing: "0.7px", textTransform: "uppercase",
+                marginTop: "3px", fontWeight: 500,
+              }}>Consulting Sàrl</div>
+            </div>
+          </div>
 
           {/* Toggle — always visible */}
           <button
@@ -716,8 +720,8 @@ export function Sidebar({
               display: "flex", alignItems: "center",
               justifyContent: isOpen ? "flex-start" : "center",
               gap: "0.55rem",
-              padding: isOpen ? "0.5rem 0.65rem" : "0",
-              height: isOpen ? "auto" : ICON_BTN,
+              padding: isOpen ? "0 0.65rem" : "0",
+              height: ICON_BTN,
               background: "var(--surface)",
               border: "none", borderRadius: "10px",
               color: "var(--text-3)",
@@ -725,16 +729,26 @@ export function Sidebar({
               fontFamily: "inherit",
               cursor: "pointer",
               boxShadow: "var(--tier-1)",
-              transition: "transform 0.22s ease, color 0.18s",
+              transition:
+                "transform 0.22s ease, color 0.18s, padding 0.24s cubic-bezier(0.22, 1, 0.36, 1)",
             }}
           >
-            <Search size={isOpen ? 14 : 19} strokeWidth={2} color="#3C3489" style={{ flexShrink: 0 }} />
-            {isOpen && (
-              <span style={{
-                flex: 1, textAlign: "left",
+            <Search size={17} strokeWidth={2} color="#3C3489" style={{ flexShrink: 0 }} />
+            {/* Label always mounted — fades + collapses width so the rail
+             * doesn't get a hard pop when toggling. */}
+            <span
+              aria-hidden={!isOpen}
+              style={{
+                flex: "1 1 auto", textAlign: "left",
                 whiteSpace: "nowrap", overflow: "hidden",
-              }}>Rechercher…</span>
-            )}
+                maxWidth: isOpen ? "100%" : 0,
+                opacity: isOpen ? 1 : 0,
+                transition:
+                  "max-width 0.24s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.22s ease",
+              }}
+            >
+              Rechercher…
+            </span>
           </button>
         </div>
 
@@ -760,7 +774,7 @@ export function Sidebar({
                 opacity: isOpen ? 1 : 0,
                 maxHeight: isOpen ? "2rem" : "0.35rem",
                 overflow: "hidden",
-                transition: "opacity 0.2s ease, max-height 0.3s cubic-bezier(0.22,1,0.36,1)",
+                transition: "opacity 0.22s ease, max-height 0.24s cubic-bezier(0.22, 1, 0.36, 1)",
                 whiteSpace: "nowrap",
               }}>
                 {section.title}
@@ -781,16 +795,27 @@ export function Sidebar({
           ))}
         </nav>
 
-        {/* Bottom: user row + bell (expanded) | stacked icons (collapsed) */}
+        {/* Bottom: user row + bell (expanded) | stacked icons (collapsed).
+         * Cross-faded via AnimatePresence so the layout swap doesn't hard-cut
+         * mid-way through the rail's width transition. */}
+        <div style={{
+          position: "relative",
+          borderTop: "1px solid var(--border)",
+          flexShrink: 0,
+        }}>
+        <AnimatePresence mode="wait" initial={false}>
         {isOpen ? (
-          <div
+          <motion.div
+            key="bottom-expanded"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.16, ease: [0.22, 1, 0.36, 1] }}
             style={{
               padding: "0.5rem 0.6rem 0.7rem",
-              borderTop: "1px solid var(--border)",
               display: "flex",
               alignItems: "center",
               gap: "0.4rem",
-              flexShrink: 0,
             }}
           >
             {/* User info button */}
@@ -905,17 +930,20 @@ export function Sidebar({
                 }}>{unreadCount}</span>
               )}
             </button>
-          </div>
+          </motion.div>
         ) : (
-          <div
+          <motion.div
+            key="bottom-collapsed"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.16, ease: [0.22, 1, 0.36, 1] }}
             style={{
               padding: "0.55rem 0 0.75rem",
-              borderTop: "1px solid var(--border)",
               display: "flex",
               flexDirection: "column",
               alignItems: "center",
               gap: "0.4rem",
-              flexShrink: 0,
             }}
           >
             <button
@@ -1011,8 +1039,10 @@ export function Sidebar({
                 }}>TM</span>
               </span>
             </button>
-          </div>
+          </motion.div>
         )}
+        </AnimatePresence>
+        </div>
 
         {/* Separate popups — each opens directly from its own trigger, no tabs */}
         <AnimatePresence>
