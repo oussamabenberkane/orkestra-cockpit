@@ -132,10 +132,17 @@ function NavItem({
   /* Single geometry for both collapsed and expanded: the row is always
    * ICON_BTN px tall with a fixed-size icon slot on the left, a label that
    * fades in/out, and a badge chip that fades alongside it. Padding stays
-   * constant so the vertical layout never reshuffles during the toggle. */
+   * constant so the vertical layout never reshuffles during the toggle.
+   *
+   * The button width is the active-pill shape: ICON_BTN px wide (square
+   * pill around just the icon) when collapsed, 100% wide (full-row pill)
+   * when expanded. `margin: 1px auto` centers the narrow button inside the
+   * nav padding when collapsed; it's a no-op at 100% width. The width
+   * transition runs in sync with the aside's rail width so they grow and
+   * shrink together. */
   const commonStyle: React.CSSProperties = {
     position: "relative",
-    width: "100%",
+    width: collapsed ? `${ICON_BTN}px` : "100%",
     display: "flex",
     alignItems: "center",
     gap: 0,
@@ -155,8 +162,9 @@ function NavItem({
     textDecoration: "none",
     boxShadow: active ? "var(--tier-active)" : "none",
     overflow: "hidden",
-    transition: "background 0.18s, color 0.18s, box-shadow 0.18s",
-    margin: "1px 0",
+    transition:
+      "width 0.24s cubic-bezier(0.22, 1, 0.36, 1), background 0.18s, color 0.18s, box-shadow 0.18s",
+    margin: "1px auto",
   };
 
   const handleMouseEnter = (e: React.MouseEvent<HTMLElement>) => {
@@ -716,11 +724,14 @@ export function Sidebar({
               hideTip();
             }}
             style={{
-              width: "100%",
+              /* Same width-driven pill as NavItem: ICON_BTN-square when
+               * collapsed, full row when expanded. Margin auto centers the
+               * narrow button in the sidebar padding when collapsed. */
+              width: isOpen ? "100%" : `${ICON_BTN}px`,
+              margin: "0 auto",
               display: "flex", alignItems: "center",
-              justifyContent: isOpen ? "flex-start" : "center",
-              gap: "0.55rem",
-              padding: isOpen ? "0 0.65rem" : "0",
+              gap: 0,
+              padding: 0,
               height: ICON_BTN,
               background: "var(--surface)",
               border: "none", borderRadius: "10px",
@@ -729,11 +740,18 @@ export function Sidebar({
               fontFamily: "inherit",
               cursor: "pointer",
               boxShadow: "var(--tier-1)",
+              overflow: "hidden",
               transition:
-                "transform 0.22s ease, color 0.18s, padding 0.24s cubic-bezier(0.22, 1, 0.36, 1)",
+                "width 0.24s cubic-bezier(0.22, 1, 0.36, 1), transform 0.22s ease, color 0.18s",
             }}
           >
-            <Search size={17} strokeWidth={2} color="#3C3489" style={{ flexShrink: 0 }} />
+            <span style={{
+              width: ICON_BTN, height: ICON_BTN,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              flexShrink: 0,
+            }}>
+              <Search size={17} strokeWidth={2} color="#3C3489" />
+            </span>
             {/* Label always mounted — fades + collapses width so the rail
              * doesn't get a hard pop when toggling. */}
             <span
@@ -741,10 +759,9 @@ export function Sidebar({
               style={{
                 flex: "1 1 auto", textAlign: "left",
                 whiteSpace: "nowrap", overflow: "hidden",
-                maxWidth: isOpen ? "100%" : 0,
+                paddingRight: "0.4rem",
                 opacity: isOpen ? 1 : 0,
-                transition:
-                  "max-width 0.24s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.22s ease",
+                transition: "opacity 0.22s ease",
               }}
             >
               Rechercher…
