@@ -2466,12 +2466,20 @@ function SlimRailButton({
 }) {
   const isAccent = variant === "accent";
   const isPanel = variant === "panel";
+  const [hovered, setHovered] = useState(false);
+  /* Inside `.agent-sidebar` the palette re-scopes --text to white so labels
+   * read on the indigo rail. A white card inside that scope therefore needs
+   * `rail-on-white` to flip --text back to dark, otherwise the icon
+   * disappears against the surface. Panel variant is always a white card;
+   * default variant becomes one on hover. */
+  const onWhite = isPanel || (!isAccent && hovered);
   return (
     <button
       type="button"
       onClick={onClick}
       aria-label={label}
       title={label}
+      className={onWhite ? "rail-on-white" : undefined}
       style={{
         position: "relative",
         width: isPanel ? 40 : 36,
@@ -2483,19 +2491,23 @@ function SlimRailButton({
           ? "var(--accent)"
           : isPanel
           ? "var(--surface)"
+          : hovered
+          ? "var(--surface)"
           : "transparent",
         border: "1px solid",
         borderColor: isAccent
           ? "var(--accent-2)"
           : isPanel
+          ? hovered ? "var(--border-strong)" : "var(--border)"
+          : hovered
           ? "var(--border)"
           : "transparent",
         borderRadius: isPanel ? 10 : 9,
         color: isAccent
           ? "#FFFFFF"
-          : isPanel
+          : onWhite
           ? "var(--text)"
-          : "var(--text-3)",
+          : "var(--rail-text-muted)",
         cursor: "pointer",
         flexShrink: 0,
         boxShadow: isAccent
@@ -2506,28 +2518,8 @@ function SlimRailButton({
         transition:
           "background 0.15s, color 0.15s, border-color 0.15s, transform 0.12s",
       }}
-      onMouseEnter={(e) => {
-        if (isAccent) return;
-        if (isPanel) {
-          e.currentTarget.style.background = "var(--surface-2)";
-          e.currentTarget.style.borderColor = "var(--border-strong)";
-          return;
-        }
-        e.currentTarget.style.background = "var(--surface)";
-        e.currentTarget.style.borderColor = "var(--border)";
-        e.currentTarget.style.color = "var(--text)";
-      }}
-      onMouseLeave={(e) => {
-        if (isAccent) return;
-        if (isPanel) {
-          e.currentTarget.style.background = "var(--surface)";
-          e.currentTarget.style.borderColor = "var(--border)";
-          return;
-        }
-        e.currentTarget.style.background = "transparent";
-        e.currentTarget.style.borderColor = "transparent";
-        e.currentTarget.style.color = "var(--text-3)";
-      }}
+      onMouseEnter={() => { if (!isAccent) setHovered(true); }}
+      onMouseLeave={() => { if (!isAccent) setHovered(false); }}
     >
       <Icon size={iconSize} strokeWidth={2.25} />
       {badge !== undefined && badge > 0 && !isAccent && (
