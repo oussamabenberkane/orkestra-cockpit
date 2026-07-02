@@ -1,4 +1,4 @@
-Base SQLite (sql.js) miroir de 7 CSV. Montants en CHF. Dates en TEXT ISO `YYYY-MM-DD` (triables lexicographiquement). Booléens en INTEGER 0/1 (ex. `WHERE actif = 1`).
+Base SQLite (sql.js) miroir des 7 tables Supabase. Montants en CHF. Dates en TEXT ISO `YYYY-MM-DD` (triables lexicographiquement). Booléens en INTEGER 0/1 (ex. `WHERE actif = 1`).
 
 ## Tables
 

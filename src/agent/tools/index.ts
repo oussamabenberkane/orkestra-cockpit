@@ -29,7 +29,7 @@ export const getDashboardKpis = tool({
     "Snapshot global du cabinet en un seul appel : CA primes annualisé, commissions, contrats actifs, ratio sinistralité, taux de rétention, taux de conversion prospects, sinistres ouverts, renouvellements urgents <30j, prospects actifs.\n\nQuand l'utiliser : questions générales (« comment va le cabinet ? », « résumé », « tableau de bord », « chiffres-clés »).\nQuand ne PAS l'utiliser : questions ciblées sur une branche, une compagnie, un client, ou un classement — préfère alors le bon agrégateur ou query_database.\nRetour : objet avec 11 indicateurs numériques (CHF ou ratios décimaux 0–1).",
   parameters: z.object({}),
   execute: async () => {
-    const { clients, contrats, sinistres, prospects, renouvellements } = loadDataset();
+    const { clients, contrats, sinistres, prospects, renouvellements } = await loadDataset();
 
     const contratsActifs = contrats.filter((c) => c.statut === "actif");
     const caPrimes = contratsActifs.reduce((s, c) => s + c.prime_annuelle, 0);
@@ -80,7 +80,7 @@ export const getRevenueSummary = tool({
     only_active: z.boolean().default(true),
   }),
   execute: async ({ group_by, only_active }) => {
-    const { contrats } = loadDataset();
+    const { contrats } = await loadDataset();
     const rows = only_active ? contrats.filter((c) => c.statut === "actif") : contrats;
     const buckets = new Map<string, { ca: number; commissions: number; count: number }>();
     for (const c of rows) {
@@ -113,7 +113,7 @@ export const getSinistraliteRatio = tool({
     include_refused: z.boolean().default(false),
   }),
   execute: async ({ branche: filtreBranche, include_refused }) => {
-    const { contrats, sinistres } = loadDataset();
+    const { contrats, sinistres } = await loadDataset();
     const contratsFiltres = contrats.filter(
       (c) => c.statut === "actif" && (!filtreBranche || c.branche === filtreBranche),
     );
@@ -142,7 +142,7 @@ export const getPipelineSummary = tool({
     "Pipeline prospects CRM en un appel : total, taux de conversion (gagné / (gagné+perdu)), valeur potentielle des prospects encore ouverts, décompte + valeur par statut.\n\nQuand l'utiliser : « état du pipeline », « combien de prospects », « valeur du pipeline ».\nQuand ne PAS l'utiliser : pour filtrer par secteur, courtier, ville, ou potentiel — préfère query_database.\nRetour : { total, taux_conversion, valeur_pipeline_potentielle_chf, par_statut: [{ statut, nb, valeur_potentielle_chf }] }.",
   parameters: z.object({}),
   execute: async () => {
-    const { prospects } = loadDataset();
+    const { prospects } = await loadDataset();
     const byStatut = new Map<string, { count: number; valeur: number }>();
     for (const p of prospects) {
       const b = byStatut.get(p.statut) ?? { count: 0, valeur: 0 };
@@ -178,7 +178,7 @@ export const getClient = tool({
     query: z.string().describe("CLT### ou fragment du nom"),
   }),
   execute: async ({ query }) => {
-    const { clients, contrats, sinistres, primes } = loadDataset();
+    const { clients, contrats, sinistres, primes } = await loadDataset();
     const q = query.toLowerCase();
     const client =
       clients.find((c) => c.id.toLowerCase() === q) ??
@@ -245,7 +245,7 @@ export const getContrat = tool({
     "Détail d'UN contrat identifié par son id `POL####` : objet contrat complet + sinistres rattachés + primes liées.\n\nQuand l'utiliser : « détails de POL1234 », « sinistres sur ce contrat ».\nQuand ne PAS l'utiliser : pour LISTER des contrats par critère (« contrats résiliés en 2025 », « contrats AXA branche cyber », « top 10 contrats par prime ») → query_database.\nRetour : { found: bool, contrat?, sinistres?, primes? }.",
   parameters: z.object({ id: z.string().describe("Identifiant exact de contrat (`POL####`).") }),
   execute: async ({ id }) => {
-    const { contrats, sinistres, primes } = loadDataset();
+    const { contrats, sinistres, primes } = await loadDataset();
     const contrat = contrats.find((c) => c.id === id);
     if (!contrat) return { found: false, id };
     return {

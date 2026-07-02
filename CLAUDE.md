@@ -12,7 +12,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Fonts:** Manrope (`--font-sans`) and JetBrains Mono (`--font-mono`), loaded once in [src/app/layout.tsx](src/app/layout.tsx) via `next/font/google`. The app `lang` is `fr`.
 - **Icons:** `lucide-react`. **Animation:** `framer-motion`. **Class merging:** `cn()` in [src/lib/utils.ts](src/lib/utils.ts).
 - **AI SDK:** Vercel AI SDK v4 with `@ai-sdk/mistral` (default model `mistral-large-latest`). `@ai-sdk/google` is kept as a commented alternative in [src/agent/runtime.ts](src/agent/runtime.ts). `MISTRAL_API_KEY` env required for `/api/agent` and `/chat`.
-- **Data:** demo CSVs in [data/](data/) loaded with `papaparse` and cached in memory by [src/agent/data/loader.ts](src/agent/data/loader.ts). `sql.js` is wired in [src/agent/data/sqljs-adapter.ts](src/agent/data/sqljs-adapter.ts) but the dataset loader uses CSVs.
+- **Data:** demo dataset in **Supabase Postgres** (project `emvcjanxyyjgrylpfkip`), fetched with `@supabase/supabase-js` and cached in memory by [src/agent/data/loader.ts](src/agent/data/loader.ts). Requires `NEXT_PUBLIC_SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` (or `NEXT_PUBLIC_SUPABASE_ANON_KEY`) in `.env.local`. The CSVs in [data/](data/) are the seed fixtures — `pnpm db:seed` ([scripts/seed-supabase.mjs](scripts/seed-supabase.mjs)) replays them into Supabase. `sql.js` in [src/agent/data/sqljs-adapter.ts](src/agent/data/sqljs-adapter.ts) still backs the `query_database` tool with an in-memory SQLite mirror, hydrated from the Supabase dataset.
 - Package manager: **pnpm** (lockfile + `pnpm-workspace.yaml` present, though this is a single-package repo).
 
 ## Commands
@@ -21,13 +21,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 pnpm dev      # next dev — http://localhost:3000
 pnpm build    # next build
 pnpm start    # next start (after build)
+pnpm db:seed  # replay data/*.csv into the Supabase demo tables
 ```
 
 There is no lint, test, or typecheck script configured. For typechecking run `pnpm exec tsc --noEmit`.
 
 ## Architecture
 
-This is a single-page BFSI cockpit demo for "Cabinet Müller & Associés SA" (French/Swiss insurance brokerage). The dashboard surface is a static prototype — figures are hardcoded inline or in [src/lib/modal-data.ts](src/lib/modal-data.ts). The AI agent surface (`/chat` and the `/api/agent` route) is real: it streams responses from Mistral and answers questions over the demo CSVs.
+This is a single-page BFSI cockpit demo for "Cabinet Müller & Associés SA" (French/Swiss insurance brokerage). The dashboard surface is a static prototype — figures are hardcoded inline or in [src/lib/modal-data.ts](src/lib/modal-data.ts). The AI agent surface (`/chat` and the `/api/agent` route) is real: it streams responses from Mistral and answers questions over the demo dataset in Supabase.
 
 **Routes** ([src/app/](src/app/)):
 - `/` → [page.tsx](src/app/page.tsx) — minimal landing (Malyz brand mark + tagline + "Accéder au cockpit →" → `/login`). Temporary placeholder; intended to be replaced by a marketing page later.
@@ -36,7 +37,7 @@ This is a single-page BFSI cockpit demo for "Cabinet Müller & Associés SA" (Fr
 - `/rapports` → [rapports/page.tsx](src/app/rapports/page.tsx) — "Tous les rapports" index with filter chips and per-report cards. Uses the same `<Sidebar>` shell. `/rapports/[id]` for detail view. Mounts `<FloatingDock />`.
 - `/alertes`, `/parametres`, `/support` → temporary mock pages wrapped in `<AppShell>` + `<MockPagePlaceholder>`. They exist so every sidebar item resolves end-to-end; promote to real features as they're built.
 - `/chat` → [chat/page.tsx](src/app/chat/page.tsx) — **full-screen** LLM chat harness (no sidebar/shell). Talks to `/api/agent` using the rich event protocol. Includes conversation history (via `AgentConversationProvider`), memory store, tool-call inspection, voice input. Does **not** mount `<FloatingDock />` — the page itself is the full chat surface.
-- `/api/agent` → [api/agent/route.ts](src/app/api/agent/route.ts) — POST streaming + `?mode=once` + `?stream=text` variants. GET is a health/dataset smoke-check. `export const runtime = "nodejs"` because the CSV loader uses `node:fs`.
+- `/api/agent` → [api/agent/route.ts](src/app/api/agent/route.ts) — POST streaming + `?mode=once` + `?stream=text` variants. GET is a health/dataset smoke-check. `export const runtime = "nodejs"` because sql.js loads its wasm via `node:fs`.
 
 **Shell composition** — `/dashboard` and `/rapports` share the same shell:
 

@@ -147,7 +147,7 @@ export class SqlJsAdapter implements DatabaseAdapter {
     const db = new SQL.Database();
     db.exec(DDL);
 
-    const ds = loadDataset();
+    const ds = await loadDataset();
 
     const insert = (table: string, columns: string[], rows: unknown[][]) => {
       const placeholders = columns.map(() => "?").join(",");

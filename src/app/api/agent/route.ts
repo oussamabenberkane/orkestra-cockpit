@@ -23,7 +23,7 @@ import { loadDataset } from "@/agent/data/loader";
 import type { Memory } from "@/agent/memory/types";
 import { AGENT_META_SENTINEL, type AgentMetaTrailer } from "@/agent/protocol";
 
-export const runtime = "nodejs"; // CSV loader uses node:fs — keep off edge.
+export const runtime = "nodejs"; // sql.js loads its wasm via node:fs — keep off edge.
 
 // Upper bound on the request body. A normal turn (history + memories) is a
 // few KB; the cap is a generous defensive ceiling so an honest oversized
@@ -35,9 +35,10 @@ export const runtime = "nodejs"; // CSV loader uses node:fs — keep off edge.
 const MAX_BODY_BYTES = 1 * 1024 * 1024; // 1 MB
 
 export async function GET() {
-  // Smoke check: does the dataset load? Counts only — no secrets, no LLM call.
+  // Smoke check: does the dataset load from Supabase? Counts only — no
+  // secrets, no LLM call.
   try {
-    const ds = loadDataset();
+    const ds = await loadDataset();
     return Response.json({
       ok: true,
       dataset: {

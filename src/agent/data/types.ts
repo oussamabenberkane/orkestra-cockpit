@@ -1,6 +1,7 @@
-// Typed row shapes for the seven demo CSVs in /data.
-// Column names mirror the CSV headers exactly (French) so the LLM-facing
-// schema doc and the runtime objects stay in lockstep.
+// Typed row shapes for the seven demo tables in Supabase (seeded from the
+// CSV fixtures in /data). Column names mirror the table columns exactly
+// (French) so the LLM-facing schema doc and the runtime objects stay in
+// lockstep.
 
 export type Branche =
   | "RC_pro"
