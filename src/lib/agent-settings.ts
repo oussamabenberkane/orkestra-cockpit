@@ -8,7 +8,7 @@ export interface AgentSettings {
 
 const DEFAULTS: AgentSettings = {
   memoryEnabled: true,
-  model: "mistral-large-latest",
+  model: "ministral-8b-latest",
   temperature: 0.2,
 };
 

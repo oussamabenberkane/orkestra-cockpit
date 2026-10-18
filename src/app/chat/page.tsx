@@ -351,7 +351,7 @@ export default function AgentTestPage() {
   // Cached agent settings — defaults match runtime defaults, updated from
   // Supabase on mount. Avoids a loading state for non-critical preferences.
   const memoryEnabledRef = useRef(true);
-  const modelRef = useRef("mistral-large-latest");
+  const modelRef = useRef("ministral-8b-latest");
   const temperatureRef = useRef(0.2);
 
   useEffect(() => {

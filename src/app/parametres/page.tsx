@@ -579,7 +579,7 @@ const TOOLS: { key: string; label: string; desc: string }[] = [
 
 function AgentsSection({ onSave, saved }: { onSave: () => void; saved: boolean }) {
   const { user } = useAuth();
-  const [model, setModel] = useState("mistral-large-latest");
+  const [model, setModel] = useState("ministral-8b-latest");
   const [temperature, setTemperature] = useState(0.2);
   const [langueReponse, setLangueReponse] = useState("fr");
   const [memoire, setMemoire] = useState(true);
@@ -617,7 +617,8 @@ function AgentsSection({ onSave, saved }: { onSave: () => void; saved: boolean }
       <Card title="Modèle de langage">
         <Field label="Modèle actif">
           <Select value={model} onChange={(e) => setModel(e.target.value)}>
-            <option value="mistral-large-latest">Mistral Large (défaut)</option>
+            <option value="ministral-8b-latest">Ministral 8B (défaut)</option>
+            <option value="mistral-large-latest">Mistral Large</option>
             <option value="mistral-small-latest">Mistral Small</option>
             <option value="codestral-latest">Codestral</option>
           </Select>
