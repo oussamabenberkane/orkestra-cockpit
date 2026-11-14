@@ -16,7 +16,7 @@ This is a Next.js 15 App Router project (React 19, TypeScript strict, Tailwind v
 - **Browser client** — `src/lib/supabase.ts` exports `supabase` via `createBrowserClient` from `@supabase/ssr`.
 - **Server client** — `src/lib/supabase-server.ts` exports `supabaseServer` using the service role key (bypasses RLS, server-only).
 - **Middleware** — `src/middleware.ts` already uses `createServerClient` to check `supabase.auth.getUser()` and redirects unauthenticated users to `/login`. Public paths: `/`, `/login`, `/api/*`.
-- **Login form** — `src/components/login/LoginCard.tsx` already calls `supabase.auth.signInWithPassword({ email, password })` and redirects to `/dashboard` on success. Demo button fills `mirko@helvebroker.ch` / `Cockpit2026`.
+- **Login form** — `src/components/login/LoginCard.tsx` already calls `supabase.auth.signInWithPassword({ email, password })` and redirects to `/dashboard` on success. Demo button fills `test@example.com` / `Cockpit2026`.
 - **Memory interface** — `src/agent/memory/store.ts` defines a `MemoryStore` interface (`list`, `save`, `update`, `remove`) and a `LocalStorageMemoryStore` implementation. The `getMemoryStore()` factory returns a singleton. The comment in the file explicitly anticipates swapping to Postgres.
 - **Memory types** — `src/agent/memory/types.ts` defines `Memory`, `MemoryInput`, `MemoryKind` (`preference | watch | saved-view | note`).
 
@@ -163,7 +163,7 @@ In `src/app/chat/page.tsx`, the local `send` wrapper (around line 491):
 ## Acceptance criteria
 
 1. Visiting `/dashboard` without a session redirects to `/login` (already works via middleware — verify it still works after changes).
-2. Logging in with `mirko@helvebroker.ch` / `Cockpit2026` sets a Supabase session cookie and lands on `/dashboard`.
+2. Logging in with `test@example.com` / `Cockpit2026` sets a Supabase session cookie and lands on `/dashboard`.
 3. Clicking logout clears the Supabase session — the back button cannot return to `/dashboard`.
 4. Memories created in `/chat` appear in the `memories` Supabase table scoped to the user's `user_id`.
 5. Memories survive a full browser refresh and re-login (they are in Supabase, not localStorage).

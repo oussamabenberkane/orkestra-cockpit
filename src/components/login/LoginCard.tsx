@@ -11,7 +11,7 @@ export default function LoginCard() {
   // Demo session: prefill the form so a one-click login is possible. The
   // placeholders below mirror the same values so the intent stays clear if
   // the user clears the fields.
-  const [email, setEmail] = useState("mirko@helvebroker.ch");
+  const [email, setEmail] = useState("test@example.com");
   const [password, setPassword] = useState("Cockpit2026");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -125,7 +125,7 @@ export default function LoginCard() {
             type="email"
             value={email}
             onChange={setEmail}
-            placeholder="mirko@helvebroker.ch"
+            placeholder="test@example.com"
             autoComplete="email"
           />
           <PasswordField
